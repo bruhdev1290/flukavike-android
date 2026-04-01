@@ -19,11 +19,11 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
-            useVectorLibrary = true
+            useSupportLibrary = true
         }
 
-        buildConfigField("String", "FLUXER_BASE_URL", """"https://api.fluxer.io""" 
-        buildConfigField("String", "FLUXER_WS_URL", """"wss://gateway.fluxer.io"""
+        buildConfigField("String", "FLUXER_BASE_URL", "\"https://api.fluxer.io\"")
+        buildConfigField("String", "FLUXER_WS_URL", "\"wss://gateway.fluxer.io\"")
     }
 
     buildTypes {
@@ -37,8 +37,8 @@ android {
         }
         debug {
             isDebuggable = true
-            buildConfigField("String", "FLUXER_BASE_URL", """"https://api.fluxer.io"""
-            buildConfigField("String", "FLUXER_WS_URL", """"wss://gateway.fluxer.io"""
+            buildConfigField("String", "FLUXER_BASE_URL", "\"https://api.fluxer.io\"")
+            buildConfigField("String", "FLUXER_WS_URL", "\"wss://gateway.fluxer.io\"")
         }
     }
     
@@ -70,6 +70,7 @@ android {
 dependencies {
     // AndroidX Core
     implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
@@ -104,13 +105,16 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
 
-    implementation("com.squareup.retrofit2:converter-kotlinx-serialization:2.9.0")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
     
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     
     // Security - EncryptedSharedPreferences
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // Logging
+    implementation("com.jakewharton.timber:timber:5.0.1")
     
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")

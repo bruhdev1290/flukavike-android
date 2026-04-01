@@ -1,0 +1,18 @@
+e: [ksp] C:/Users/plane/flukavike-android/app/src/main/java/com/fluxer/client/data/local/model/DatabaseEntities.kt:8: [MissingType]: Element 'com.fluxer.client.data.local.model.MessageEntity' references a type that is not present
+e: [ksp] androidx.room.RoomKspProcessor was unable to process 'com.fluxer.client.data.local.AppDatabase' because not all of its dependencies could be resolved. Check for compilation errors or a circular dependency with generated code.
+e: Error occurred in KSP, check log for detail
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:kspDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 1m 28s

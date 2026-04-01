@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#0D0D0D</color>
+    <string name="app_name">Fluxer</string>
+    <string name="channel_list_title">TEXT CHANNELS</string>
+    <string name="email_hint">Email</string>
+    <string name="error_auth">Authentication failed. Please sign in again.</string>
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_unknown">An unexpected error occurred.</string>
+    <string name="forgot_password">FORGOT PASSWORD?</string>
+    <string name="login_button">SIGN IN</string>
+    <string name="login_title">Sign In</string>
+    <string name="message_hint">Type a message...</string>
+    <string name="password_hint">Password</string>
+    <string name="register_button">CREATE ACCOUNT</string>
+    <string name="register_title">Create Account</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_connecting">Connecting...</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_error">Connection Error</string>
+    <string name="username_hint">Username</string>
+    <style name="Theme.Fluxer" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+    <style name="Theme.Fluxer.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@android:color/black</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="windowSplashScreenAnimationDuration">300</item>
+        <item name="postSplashScreenTheme">@style/Theme.Fluxer</item>
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+    </style>
+</resources>

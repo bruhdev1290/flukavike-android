@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Exclude all encrypted data from backup -->
+    <exclude domain="sharedpref" path="fluxer_secure_cookies.xml"/>
+    <exclude domain="sharedpref" path="fluxer_settings.preferences_pb"/>
+</full-backup-content>
