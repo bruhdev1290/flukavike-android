@@ -7,7 +7,20 @@ A native Android client for Fluxer (an open-source Discord alternative), built w
 ### Bulletproof Authentication
 The app solves the critical authentication challenges that plagued previous Swift attempts:
 
-- **Secure CookieJar** (`SecureCookieStorage`): Uses `EncryptedSharedPreferences` to persistently store HttpOnly cookies (including `fluxer_session`) with AES-256 encryption
+- **Secure CookieJar** (`SecureCookieStorage`): Uses `EncryptedSharedPreferences` to persistently store HttpOnly cookies (including `fluxer_session`) with AES-256 encryption.
+- **Automatic Token Refresh** (`AuthAuthenticator`): An OkHttp `Authenticator` that seamlessly refreshes expired access tokens using the refresh token, retrying failed requests automatically.
+- **CSRF Protection** (`CsrfInterceptor`): An OkHttp `Interceptor` that fetches and attaches a CSRF token (`X-CSRF-Token`) to all state-modifying requests (POST, PATCH, DELETE).
+
+### Offline First
+- **Local Database**: Messages are cached locally using Room, allowing users to view past conversations even when offline.
+- **Offline Queue**: Messages sent while offline are queued and automatically sent when the connection is restored.
+
+### Modern Chat Experience
+- **Image Attachments**: View images directly in the chat.
+- **Infinite Scroll**: Messages are paginated, allowing for efficient loading of long chat histories.
+- **Message Search**: Quickly find messages within a channel.
+- **Error Handling**: A clear error message with a retry option is shown when the network is unreliable.
+
 - **CSRF Token Management** (`CsrfInterceptor`): Automatically extracts CSRF tokens from cookies/headers and injects them into state-changing requests
 - **Token Refresh** (`AuthAuthenticator`): Handles 401 responses by attempting session refresh before requiring re-login
 - **Automatic Cookie Attachment**: All requests automatically include the correct cookies thanks to OkHttp's CookieJar interface

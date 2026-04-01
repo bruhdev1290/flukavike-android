@@ -88,32 +88,47 @@ fun MessageBubble(
             Box(
                 modifier = Modifier
                     .widthIn(max = 320.dp)
-                    .background(
-                        color = if (isOwnMessage) PhantomRed.copy(alpha = 0.9f) else VelvetSurface,
-                        shape = if (isOwnMessage) {
-                            RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)
-                        } else {
-                            RoundedCornerShape(4.dp, 16.dp, 16.dp, 16.dp)
-                        }
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = if (isOwnMessage) PhantomRed else BorderSubtle,
-                        shape = if (isOwnMessage) {
-                            RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)
-                        } else {
-                            RoundedCornerShape(4.dp, 16.dp, 16.dp, 16.dp)
-                        }
-                    )
-                    .clickable(onClick = { showMenu = !showMenu })
-                    .animateContentSize()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                Text(
-                    text = message.content,
-                    style = FluxerTextStyles.messageContent,
-                    color = if (isOwnMessage) TextPrimary else TextPrimary
-                )
+                Column(
+                    modifier = Modifier
+                        .background(
+                            color = if (isOwnMessage) PhantomRed.copy(alpha = 0.9f) else VelvetSurface,
+                            shape = if (isOwnMessage) {
+                                RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)
+                            } else {
+                                RoundedCornerShape(4.dp, 16.dp, 16.dp, 16.dp)
+                            }
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = if (isOwnMessage) NeonCyber.copy(alpha = 0.5f) else GlitchPurple.copy(alpha = 0.5f),
+                            shape = if (isOwnMessage) {
+                                RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)
+                            } else {
+                                RoundedCornerShape(4.dp, 16.dp, 16.dp, 16.dp)
+                            }
+                        )
+                        .padding(12.dp)
+                ) {
+                    if (message.content.isNotBlank()) {
+                        Text(
+                            text = message.content,
+                            style = FluxerTextStyles.messageBody,
+                            color = if (isOwnMessage) OffWhite else TextPrimary,
+                            maxLines = 20,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.animateContentSize()
+                        )
+                    }
+
+                    // Attachments
+                    if (message.attachments.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        message.attachments.forEach { attachment ->
+                            ChatAttachment(attachment = attachment)
+                        }
+                    }
+                }
             }
             
             // Timestamp for own messages

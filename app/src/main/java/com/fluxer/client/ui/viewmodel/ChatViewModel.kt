@@ -2,16 +2,21 @@ package com.fluxer.client.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.fluxer.client.data.model.*
 import com.fluxer.client.data.remote.GatewayWebSocketManager
 import com.fluxer.client.data.repository.ChatRepository
 import com.fluxer.client.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
@@ -35,14 +40,24 @@ class ChatViewModel @Inject constructor(
     private val _selectedChannel = MutableStateFlow<Channel?>(null)
     val selectedChannel: StateFlow<Channel?> = _selectedChannel.asStateFlow()
 
-    // Messages for selected channel
-    val messages: StateFlow<List<Message>> = _selectedChannel
+    // Messages for selected channel using Paging
+    val messages: Flow<PagingData<Message>> = _selectedChannel
         .flatMapLatest { channel ->
             channel?.let { 
-                chatRepository.getMessagesFlow(it.id)
-            } ?: flowOf(emptyList())
+                chatRepository.getMessagesPaginated(it.id)
+            } ?: flowOf(PagingData.empty())
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+        .cachedIn(viewModelScope)
+
+    // Search
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+    
+    private val _searchResults = MutableStateFlow<List<Message>>(emptyList())
+    val searchResults: StateFlow<List<Message>> = _searchResults.asStateFlow()
+    
+    private val _isSearching = MutableStateFlow(false)
+    val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
 
     // Guilds/Servers
     private val _guilds = MutableStateFlow<List<Server>>(emptyList())
@@ -69,27 +84,39 @@ class ChatViewModel @Inject constructor(
         
         // Collect Gateway events
         collectGatewayEvents()
+
+        // Debounced search
+        viewModelScope.launch {
+            _searchQuery
+                .debounce(300)
+                .collectLatest { query ->
+                    if (query.length > 2) {
+                        performSearch(query)
+                    } else {
+                        _searchResults.value = emptyList()
+                    }
+                }
+        }
+    }
+
+    fun onSearchQueryChanged(query: String) {
+        _searchQuery.value = query
+    }
+
+    private fun performSearch(query: String) {
+        val channelId = _selectedChannel.value?.id ?: return
+        viewModelScope.launch {
+            _isSearching.value = true
+            val result = chatRepository.searchMessages(channelId, query)
+            if (result is com.fluxer.client.util.Result.Success) {
+                _searchResults.value = result.data
+            }
+            _isSearching.value = false
+        }
     }
 
     fun selectChannel(channel: Channel) {
         _selectedChannel.value = channel
-        loadMessages(channel.id)
-    }
-
-    fun loadMessages(channelId: String, before: String? = null) {
-        viewModelScope.launch {
-            _isLoadingMessages.value = true
-            
-            chatRepository.getMessages(channelId, before = before)
-                .onSuccess { messages ->
-                    Timber.d("Loaded ${messages.size} messages")
-                }
-                .onError { error ->
-                    _error.value = error
-                }
-            
-            _isLoadingMessages.value = false
-        }
     }
 
     fun sendMessage() {

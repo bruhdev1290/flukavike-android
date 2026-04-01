@@ -69,6 +69,12 @@ interface FluxerApiService {
         @Path("channelId") channelId: String,
         @Path("messageId") messageId: String
     ): Response<Unit>
+
+    @GET("/api/channels/{channelId}/messages/search")
+    suspend fun searchMessages(
+        @Path("channelId") channelId: String,
+        @Query("q") query: String
+    ): Response<List<Message>>
     
     // ==================== CHANNELS ====================
     

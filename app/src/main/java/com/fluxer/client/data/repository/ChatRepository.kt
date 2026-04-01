@@ -1,5 +1,9 @@
 package com.fluxer.client.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import com.fluxer.client.data.paging.MessagePagingSource
 import com.fluxer.client.data.model.*
 import com.fluxer.client.data.remote.*
 import com.fluxer.client.util.Result
@@ -7,6 +11,8 @@ import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
+
+private const val MESSAGE_PAGE_SIZE = 50
 
 /**
  * Repository for chat-related operations including messages and channels.
@@ -36,28 +42,34 @@ class ChatRepository @Inject constructor(
     }
 
     /**
-     * Get messages for a channel
+     * Get messages for a channel with pagination.
      */
-    suspend fun getMessages(
-        channelId: String,
-        limit: Int = 50,
-        before: String? = null
-    ): Result<List<Message>> {
+    fun getMessagesPaginated(channelId: String): Flow<PagingData<Message>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = MESSAGE_PAGE_SIZE,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = { MessagePagingSource(apiService, channelId) }
+        ).flow
+    }
+
+    /**
+     * Search messages in a channel.
+     */
+    suspend fun searchMessages(channelId: String, query: String): Result<List<Message>> {
+        if (query.isBlank()) {
+            return Result.Success(emptyList())
+        }
         return try {
-            val response = apiService.getMessages(channelId, limit, before)
-            
+            val response = apiService.searchMessages(channelId, query)
             if (response.isSuccessful) {
-                val messages = response.body() ?: emptyList()
-                
-                // Update cache
-                updateMessageCache(channelId, messages, before == null)
-                
-                Result.Success(messages)
+                Result.Success(response.body() ?: emptyList())
             } else {
-                Result.Error("Failed to load messages: ${response.code()}")
+                Result.Error("Search failed: ${response.code()}")
             }
         } catch (e: Exception) {
-            Result.Error("Network error: ${e.message}")
+            Result.Error("Network error during search: ${e.message}")
         }
     }
 

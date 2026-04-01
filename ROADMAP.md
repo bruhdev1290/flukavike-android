@@ -33,19 +33,19 @@ gradle wrapper --gradle-version 8.2
 Currently messages disappear when app restarts. Need persistent storage.
 
 #### Implementation Checklist:
-- [ ] Add Room dependencies to `app/build.gradle.kts`
-- [ ] Create `@Entity` classes:
+- [x] Add Room dependencies to `app/build.gradle.kts`
+- [x] Create `@Entity` classes:
   - `MessageEntity` (cached messages)
   - `ChannelEntity` (cached channels)
   - `GuildEntity` (cached servers)
   - `PendingMessageEntity` (offline queue)
-- [ ] Create `@Dao` interfaces:
+- [x] Create `@Dao` interfaces:
   - `MessageDao` - insert, get by channel, delete old
   - `ChannelDao` - upsert, get by guild
   - `PendingMessageDao` - queue for offline sending
-- [ ] Create `AppDatabase` class
-- [ ] Add to DI module (`DatabaseModule.kt`)
-- [ ] Update `ChatRepository` to:
+- [x] Create `AppDatabase` class
+- [x] Add to DI module (`DatabaseModule.kt`)
+- [x] Update `ChatRepository` to:
   - Check database first, then fetch from API
   - Store new messages to database
   - Sync pending messages when online
@@ -98,7 +98,7 @@ implementation("com.google.firebase:firebase-messaging")
 Users expect to share images in chat.
 
 #### Implementation Checklist:
-- [ ] Add Coil for image loading (already in deps, verify configured)
+- [x] Add Coil for image loading (already in deps, verify configured)
 - [ ] Add file picker integration
 - [ ] Update `FluxerApiService` with multipart upload:
   ```kotlin
@@ -113,7 +113,7 @@ Users expect to share images in chat.
   - Image compression before upload
   - Upload progress tracking
   - Retry on failure
-- [ ] Update `MessageBubble` to show:
+- [x] Update `MessageBubble` to show:
   - Image thumbnails
   - Loading state
   - Error state with retry
@@ -167,14 +167,14 @@ Essential for reliability and confident refactoring.
 Current implementation loads all messages - won't scale.
 
 #### Implementation Checklist:
-- [ ] Update `FluxerApiService.getMessages()` - already supports `before` param
-- [ ] Update `ChatRepository` with paginated loading:
+- [x] Update `FluxerApiService.getMessages()` - already supports `before` param
+- [x] Update `ChatRepository` with paginated loading:
   ```kotlin
   fun getMessagesPaginated(channelId: String): Flow<PagingData<Message>>
   ```
-- [ ] Add Paging 3 dependency and implementation
-- [ ] Update `ChatScreen` with infinite scroll
-- [ ] Add search API endpoint:
+- [x] Add Paging 3 dependency and implementation
+- [x] Update `ChatScreen` with infinite scroll
+- [x] Add search API endpoint:
   ```kotlin
   @GET("/api/channels/{channelId}/messages/search")
   suspend fun searchMessages(
@@ -182,7 +182,7 @@ Current implementation loads all messages - won't scale.
       @Query("q") query: String
   ): Response<List<Message>>
   ```
-- [ ] Add search UI to chat screen
+- [x] Add search UI to chat screen
 
 #### Dependencies:
 ```kotlin

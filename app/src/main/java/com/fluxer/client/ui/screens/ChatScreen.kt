@@ -1,14 +1,12 @@
-package com.fluxer.client.ui.screens
-
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.items
 import com.fluxer.client.data.model.UserStatus
 import com.fluxer.client.ui.components.*
 import com.fluxer.client.ui.theme.*
@@ -30,22 +30,25 @@ fun ChatScreen(
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
     val selectedChannel by viewModel.selectedChannel.collectAsState()
-    val messages by viewModel.messages.collectAsState()
+    val messages = viewModel.messages.collectAsLazyPagingItems()
     val messageInput by viewModel.messageInput.collectAsState()
     val connectionState by viewModel.connectionState.collectAsState()
     val guilds by viewModel.guilds.collectAsState()
     val channels by viewModel.channels.collectAsState()
     val isLoading by viewModel.isLoadingMessages.collectAsState()
     val error by viewModel.error.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchResults by viewModel.searchResults.collectAsState()
+    val isSearching by viewModel.isSearching.collectAsState()
     
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     
     // Scroll to bottom when new messages arrive
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
+    LaunchedEffect(messages.itemCount) {
+        if (messages.itemCount > 0) {
             scope.launch {
-                listState.animateScrollToItem(messages.size - 1)
+                listState.animateScrollToItem(messages.itemCount - 1)
             }
         }
     }
@@ -101,6 +104,15 @@ fun ChatScreen(
                         }
                     },
                     actions = {
+                        // Search
+                        IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = TextSecondary
+                            )
+                        }
+                        
                         // User avatar with status
                         UserAvatar(
                             user = currentUser,
@@ -130,6 +142,16 @@ fun ChatScreen(
                     )
                 )
                 
+                // Search Bar
+                AnimatedVisibility(visible = searchQuery.isNotEmpty() || isSearching) {
+                    FluxerTextField(
+                        value = searchQuery,
+                        onValueChange = { viewModel.onSearchQueryChanged(it) },
+                        placeholder = "Search in #${selectedChannel?.name}",
+                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    )
+                }
+
                 // Messages List
                 Box(
                     modifier = Modifier
@@ -158,7 +180,7 @@ fun ChatScreen(
                                 )
                             }
                         }
-                    } else if (messages.isEmpty() && !isLoading) {
+                    } else if (messages.itemCount == 0 && !isLoading) {
                         // Empty channel
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -175,18 +197,20 @@ fun ChatScreen(
                             state = listState,
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(vertical = 16.dp),
-                            reverseLayout = false
+                            reverseLayout = true
                         ) {
                             items(messages, key = { it.id }) { message ->
-                                val isOwnMessage = message.authorId == currentUser?.id
-                                val showAvatar = true // TODO: Check if previous message is from same author
-                                
-                                MessageBubble(
-                                    message = message,
-                                    isOwnMessage = isOwnMessage,
-                                    showAvatar = showAvatar,
-                                    onDelete = { viewModel.deleteMessage(message.id) }
-                                )
+                                message?.let {
+                                    val isOwnMessage = it.authorId == currentUser?.id
+                                    val showAvatar = true // TODO: Check if previous message is from same author
+                                    
+                                    MessageBubble(
+                                        message = it,
+                                        isOwnMessage = isOwnMessage,
+                                        showAvatar = showAvatar,
+                                        onDelete = { viewModel.deleteMessage(it.id) }
+                                    )
+                                }
                             }
                         }
                     }
@@ -196,6 +220,15 @@ fun ChatScreen(
                         CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center),
                             color = PhantomRed
+                        )
+                    }
+
+                    // Error state
+                    if (error != null) {
+                        ErrorState(
+                            message = error!!,
+                            onRetry = { messages.retry() },
+                            modifier = Modifier.align(Alignment.Center)
                         )
                     }
                 }
