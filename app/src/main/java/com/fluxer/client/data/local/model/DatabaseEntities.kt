@@ -3,13 +3,21 @@ package com.fluxer.client.data.local.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Embedded
-import com.fluxer.client.data.model.MessageAuthor
+
+// Local entity for embedded author to avoid cross-package issues with Room KSP
+@Entity
+class AuthorEntity(
+    val author_id: String,
+    val author_username: String,
+    val author_displayName: String?,
+    val author_avatarUrl: String?
+)
 
 @Entity(tableName = "messages")
 data class MessageEntity(
     @PrimaryKey val id: String,
     val channelId: String,
-    @Embedded(prefix = "author_") val author: MessageAuthor,
+    @Embedded val author: AuthorEntity,
     val content: String,
     val timestamp: Long
 )

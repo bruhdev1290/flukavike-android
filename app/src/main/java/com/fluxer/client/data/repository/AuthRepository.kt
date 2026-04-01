@@ -1,6 +1,7 @@
 package com.fluxer.client.data.repository
 
 import com.fluxer.client.data.local.SecureCookieStorage
+import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.model.*
 import com.fluxer.client.data.remote.*
 import com.fluxer.client.util.Result
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import retrofit2.HttpException
 import timber.log.Timber
 import java.io.IOException
+import java.net.UnknownHostException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,7 +24,9 @@ import javax.inject.Singleton
 class AuthRepository @Inject constructor(
     private val apiService: FluxerApiService,
     private val cookieStorage: SecureCookieStorage,
+    private val instanceConfigStore: InstanceConfigStore,
     private val csrfInterceptor: CsrfInterceptor,
+    private val authenticator: AuthAuthenticator,
     private val gatewayManager: GatewayWebSocketManager
 ) : TokenRefreshHandler {
 
@@ -32,6 +36,9 @@ class AuthRepository @Inject constructor(
     val sessionCookieFlow: Flow<String?> = cookieStorage.sessionCookieFlow
 
     init {
+        // Wire the authenticator back to this repository so 401 refreshes can call refreshToken().
+        authenticator.setTokenRefreshHandler(this)
+
         // Check for existing session on init
         checkExistingSession()
     }
@@ -68,7 +75,11 @@ class AuthRepository @Inject constructor(
             _authState.value = AuthState.Error(error)
             Result.Error(error)
         } catch (e: IOException) {
-            val error = "Network error: ${e.message}"
+            val error = if (e is UnknownHostException) {
+                "Cannot reach instance: ${instanceConfigStore.getActiveBaseUrl()}"
+            } else {
+                "Network error: ${e.message}"
+            }
             _authState.value = AuthState.Error(error)
             Result.Error(error)
         } catch (e: Exception) {
@@ -104,6 +115,14 @@ class AuthRepository @Inject constructor(
                 _authState.value = AuthState.Error(error)
                 Result.Error(error)
             }
+        } catch (e: IOException) {
+            val error = if (e is UnknownHostException) {
+                "Cannot reach instance: ${instanceConfigStore.getActiveBaseUrl()}"
+            } else {
+                "Registration failed: network error"
+            }
+            _authState.value = AuthState.Error(error)
+            Result.Error(error)
         } catch (e: Exception) {
             val error = "Registration failed: ${e.message}"
             _authState.value = AuthState.Error(error)
@@ -162,6 +181,11 @@ class AuthRepository @Inject constructor(
         clearSession()
     }
 
+    fun onInstanceChanged() {
+        gatewayManager.disconnect()
+        clearSession()
+    }
+
     /**
      * Check for existing valid session
      */
@@ -216,7 +240,7 @@ class AuthRepository @Inject constructor(
     private fun parseError(code: Int, errorBody: String?): String {
         return when (code) {
             401 -> "Invalid email or password"
-            403 -> "Access denied"
+            403 -> "Access denied. Verify credentials and instance URL (${instanceConfigStore.getActiveBaseUrl()})."
             429 -> "Too many requests, please try again later"
             in 500..599 -> "Server error, please try again later"
             else -> errorBody ?: "Unknown error (code: $code)"

@@ -1,5 +1,7 @@
 package com.fluxer.client.data.model
 
+import com.fluxer.client.data.local.model.AuthorEntity
+import com.fluxer.client.data.local.model.MessageEntity
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -125,3 +127,61 @@ data class MessageAuthor(
     @SerialName("avatar_url")
     val avatarUrl: String? = null
 )
+
+// Extension functions for converting between API models and database entities
+
+fun MessageAuthor.toEntity(): AuthorEntity =
+    AuthorEntity(
+        author_id = id,
+        author_username = username,
+        author_displayName = displayName,
+        author_avatarUrl = avatarUrl
+    )
+
+fun AuthorEntity.toDomain(): MessageAuthor =
+    MessageAuthor(
+        id = author_id,
+        username = author_username,
+        displayName = author_displayName,
+        avatarUrl = author_avatarUrl
+    )
+
+fun Message.toEntity(timestampMillis: Long): MessageEntity? {
+    val msgAuthor = author ?: return null
+    return MessageEntity(
+        id = id,
+        channelId = channelId,
+        author = MessageAuthor(
+            id = msgAuthor.id,
+            username = msgAuthor.username,
+            displayName = msgAuthor.displayName,
+            avatarUrl = msgAuthor.avatarUrl
+        ).toEntity(),
+        content = content,
+        timestamp = timestampMillis
+    )
+}
+
+fun MessageEntity.toDomain(): Message =
+    Message(
+        id = id,
+        channelId = channelId,
+        authorId = author.author_id,
+        author = author.toDomain().let { 
+            User(
+                id = it.id,
+                email = "", // Email not stored in message cache
+                username = it.username,
+                displayName = it.displayName,
+                avatarUrl = it.avatarUrl
+            )
+        },
+        content = content,
+        createdAt = "",
+        updatedAt = null,
+        embeds = emptyList(),
+        attachments = emptyList(),
+        reactions = emptyList(),
+        replyToId = null,
+        isEdited = false
+    )

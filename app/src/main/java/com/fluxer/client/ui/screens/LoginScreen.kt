@@ -18,6 +18,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fluxer.client.ui.components.*
 import com.fluxer.client.ui.theme.*
@@ -36,6 +37,11 @@ fun LoginScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.loginError.collectAsState()
     val authState by viewModel.authState.collectAsState()
+    val customInstanceUrl by viewModel.customInstanceUrl.collectAsState()
+    val activeInstanceBaseUrl by viewModel.activeInstanceBaseUrl.collectAsState()
+    val instanceMessage by viewModel.instanceMessage.collectAsState()
+
+    var instanceInput by remember(customInstanceUrl) { mutableStateOf(customInstanceUrl) }
     
     // Navigate on successful auth
     LaunchedEffect(authState) {
@@ -86,20 +92,11 @@ fun LoginScreen(
             
             // Title
             Text(
-                text = "FLUXER",
+                text = "FLUKAVIKE",
                 style = MaterialTheme.typography.displaySmall.copy(
-                    letterSpacing = 8.sp
-                ),
-                color = TextPrimary,
-                textAlign = TextAlign.Center
-            )
-            
-            Text(
-                text = "TAKE YOUR HEART",
-                style = MaterialTheme.typography.labelMedium.copy(
                     letterSpacing = 4.sp
                 ),
-                color = PhantomRed,
+                color = TextPrimary,
                 textAlign = TextAlign.Center
             )
             
@@ -213,6 +210,64 @@ fun LoginScreen(
             }
             
             Spacer(modifier = Modifier.height(24.dp))
+
+            FluxerTextField(
+                value = instanceInput,
+                onValueChange = {
+                    instanceInput = it
+                    viewModel.clearInstanceMessage()
+                },
+                hint = "https://web.fluxer.app",
+                label = "INSTANCE URL (OPTIONAL)",
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                TextButton(
+                    onClick = { viewModel.applyCustomInstance(instanceInput) }
+                ) {
+                    Text("APPLY INSTANCE", color = PhantomRed)
+                }
+
+                TextButton(
+                    onClick = {
+                        instanceInput = ""
+                        viewModel.applyCustomInstance("")
+                    }
+                ) {
+                    Text("USE DEFAULT", color = TextMuted)
+                }
+            }
+
+            Text(
+                text = "CURRENT: $activeInstanceBaseUrl",
+                style = MaterialTheme.typography.labelSmall,
+                color = TextMuted,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            AnimatedVisibility(
+                visible = instanceMessage != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Text(
+                    text = instanceMessage ?: "",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextPrimary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp)
+                )
+            }
             
             // Error message
             AnimatedVisibility(

@@ -1,10 +1,12 @@
 package com.fluxer.client.data.remote
 
+import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.local.SecureCookieStorage
 import com.fluxer.client.data.model.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -23,7 +25,8 @@ import javax.inject.Singleton
 @Singleton
 class GatewayWebSocketManager @Inject constructor(
     private val cookieStorage: SecureCookieStorage,
-    private val json: Json
+    private val json: Json,
+    private val instanceConfigStore: InstanceConfigStore
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     
@@ -84,7 +87,7 @@ class GatewayWebSocketManager @Inject constructor(
     /**
      * Connect to the Gateway
      */
-    fun connect(gatewayUrl: String = GATEWAY_URL) {
+    fun connect(gatewayUrl: String = instanceConfigStore.getActiveWebSocketUrl()) {
         if (_connectionState.value is ConnectionState.Connecting ||
             _connectionState.value is ConnectionState.Connected) {
             Timber.d("Already connected or connecting")
@@ -348,7 +351,4 @@ class GatewayWebSocketManager @Inject constructor(
         val channelId: String
     )
 
-    companion object {
-        private const val GATEWAY_URL = "wss://gateway.fluxer.io/?v=1&encoding=json"
-    }
 }

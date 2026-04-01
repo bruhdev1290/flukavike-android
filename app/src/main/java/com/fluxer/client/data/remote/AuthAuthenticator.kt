@@ -1,6 +1,7 @@
 package com.fluxer.client.data.remote
 
 import com.fluxer.client.data.local.SecureCookieStorage
+import javax.inject.Inject
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -14,15 +15,20 @@ import timber.log.Timber
  * Authenticator that handles 401 Unauthorized responses.
  * Attempts to refresh the session or triggers re-authentication.
  */
-class AuthAuthenticator(
-    private val cookieStorage: SecureCookieStorage,
-    private val tokenRefreshHandler: TokenRefreshHandler? = null
+class AuthAuthenticator @Inject constructor(
+    private val cookieStorage: SecureCookieStorage
 ) : Authenticator {
 
     private val refreshMutex = Mutex()
     
     @Volatile
     private var isRefreshing = false
+    @Volatile
+    private var tokenRefreshHandler: TokenRefreshHandler? = null
+
+    fun setTokenRefreshHandler(handler: TokenRefreshHandler) {
+        tokenRefreshHandler = handler
+    }
 
     override fun authenticate(route: Route?, response: Response): Request? {
         // Only attempt refresh once per 401

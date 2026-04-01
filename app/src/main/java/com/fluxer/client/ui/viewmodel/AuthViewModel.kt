@@ -2,6 +2,7 @@ package com.fluxer.client.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.repository.AuthRepository
 import com.fluxer.client.data.repository.AuthRepository.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,7 +13,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val instanceConfigStore: InstanceConfigStore
 ) : ViewModel() {
 
     val authState: StateFlow<AuthState> = authRepository.authState
@@ -23,13 +25,22 @@ class AuthViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _customInstanceUrl = MutableStateFlow(instanceConfigStore.getCustomBaseUrl() ?: "")
+    val customInstanceUrl: StateFlow<String> = _customInstanceUrl.asStateFlow()
+
+    private val _activeInstanceBaseUrl = MutableStateFlow(instanceConfigStore.getActiveBaseUrl())
+    val activeInstanceBaseUrl: StateFlow<String> = _activeInstanceBaseUrl.asStateFlow()
+
+    private val _instanceMessage = MutableStateFlow<String?>(null)
+    val instanceMessage: StateFlow<String?> = _instanceMessage.asStateFlow()
+
     private val _navigateToChat = MutableSharedFlow<Unit>()
     val navigateToChat: SharedFlow<Unit> = _navigateToChat.asSharedFlow()
 
     init {
         // Check for existing session on startup
         viewModelScope.launch {
-            if (authRepository.sessionCookieFlow.value != null) {
+            if (authRepository.sessionCookieFlow.firstOrNull() != null) {
                 _isLoading.value = true
                 authRepository.validateSession()
                     .onSuccess { 
@@ -88,6 +99,28 @@ class AuthViewModel @Inject constructor(
     }
 
     fun clearError() {
+        _loginError.value = null
+    }
+
+    fun clearInstanceMessage() {
+        _instanceMessage.value = null
+    }
+
+    fun applyCustomInstance(rawInput: String) {
+        val appliedBaseUrl = instanceConfigStore.saveCustomBaseUrl(rawInput)
+        if (appliedBaseUrl == null) {
+            _loginError.value = "Invalid instance URL. Example: https://web.fluxer.app"
+            return
+        }
+
+        authRepository.onInstanceChanged()
+        _customInstanceUrl.value = instanceConfigStore.getCustomBaseUrl() ?: ""
+        _activeInstanceBaseUrl.value = appliedBaseUrl
+        _instanceMessage.value = if (_customInstanceUrl.value.isBlank()) {
+            "Using default instance"
+        } else {
+            "Custom instance applied"
+        }
         _loginError.value = null
     }
 

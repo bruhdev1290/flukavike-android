@@ -4,6 +4,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -15,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.fluxer.client.data.model.Server
 import com.fluxer.client.ui.theme.*
@@ -145,7 +147,6 @@ private fun ServerIcon(
     if (hasNotification && !isSelected) {
         Box(
             modifier = Modifier
-                .align(Alignment.BottomEnd)
                 .offset((-4).dp, (-4).dp)
                 .size(12.dp)
                 .background(AlertYellow, RoundedCornerShape(50))

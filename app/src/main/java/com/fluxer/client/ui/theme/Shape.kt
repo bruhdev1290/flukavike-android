@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import kotlin.math.PI
 
 /**
  * Fluxer Shapes - Sharp, angular gaming aesthetic
@@ -112,17 +113,17 @@ private fun createPolygonPath(size: Size, sides: Int, cornerRadius: Float): Path
     val centerX = size.width / 2f
     val centerY = size.height / 2f
     val radius = kotlin.math.min(centerX, centerY)
-    val angleStep = (2 * Math.PI / sides).toFloat()
+    val angleStep = (2.0 * PI) / sides.toDouble()
     
     for (i in 0 until sides) {
-        val angle = i * angleStep - Math.PI / 2
-        val x = centerX + radius * kotlin.math.cos(angle)
-        val y = centerY + radius * kotlin.math.sin(angle)
+        val angle = i * angleStep - PI / 2.0
+        val x = centerX.toDouble() + radius.toDouble() * kotlin.math.cos(angle)
+        val y = centerY.toDouble() + radius.toDouble() * kotlin.math.sin(angle)
         
         if (i == 0) {
-            path.moveTo(x, y)
+            path.moveTo(x.toFloat(), y.toFloat())
         } else {
-            path.lineTo(x, y)
+            path.lineTo(x.toFloat(), y.toFloat())
         }
     }
     path.close()

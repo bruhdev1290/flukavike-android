@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.fluxer.client.data.model.Message
@@ -101,7 +102,7 @@ fun MessageBubble(
                         )
                         .border(
                             width = 1.dp,
-                            color = if (isOwnMessage) NeonCyber.copy(alpha = 0.5f) else GlitchPurple.copy(alpha = 0.5f),
+                            color = if (isOwnMessage) PhantomRed.copy(alpha = 0.5f) else BorderSubtle.copy(alpha = 0.5f),
                             shape = if (isOwnMessage) {
                                 RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)
                             } else {
@@ -113,8 +114,8 @@ fun MessageBubble(
                     if (message.content.isNotBlank()) {
                         Text(
                             text = message.content,
-                            style = FluxerTextStyles.messageBody,
-                            color = if (isOwnMessage) OffWhite else TextPrimary,
+                            style = FluxerTextStyles.messageContent,
+                            color = TextPrimary,
                             maxLines = 20,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.animateContentSize()

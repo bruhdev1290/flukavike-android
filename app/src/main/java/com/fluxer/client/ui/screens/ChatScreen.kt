@@ -1,7 +1,10 @@
+package com.fluxer.client.ui.screens
+
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
@@ -15,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.items
 import com.fluxer.client.data.model.UserStatus
 import com.fluxer.client.ui.components.*
 import com.fluxer.client.ui.theme.*
@@ -40,6 +42,7 @@ fun ChatScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
+    val activeChannel = selectedChannel
     
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -71,7 +74,7 @@ fun ChatScreen(
             if (channels.isNotEmpty()) {
                 ChannelList(
                     channels = channels,
-                    selectedChannelId = selectedChannel?.id,
+                    selectedChannelId = activeChannel?.id,
                     onChannelSelected = { viewModel.selectChannel(it) }
                 )
             }
@@ -147,7 +150,7 @@ fun ChatScreen(
                     FluxerTextField(
                         value = searchQuery,
                         onValueChange = { viewModel.onSearchQueryChanged(it) },
-                        placeholder = "Search in #${selectedChannel?.name}",
+                        hint = "Search in #${activeChannel?.name}",
                         modifier = Modifier.fillMaxWidth().padding(8.dp)
                     )
                 }
@@ -180,7 +183,7 @@ fun ChatScreen(
                                 )
                             }
                         }
-                    } else if (messages.itemCount == 0 && !isLoading) {
+                        } else if (messages.itemCount == 0 && !isLoading) {
                         // Empty channel
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -199,16 +202,20 @@ fun ChatScreen(
                             contentPadding = PaddingValues(vertical = 16.dp),
                             reverseLayout = true
                         ) {
-                            items(messages, key = { it.id }) { message ->
-                                message?.let {
-                                    val isOwnMessage = it.authorId == currentUser?.id
+                            items(
+                                count = messages.itemCount,
+                                key = { index -> messages[index]?.id ?: index }
+                            ) { index ->
+                                val message = messages[index]
+                                if (message != null) {
+                                    val isOwnMessage = message.authorId == currentUser?.id
                                     val showAvatar = true // TODO: Check if previous message is from same author
-                                    
+
                                     MessageBubble(
-                                        message = it,
+                                        message = message,
                                         isOwnMessage = isOwnMessage,
                                         showAvatar = showAvatar,
-                                        onDelete = { viewModel.deleteMessage(it.id) }
+                                        onDelete = { viewModel.deleteMessage(message.id) }
                                     )
                                 }
                             }
@@ -234,7 +241,7 @@ fun ChatScreen(
                 }
                 
                 // Message Input
-                if (selectedChannel != null) {
+                if (activeChannel != null) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -245,7 +252,7 @@ fun ChatScreen(
                             value = messageInput,
                             onValueChange = viewModel::updateMessageInput,
                             onSend = viewModel::sendMessage,
-                            placeholder = "Message #${selectedChannel.name}"
+                            placeholder = "Message #${activeChannel.name}"
                         )
                     }
                 }

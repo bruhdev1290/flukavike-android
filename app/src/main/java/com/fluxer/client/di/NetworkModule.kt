@@ -2,6 +2,7 @@ package com.fluxer.client.di
 
 import android.content.Context
 import com.fluxer.client.BuildConfig
+import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.local.SecureCookieStorage
 import com.fluxer.client.data.remote.*
 import dagger.Module
@@ -14,7 +15,7 @@ import okhttp3.CookieJar
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import okhttp3.MediaType.Companion.toMediaType
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -67,12 +68,15 @@ object NetworkModule {
     fun provideOkHttpClient(
         cookieStorage: SecureCookieStorage,
         csrfInterceptor: CsrfInterceptor,
+        baseUrlOverrideInterceptor: BaseUrlOverrideInterceptor,
         loggingInterceptor: HttpLoggingInterceptor,
         authAuthenticator: AuthAuthenticator
     ): OkHttpClient {
         return OkHttpClient.Builder()
             // Cookie handling - CRITICAL for HttpOnly session cookies
             .cookieJar(cookieStorage as CookieJar)
+            // Runtime instance switching for all API calls
+            .addInterceptor(baseUrlOverrideInterceptor)
             // CSRF protection
             .addInterceptor(csrfInterceptor)
             // Logging
@@ -116,8 +120,9 @@ object NetworkModule {
     @Singleton
     fun provideGatewayWebSocketManager(
         cookieStorage: SecureCookieStorage,
-        json: Json
+        json: Json,
+        instanceConfigStore: InstanceConfigStore
     ): GatewayWebSocketManager {
-        return GatewayWebSocketManager(cookieStorage, json)
+        return GatewayWebSocketManager(cookieStorage, json, instanceConfigStore)
     }
 }

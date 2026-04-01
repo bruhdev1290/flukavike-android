@@ -22,8 +22,8 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "FLUXER_BASE_URL", "\"https://api.fluxer.io\"")
-        buildConfigField("String", "FLUXER_WS_URL", "\"wss://gateway.fluxer.io\"")
+        buildConfigField("String", "FLUXER_BASE_URL", "\"https://web.fluxer.app/\"")
+        buildConfigField("String", "FLUXER_WS_URL", "\"wss://web.fluxer.app\"")
     }
 
     buildTypes {
@@ -37,8 +37,8 @@ android {
         }
         debug {
             isDebuggable = true
-            buildConfigField("String", "FLUXER_BASE_URL", "\"https://api.fluxer.io\"")
-            buildConfigField("String", "FLUXER_WS_URL", "\"wss://gateway.fluxer.io\"")
+            buildConfigField("String", "FLUXER_BASE_URL", "\"https://web.fluxer.app/\"")
+            buildConfigField("String", "FLUXER_WS_URL", "\"wss://web.fluxer.app\"")
         }
     }
     
