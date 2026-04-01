@@ -1,0 +1,117 @@
+package com.fluxer.client.data.model
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class Message(
+    val id: String,
+    @SerialName("channel_id")
+    val channelId: String,
+    @SerialName("author_id")
+    val authorId: String,
+    val author: User? = null,
+    val content: String,
+    @SerialName("created_at")
+    val createdAt: String,
+    @SerialName("updated_at")
+    val updatedAt: String? = null,
+    val embeds: List<Embed> = emptyList(),
+    val attachments: List<Attachment> = emptyList(),
+    val reactions: List<Reaction> = emptyList(),
+    @SerialName("reply_to_id")
+    val replyToId: String? = null,
+    @SerialName("is_edited")
+    val isEdited: Boolean = false
+)
+
+@Serializable
+data class Embed(
+    val title: String? = null,
+    val description: String? = null,
+    val url: String? = null,
+    val color: Int? = null,
+    val image: EmbedImage? = null,
+    val thumbnail: EmbedImage? = null,
+    val footer: EmbedFooter? = null,
+    val timestamp: String? = null
+)
+
+@Serializable
+data class EmbedImage(
+    val url: String,
+    val width: Int? = null,
+    val height: Int? = null
+)
+
+@Serializable
+data class EmbedFooter(
+    val text: String,
+    @SerialName("icon_url")
+    val iconUrl: String? = null
+)
+
+@Serializable
+data class Attachment(
+    val id: String,
+    val filename: String,
+    val size: Long,
+    val url: String,
+    @SerialName("content_type")
+    val contentType: String? = null,
+    val width: Int? = null,
+    val height: Int? = null
+)
+
+@Serializable
+data class Reaction(
+    val emoji: String,
+    val count: Int,
+    @SerialName("user_reacted")
+    val userReacted: Boolean = false
+)
+
+@Serializable
+data class SendMessageRequest(
+    val content: String,
+    @SerialName("reply_to_id")
+    val replyToId: String? = null,
+    val embeds: List<Embed> = emptyList()
+)
+
+@Serializable
+data class Channel(
+    val id: String,
+    val name: String,
+    val type: ChannelType,
+    @SerialName("server_id")
+    val serverId: String? = null,
+    @SerialName("parent_id")
+    val parentId: String? = null,
+    val position: Int = 0,
+    val topic: String? = null,
+    @SerialName("last_message_id")
+    val lastMessageId: String? = null,
+    @SerialName("created_at")
+    val createdAt: String? = null
+)
+
+@Serializable
+enum class ChannelType {
+    TEXT, VOICE, DM, CATEGORY
+}
+
+@Serializable
+data class Server(
+    val id: String,
+    val name: String,
+    @SerialName("icon_url")
+    val iconUrl: String? = null,
+    @SerialName("owner_id")
+    val ownerId: String,
+    val channels: List<Channel> = emptyList(),
+    @SerialName("member_count")
+    val memberCount: Int = 0,
+    @SerialName("created_at")
+    val createdAt: String? = null
+)

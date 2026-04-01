@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Fluxer</string>
+    
+    <!-- Auth -->
+    <string name="login_title">Sign In</string>
+    <string name="register_title">Create Account</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Password</string>
+    <string name="username_hint">Username</string>
+    <string name="login_button">SIGN IN</string>
+    <string name="register_button">CREATE ACCOUNT</string>
+    <string name="forgot_password">FORGOT PASSWORD?</string>
+    
+    <!-- Chat -->
+    <string name="message_hint">Type a message...</string>
+    <string name="channel_list_title">TEXT CHANNELS</string>
+    
+    <!-- Connection Status -->
+    <string name="status_connected">Connected</string>
+    <string name="status_connecting">Connecting...</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_error">Connection Error</string>
+    
+    <!-- Errors -->
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_auth">Authentication failed. Please sign in again.</string>
+    <string name="error_unknown">An unexpected error occurred.</string>
+</resources>
