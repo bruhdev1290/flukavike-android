@@ -4,6 +4,7 @@ import android.content.Context
 import com.fluxer.client.BuildConfig
 import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.local.SecureCookieStorage
+import com.fluxer.client.data.local.AuthTokenStorage
 import com.fluxer.client.data.remote.*
 import dagger.Module
 import dagger.Provides
@@ -51,6 +52,12 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideAuthInterceptor(
+        authTokenStorage: AuthTokenStorage
+    ): AuthInterceptor = AuthInterceptor(authTokenStorage)
+
+    @Provides
+    @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor { message ->
             Timber.tag("OkHttp").d(message)
@@ -69,6 +76,7 @@ object NetworkModule {
         cookieStorage: SecureCookieStorage,
         csrfInterceptor: CsrfInterceptor,
         baseUrlOverrideInterceptor: BaseUrlOverrideInterceptor,
+        authInterceptor: AuthInterceptor,
         loggingInterceptor: HttpLoggingInterceptor,
         authAuthenticator: AuthAuthenticator
     ): OkHttpClient {
@@ -77,6 +85,8 @@ object NetworkModule {
             .cookieJar(cookieStorage as CookieJar)
             // Runtime instance switching for all API calls
             .addInterceptor(baseUrlOverrideInterceptor)
+            // Auth token injection
+            .addInterceptor(authInterceptor)
             // CSRF protection
             .addInterceptor(csrfInterceptor)
             // Logging

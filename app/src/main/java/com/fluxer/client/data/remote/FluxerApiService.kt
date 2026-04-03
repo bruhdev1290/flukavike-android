@@ -10,25 +10,34 @@ import retrofit2.http.*
  */
 interface FluxerApiService {
 
+    // ==================== DISCOVERY ====================
+
+    @GET("/.well-known/fluxer")
+    suspend fun discoverInstance(): Response<InstanceConfig>
+
     // ==================== AUTH ====================
-    
+
     @POST("/api/auth/login")
-    suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
-    
+    suspend fun login(
+        @Body request: LoginRequest,
+        @Header("X-Captcha-Token") captchaToken: String? = null,
+        @Header("X-Captcha-Type") captchaType: String? = null
+    ): Response<AuthResponse>
+
     @POST("/api/auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
-    
+
     @POST("/api/auth/logout")
     suspend fun logout(): Response<Unit>
-    
+
     @POST("/api/auth/refresh")
     suspend fun refreshToken(): Response<AuthResponse>
-    
+
     @GET("/api/auth/csrf")
     suspend fun getCsrfToken(): Response<CsrfResponse>
-    
+
     @GET("/api/auth/me")
-    suspend fun getCurrentUser(): Response<User>
+    suspend fun getCurrentUser(@Header("Authorization") authToken: String? = null): Response<User>
     
     // ==================== USERS ====================
     

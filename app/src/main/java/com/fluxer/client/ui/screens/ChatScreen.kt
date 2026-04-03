@@ -37,6 +37,7 @@ fun ChatScreen(
     val connectionState by viewModel.connectionState.collectAsState()
     val guilds by viewModel.guilds.collectAsState()
     val channels by viewModel.channels.collectAsState()
+    val selectedServer by viewModel.selectedServer.collectAsState()
     val isLoading by viewModel.isLoadingMessages.collectAsState()
     val error by viewModel.error.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -65,8 +66,8 @@ fun ChatScreen(
             // Server Sidebar
             ServerSidebar(
                 servers = guilds,
-                selectedServerId = null, // TODO: Track selected server
-                onServerSelected = { /* TODO */ },
+                selectedServerId = selectedServer?.id,
+                onServerSelected = { viewModel.selectServer(it) },
                 onAddServer = { /* TODO */ }
             )
             

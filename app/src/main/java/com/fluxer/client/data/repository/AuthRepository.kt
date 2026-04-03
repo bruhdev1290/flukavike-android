@@ -1,5 +1,6 @@
 package com.fluxer.client.data.repository
 
+import com.fluxer.client.BuildConfig
 import com.fluxer.client.data.local.SecureCookieStorage
 import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.model.*
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.json.Json
 import retrofit2.HttpException
 import timber.log.Timber
 import java.io.IOException
@@ -27,13 +29,19 @@ class AuthRepository @Inject constructor(
     private val instanceConfigStore: InstanceConfigStore,
     private val csrfInterceptor: CsrfInterceptor,
     private val authenticator: AuthAuthenticator,
-    private val gatewayManager: GatewayWebSocketManager
+    private val gatewayManager: GatewayWebSocketManager,
+    private val authTokenStorage: com.fluxer.client.data.local.AuthTokenStorage
 ) : TokenRefreshHandler {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
     val sessionCookieFlow: Flow<String?> = cookieStorage.sessionCookieFlow
+
+    private var discoveredCaptchaConfig: InstanceConfig.CaptchaConfig? = null
+    private var authToken: String? = null
+
+    private val jsonParser = Json { ignoreUnknownKeys = true }
 
     init {
         // Wire the authenticator back to this repository so 401 refreshes can call refreshToken().
@@ -46,34 +54,64 @@ class AuthRepository @Inject constructor(
     /**
      * Login with email and password
      */
-    suspend fun login(email: String, password: String): Result<Unit> {
+    suspend fun login(email: String, password: String, captchaToken: String? = null): LoginResult {
         return try {
             Timber.i("🔐 Attempting login for: $email")
             _authState.value = AuthState.Loading
-            
-            val response = apiService.login(LoginRequest(email, password))
-            
+
+            // Discover instance endpoints and captcha config before login
+            runDiscovery()
+
+            val captchaType = discoveredCaptchaConfig?.resolvedProvider() ?: "hcaptcha"
+            val response = apiService.login(
+                request = LoginRequest(email, password, captchaKey = captchaToken),
+                captchaToken = captchaToken,
+                captchaType = captchaType
+            )
+
             if (response.isSuccessful) {
                 val authData = response.body()
-                authData?.let {
-                    _authState.value = AuthState.Authenticated(it.user)
-                    Timber.i("✅ Login successful for: ${it.user.username}")
-                    
+                Timber.d("🔐 Login HTTP ${response.code()}, body null=${authData == null}, token=${authData?.resolvedToken()?.take(8)}, user=${authData?.user?.username}")
+
+                // Persist token if present (some instances omit it and rely on cookies)
+                authData?.resolvedToken()?.let { token ->
+                    authToken = token
+                    authTokenStorage.setToken(token)
+                }
+
+                // Get user from body, or fall back to /api/auth/me (handles empty-body 200 responses)
+                val resolvedUser = authData?.user ?: run {
+                    Timber.d("Login response missing user, fetching /api/auth/me (authToken=${authToken?.take(8)})")
+                    val userResponse = apiService.getCurrentUser(authToken = authToken)
+                    Timber.d("/api/auth/me HTTP ${userResponse.code()}, body null=${userResponse.body() == null}")
+                    if (userResponse.isSuccessful) userResponse.body() else null
+                }
+
+                if (resolvedUser != null) {
+                    _authState.value = AuthState.Authenticated(resolvedUser)
+                    Timber.i("✅ Login successful for: ${resolvedUser.username}")
+
                     // Connect to Gateway after successful login
                     gatewayManager.connect()
-                    
-                    Result.Success(Unit)
-                } ?: Result.Error("Empty response body")
+
+                    LoginResult.Success
+                } else {
+                    LoginResult.Error("Empty response body")
+                }
             } else {
-                val error = parseError(response.code(), response.errorBody()?.string())
-                _authState.value = AuthState.Error(error)
-                Timber.e("❌ Login failed: $error")
-                Result.Error(error)
+                val result = parseLoginError(response.code(), response.errorBody()?.string())
+                if (result is LoginResult.Error) {
+                    _authState.value = AuthState.Error(result.message)
+                    Timber.e("❌ Login failed: ${result.message}")
+                }
+                result
             }
         } catch (e: HttpException) {
-            val error = "HTTP ${e.code()}: ${e.message()}"
-            _authState.value = AuthState.Error(error)
-            Result.Error(error)
+            val result = parseLoginError(e.code(), e.response()?.errorBody()?.string())
+            if (result is LoginResult.Error) {
+                _authState.value = AuthState.Error(result.message)
+            }
+            result
         } catch (e: IOException) {
             val error = if (e is UnknownHostException) {
                 "Cannot reach instance: ${instanceConfigStore.getActiveBaseUrl()}"
@@ -81,11 +119,11 @@ class AuthRepository @Inject constructor(
                 "Network error: ${e.message}"
             }
             _authState.value = AuthState.Error(error)
-            Result.Error(error)
+            LoginResult.Error(error)
         } catch (e: Exception) {
             val error = "Unexpected error: ${e.message}"
             _authState.value = AuthState.Error(error)
-            Result.Error(error)
+            LoginResult.Error(error)
         }
     }
 
@@ -96,19 +134,31 @@ class AuthRepository @Inject constructor(
         return try {
             Timber.i("📝 Attempting registration for: $email")
             _authState.value = AuthState.Loading
-            
+
             val response = apiService.register(RegisterRequest(email, username, password))
-            
+
             if (response.isSuccessful) {
                 val authData = response.body()
                 authData?.let {
-                    _authState.value = AuthState.Authenticated(it.user)
-                    Timber.i("✅ Registration successful for: ${it.user.username}")
-                    
-                    // Connect to Gateway after successful registration
-                    gatewayManager.connect()
-                    
-                    Result.Success(Unit)
+                    // Persist token for REST API auth header
+                    it.resolvedToken()?.let { token ->
+                        authToken = token
+                        authTokenStorage.setToken(token)
+                    }
+                    val resolvedUser = it.user ?: run {
+                        Timber.d("Registration response missing user, fetching /api/auth/me")
+                        val userResponse = apiService.getCurrentUser(authToken = authToken)
+                        if (userResponse.isSuccessful) userResponse.body() else null
+                    }
+                    resolvedUser?.let { user ->
+                        _authState.value = AuthState.Authenticated(user)
+                        Timber.i("✅ Registration successful for: ${user.username}")
+
+                        // Connect to Gateway after successful registration
+                        gatewayManager.connect()
+
+                        Result.Success(Unit)
+                    } ?: Result.Error("Empty response body")
                 } ?: Result.Error("Empty response body")
             } else {
                 val error = parseError(response.code(), response.errorBody()?.string())
@@ -136,16 +186,16 @@ class AuthRepository @Inject constructor(
     suspend fun logout(): Result<Unit> {
         return try {
             Timber.i("👋 Logging out")
-            
+
             // Disconnect from Gateway first
             gatewayManager.disconnect()
-            
+
             // Call logout endpoint (cookies will be cleared server-side)
             apiService.logout()
-            
+
             // Clear local data
             clearSession()
-            
+
             Result.Success(Unit)
         } catch (e: Exception) {
             // Still clear local session even if server call fails
@@ -161,7 +211,7 @@ class AuthRepository @Inject constructor(
         return try {
             Timber.i("🔄 Refreshing session token")
             val response = apiService.refreshToken()
-            
+
             if (response.isSuccessful) {
                 Timber.i("✅ Token refreshed successfully")
                 true
@@ -184,6 +234,7 @@ class AuthRepository @Inject constructor(
     fun onInstanceChanged() {
         gatewayManager.disconnect()
         clearSession()
+        discoveredCaptchaConfig = null
     }
 
     /**
@@ -193,7 +244,7 @@ class AuthRepository @Inject constructor(
         if (cookieStorage.hasValidSession()) {
             Timber.i("🔍 Found existing session, validating...")
             _authState.value = AuthState.Loading
-            
+
             // Try to fetch current user to validate session
             // This would typically be a suspend function, handle properly in ViewModel
             _authState.value = AuthState.Unauthenticated // Will be updated by validateSession
@@ -205,16 +256,14 @@ class AuthRepository @Inject constructor(
      */
     suspend fun validateSession(): Result<Unit> {
         return try {
-            val response = apiService.getCurrentUser()
-            
+            val response = apiService.getCurrentUser(authToken = authToken)
+
             if (response.isSuccessful) {
                 val user = response.body()
                 user?.let {
                     _authState.value = AuthState.Authenticated(it)
-                    
                     // Reconnect to Gateway
                     gatewayManager.connect()
-                    
                     Result.Success(Unit)
                 } ?: Result.Error("Empty user data")
             } else {
@@ -233,8 +282,64 @@ class AuthRepository @Inject constructor(
     private fun clearSession() {
         cookieStorage.clearAllCookies()
         csrfInterceptor.clearCsrfToken()
+        authTokenStorage.clear()
+        authToken = null
         _authState.value = AuthState.Unauthenticated
         Timber.i("🧹 Session cleared")
+    }
+
+    private suspend fun runDiscovery() {
+        try {
+            val response = apiService.discoverInstance()
+            if (response.isSuccessful) {
+                response.body()?.let { config ->
+                    discoveredCaptchaConfig = config.captcha
+                    config.resolvedGateway().takeIf { it.isNotBlank() }?.let {
+                        instanceConfigStore.saveDiscoveredWebSocketUrl(it)
+                    }
+                    Timber.d("Instance discovered. API: ${config.resolvedApi()}, Gateway: ${config.resolvedGateway()}, Captcha: ${config.captcha != null}")
+                }
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Instance discovery failed, continuing with defaults")
+        }
+    }
+
+    private fun parseLoginError(code: Int, errorBody: String?): LoginResult {
+        val raw = errorBody ?: return LoginResult.Error(parseError(code, null))
+        return try {
+            val err = jsonParser.decodeFromString(CaptchaRequiredResponse.serializer(), raw)
+            when {
+                err.error == "captcha_required" -> {
+                    val sitekey = err.sitekey?.takeIf { it.isNotBlank() }
+                        ?: discoveredCaptchaConfig?.resolvedSitekey()
+                        ?: BuildConfig.HCAPTCHA_SITE_KEY
+                    val provider = err.provider?.trim()?.lowercase()
+                        ?: discoveredCaptchaConfig?.resolvedProvider()
+                        ?: "hcaptcha"
+                    LoginResult.CaptchaRequired(sitekey, provider)
+                }
+                else -> LoginResult.Error(parseError(code, raw))
+            }
+        } catch (e: Exception) {
+            // Try to parse as IP authorization error first
+            try {
+                val ipErr = jsonParser.decodeFromString(IpAuthRequiredResponse.serializer(), raw)
+                if (ipErr.code == "IP_AUTHORIZATION_REQUIRED" || ipErr.ipAuthorizationRequired == true) {
+                    return LoginResult.IpAuthorizationRequired(ipErr.ticket, ipErr.email, ipErr.resendAvailableIn)
+                }
+            } catch (_: Exception) { }
+
+            val lower = raw.lowercase()
+            val normalized = lower.filter { it.isLetterOrDigit() }
+            if (lower.contains("captcha") || lower.contains("api error 7") || normalized.contains("apierror7")) {
+                val sitekey = discoveredCaptchaConfig?.resolvedSitekey() ?: BuildConfig.HCAPTCHA_SITE_KEY
+                val provider = discoveredCaptchaConfig?.resolvedProvider() ?: "hcaptcha"
+                LoginResult.CaptchaRequired(sitekey, provider)
+            } else {
+                LoginResult.Error(parseError(code, raw))
+            }
+        }
     }
 
     private fun parseError(code: Int, errorBody: String?): String {
@@ -250,7 +355,14 @@ class AuthRepository @Inject constructor(
     sealed class AuthState {
         object Unauthenticated : AuthState()
         object Loading : AuthState()
-        data class Authenticated(val user: User) : AuthState()
+        data class Authenticated(val user: User?) : AuthState()
         data class Error(val message: String) : AuthState()
+    }
+
+    sealed class LoginResult {
+        object Success : LoginResult()
+        data class CaptchaRequired(val sitekey: String?, val provider: String?) : LoginResult()
+        data class IpAuthorizationRequired(val ticket: String?, val email: String?, val resendAvailableIn: Int?) : LoginResult()
+        data class Error(val message: String) : LoginResult()
     }
 }

@@ -183,14 +183,20 @@ fun LoadingButton(
     text: String,
     isLoading: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
+    val alpha = when {
+        isLoading -> 1f
+        !enabled -> 0.5f
+        else -> 1f
+    }
     Box(
         modifier = modifier
             .height(48.dp)
             .clip(RectangleShape)
-            .background(PhantomRed)
-            .clickable(enabled = !isLoading, onClick = onClick),
+            .background(PhantomRed.copy(alpha = alpha))
+            .clickable(enabled = enabled && !isLoading, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         if (isLoading) {
@@ -205,7 +211,7 @@ fun LoadingButton(
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                 ),
-                color = TextPrimary
+                color = TextPrimary.copy(alpha = alpha)
             )
         }
     }

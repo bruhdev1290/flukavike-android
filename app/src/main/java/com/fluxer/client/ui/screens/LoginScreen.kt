@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
@@ -40,6 +41,10 @@ fun LoginScreen(
     val customInstanceUrl by viewModel.customInstanceUrl.collectAsState()
     val activeInstanceBaseUrl by viewModel.activeInstanceBaseUrl.collectAsState()
     val instanceMessage by viewModel.instanceMessage.collectAsState()
+    val captchaRequired by viewModel.captchaRequired.collectAsState()
+    val captchaSiteKey by viewModel.captchaSiteKey.collectAsState()
+    val captchaProvider by viewModel.captchaProvider.collectAsState()
+    val captchaToken by viewModel.captchaToken.collectAsState()
 
     var instanceInput by remember(customInstanceUrl) { mutableStateOf(customInstanceUrl) }
     
@@ -113,6 +118,7 @@ fun LoginScreen(
                     onClick = { 
                         isLoginMode = true
                         viewModel.clearError()
+                        viewModel.resetCaptchaState()
                     }
                 )
                 Spacer(modifier = Modifier.width(32.dp))
@@ -122,6 +128,7 @@ fun LoginScreen(
                     onClick = { 
                         isLoginMode = false
                         viewModel.clearError()
+                        viewModel.resetCaptchaState()
                     }
                 )
             }
@@ -268,6 +275,60 @@ fun LoginScreen(
                         .padding(top = 4.dp)
                 )
             }
+
+            // Captcha challenge
+            AnimatedVisibility(
+                visible = captchaRequired,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Please complete the verification below.",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TextSecondary,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+
+                    CaptchaWidget(
+                        siteKey = captchaSiteKey,
+                        provider = captchaProvider,
+                        baseUrl = activeInstanceBaseUrl,
+                        onToken = { viewModel.onCaptchaToken(it) },
+                        onError = { }
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = captchaToken != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = androidx.compose.ui.graphics.Color(0xFF4CAF50)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Verification completed",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = androidx.compose.ui.graphics.Color(0xFF4CAF50)
+                    )
+                }
+            }
             
             // Error message
             AnimatedVisibility(
@@ -296,6 +357,7 @@ fun LoginScreen(
             LoadingButton(
                 text = if (isLoginMode) "SIGN IN" else "CREATE ACCOUNT",
                 isLoading = isLoading,
+                enabled = if (isLoginMode) !(captchaRequired && captchaToken == null) else true,
                 onClick = {
                     if (isLoginMode) {
                         viewModel.login(email, password)

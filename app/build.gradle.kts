@@ -23,7 +23,8 @@ android {
         }
 
         buildConfigField("String", "FLUXER_BASE_URL", "\"https://web.fluxer.app/\"")
-        buildConfigField("String", "FLUXER_WS_URL", "\"wss://web.fluxer.app\"")
+        buildConfigField("String", "FLUXER_WS_URL", "\"wss://gateway.fluxer.app\"")
+        buildConfigField("String", "HCAPTCHA_SITE_KEY", "\"9cbad400-df84-4e0c-bda6-e65000be78aa\"")
     }
 
     buildTypes {
@@ -38,7 +39,7 @@ android {
         debug {
             isDebuggable = true
             buildConfigField("String", "FLUXER_BASE_URL", "\"https://web.fluxer.app/\"")
-            buildConfigField("String", "FLUXER_WS_URL", "\"wss://web.fluxer.app\"")
+            buildConfigField("String", "FLUXER_WS_URL", "\"wss://gateway.fluxer.app\"")
         }
     }
     
@@ -129,7 +130,8 @@ dependencies {
     // Paging
     implementation("androidx.paging:paging-runtime-ktx:3.2.1")
     implementation("androidx.paging:paging-compose:3.2.1")
-    
+
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")

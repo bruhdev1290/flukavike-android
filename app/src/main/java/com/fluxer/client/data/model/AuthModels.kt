@@ -1,14 +1,20 @@
 package com.fluxer.client.data.model
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class LoginRequest(
     val email: String,
     val password: String,
     @SerialName("device_name")
-    val deviceName: String = "Android Device"
+    val deviceName: String = "Android Device",
+    @SerialName("captcha_key")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    val captchaKey: String? = null
 )
 
 @Serializable
@@ -22,9 +28,16 @@ data class RegisterRequest(
 
 @Serializable
 data class AuthResponse(
-    val user: User,
+    val token: String? = null,
+    @SerialName("access_token")
+    val accessToken: String? = null,
+    @SerialName("refresh_token")
+    val refreshToken: String? = null,
+    val user: User? = null,
     val message: String? = null
-)
+) {
+    fun resolvedToken(): String? = token ?: accessToken
+}
 
 @Serializable
 data class User(

@@ -20,26 +20,29 @@ class InstanceConfigStore @Inject constructor(
     }
 
     fun getActiveWebSocketUrl(): String {
-        val baseUrl = getActiveBaseUrl().toHttpUrlOrNull() ?: return BuildConfig.FLUXER_WS_URL
-        val wsScheme = if (baseUrl.scheme == "https") "wss" else "ws"
-        val portPart = when {
-            wsScheme == "ws" && baseUrl.port == 80 -> ""
-            wsScheme == "wss" && baseUrl.port == 443 -> ""
-            else -> ":${baseUrl.port}"
-        }
-        return "$wsScheme://${baseUrl.host}$portPart"
+        return prefs.getString(KEY_DISCOVERED_WS_URL, null)
+            ?: BuildConfig.FLUXER_WS_URL
     }
 
     fun saveCustomBaseUrl(rawInput: String): String? {
         val trimmed = rawInput.trim()
         if (trimmed.isEmpty()) {
-            prefs.edit().remove(KEY_CUSTOM_BASE_URL).apply()
+            prefs.edit()
+                .remove(KEY_CUSTOM_BASE_URL)
+                .remove(KEY_DISCOVERED_WS_URL)
+                .apply()
             return BuildConfig.FLUXER_BASE_URL
         }
 
         val normalized = normalizeToBaseUrl(trimmed) ?: return null
         prefs.edit().putString(KEY_CUSTOM_BASE_URL, normalized).apply()
         return normalized
+    }
+
+    fun saveDiscoveredWebSocketUrl(url: String) {
+        if (url.isNotBlank()) {
+            prefs.edit().putString(KEY_DISCOVERED_WS_URL, url).apply()
+        }
     }
 
     private fun normalizeToBaseUrl(input: String): String? {
@@ -62,5 +65,6 @@ class InstanceConfigStore @Inject constructor(
     companion object {
         private const val PREFS_NAME = "fluxer_instance_config"
         private const val KEY_CUSTOM_BASE_URL = "custom_base_url"
+        private const val KEY_DISCOVERED_WS_URL = "discovered_ws_url"
     }
 }

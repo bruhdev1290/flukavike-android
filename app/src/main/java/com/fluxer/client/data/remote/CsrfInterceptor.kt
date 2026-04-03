@@ -39,6 +39,7 @@ class CsrfInterceptor(
         // Add common headers
         builder.header("Accept", "application/json")
         builder.header("X-Requested-With", "FluxerAndroidClient")
+        builder.header("Origin", "${request.url.scheme}://${request.url.host}")
 
         val response = chain.proceed(builder.build())
 

@@ -158,6 +158,22 @@ class ChatRepository @Inject constructor(
     }
 
     /**
+     * Get user's guilds/servers
+     */
+    suspend fun getUserGuilds(): Result<List<Server>> {
+        return try {
+            val response = apiService.getUserGuilds()
+            if (response.isSuccessful) {
+                Result.Success(response.body() ?: emptyList())
+            } else {
+                Result.Error("Failed to load servers: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
+    /**
      * Get channels for a guild/server
      */
     suspend fun getGuildChannels(guildId: String): Result<List<Channel>> {

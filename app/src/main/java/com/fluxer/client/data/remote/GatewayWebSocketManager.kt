@@ -104,8 +104,10 @@ class GatewayWebSocketManager @Inject constructor(
             .cookieJar(cookieStorage as CookieJar)
             .build()
 
+        val wsUrl = if (gatewayUrl.contains("?")) gatewayUrl else "$gatewayUrl?v=1"
+
         val request = Request.Builder()
-            .url(gatewayUrl)
+            .url(wsUrl)
             .header("Accept", "application/json")
             .header("User-Agent", "FluxerAndroid/1.0")
             .build()

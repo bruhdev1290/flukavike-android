@@ -2,6 +2,7 @@ package com.fluxer.client.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fluxer.client.BuildConfig
 import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.repository.AuthRepository
 import com.fluxer.client.data.repository.AuthRepository.AuthState
@@ -37,6 +38,19 @@ class AuthViewModel @Inject constructor(
     private val _navigateToChat = MutableSharedFlow<Unit>()
     val navigateToChat: SharedFlow<Unit> = _navigateToChat.asSharedFlow()
 
+    // Captcha state
+    private val _captchaRequired = MutableStateFlow(false)
+    val captchaRequired: StateFlow<Boolean> = _captchaRequired.asStateFlow()
+
+    private val _captchaSiteKey = MutableStateFlow("")
+    val captchaSiteKey: StateFlow<String> = _captchaSiteKey.asStateFlow()
+
+    private val _captchaProvider = MutableStateFlow("hcaptcha")
+    val captchaProvider: StateFlow<String> = _captchaProvider.asStateFlow()
+
+    private val _captchaToken = MutableStateFlow<String?>(null)
+    val captchaToken: StateFlow<String?> = _captchaToken.asStateFlow()
+
     init {
         // Check for existing session on startup
         viewModelScope.launch {
@@ -61,15 +75,34 @@ class AuthViewModel @Inject constructor(
             _isLoading.value = true
             _loginError.value = null
             
-            authRepository.login(email, password)
-                .onSuccess {
+            when (val result = authRepository.login(email, password, _captchaToken.value)) {
+                is AuthRepository.LoginResult.Success -> {
                     _navigateToChat.emit(Unit)
+                    resetCaptchaState()
                 }
-                .onError { error ->
-                    _loginError.value = error
+                is AuthRepository.LoginResult.CaptchaRequired -> {
+                    _isLoading.value = false
+                    _captchaRequired.value = true
+                    _captchaSiteKey.value = result.sitekey?.takeIf { it.isNotBlank() } ?: BuildConfig.HCAPTCHA_SITE_KEY
+                    val resolved = result.provider?.trim()?.lowercase() ?: "hcaptcha"
+                    _captchaProvider.value = if (resolved.contains("turnstile")) "turnstile" else "hcaptcha"
+                    _loginError.value = "Please complete the verification below."
                 }
-            
-            _isLoading.value = false
+                is AuthRepository.LoginResult.IpAuthorizationRequired -> {
+                    _isLoading.value = false
+                    resetCaptchaState()
+                    _loginError.value = if (!result.email.isNullOrBlank()) {
+                        "Check ${result.email} and approve this login attempt."
+                    } else {
+                        "Approve this login attempt from your email, then try again."
+                    }
+                }
+                is AuthRepository.LoginResult.Error -> {
+                    _isLoading.value = false
+                    _loginError.value = result.message
+                    resetCaptchaState()
+                }
+            }
         }
     }
 
@@ -122,6 +155,18 @@ class AuthViewModel @Inject constructor(
             "Custom instance applied"
         }
         _loginError.value = null
+    }
+
+    fun onCaptchaToken(token: String) {
+        _captchaToken.value = token
+        _loginError.value = null
+    }
+
+    fun resetCaptchaState() {
+        _captchaRequired.value = false
+        _captchaSiteKey.value = ""
+        _captchaProvider.value = "hcaptcha"
+        _captchaToken.value = null
     }
 
     private fun validateInput(email: String, password: String): Boolean {

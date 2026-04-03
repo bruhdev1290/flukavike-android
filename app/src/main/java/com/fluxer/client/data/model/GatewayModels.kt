@@ -28,7 +28,9 @@ data class GatewayHello(
 @Serializable
 data class GatewayIdentify(
     val token: String,
-    val properties: ConnectionProperties
+    val properties: ConnectionProperties,
+    @SerialName("v")
+    val version: Int = 1
 )
 
 @Serializable

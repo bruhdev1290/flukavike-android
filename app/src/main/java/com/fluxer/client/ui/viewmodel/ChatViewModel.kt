@@ -40,6 +40,10 @@ class ChatViewModel @Inject constructor(
     private val _selectedChannel = MutableStateFlow<Channel?>(null)
     val selectedChannel: StateFlow<Channel?> = _selectedChannel.asStateFlow()
 
+    // Selected server/guild
+    private val _selectedServer = MutableStateFlow<Server?>(null)
+    val selectedServer: StateFlow<Server?> = _selectedServer.asStateFlow()
+
     // Messages for selected channel using Paging
     val messages: Flow<PagingData<Message>> = _selectedChannel
         .flatMapLatest { channel ->
@@ -71,6 +75,9 @@ class ChatViewModel @Inject constructor(
     private val _isLoadingMessages = MutableStateFlow(false)
     val isLoadingMessages: StateFlow<Boolean> = _isLoadingMessages.asStateFlow()
 
+    private val _isLoadingServers = MutableStateFlow(false)
+    val isLoadingServers: StateFlow<Boolean> = _isLoadingServers.asStateFlow()
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
@@ -84,6 +91,9 @@ class ChatViewModel @Inject constructor(
         
         // Collect Gateway events
         collectGatewayEvents()
+
+        // Load servers/guilds from REST API (fallback to Gateway READY event)
+        loadGuilds()
 
         // Debounced search
         viewModelScope.launch {
@@ -112,6 +122,15 @@ class ChatViewModel @Inject constructor(
                 _searchResults.value = result.data
             }
             _isSearching.value = false
+        }
+    }
+
+    fun selectServer(server: Server) {
+        _selectedServer.value = server
+        _channels.value = server.channels
+        // Auto-select first text channel if none selected
+        if (_selectedChannel.value == null || _selectedChannel.value?.serverId != server.id) {
+            _selectedChannel.value = server.channels.firstOrNull { it.type == ChannelType.TEXT }
         }
     }
 
@@ -166,6 +185,23 @@ class ChatViewModel @Inject constructor(
         chatRepository.disconnectGateway()
     }
 
+    private fun loadGuilds() {
+        viewModelScope.launch {
+            _isLoadingServers.value = true
+            val result = chatRepository.getUserGuilds()
+            result.onSuccess { servers ->
+                _guilds.value = servers
+                Timber.i("Loaded ${servers.size} guilds from REST API")
+                if (servers.isNotEmpty() && _selectedServer.value == null) {
+                    selectServer(servers.first())
+                }
+            }.onError { error ->
+                Timber.e("Failed to load guilds: $error")
+            }
+            _isLoadingServers.value = false
+        }
+    }
+
     private fun collectGatewayEvents() {
         chatRepository.gatewayEvents
             .onEach { event ->
@@ -173,6 +209,18 @@ class ChatViewModel @Inject constructor(
                     is GatewayWebSocketManager.GatewayEvent.Ready -> {
                         _guilds.value = event.data.guilds
                         Timber.i("Gateway ready with ${event.data.guilds.size} guilds")
+                        if (event.data.guilds.isNotEmpty() && _selectedServer.value == null) {
+                            selectServer(event.data.guilds.first())
+                        }
+                    }
+                    is GatewayWebSocketManager.GatewayEvent.MessageCreate -> {
+                        // Message handled by repository cache
+                    }
+                    is GatewayWebSocketManager.GatewayEvent.MessageUpdate -> {
+                        // Message handled by repository cache
+                    }
+                    is GatewayWebSocketManager.GatewayEvent.MessageDelete -> {
+                        // Message handled by repository cache
                     }
                     else -> { /* Handle other events if needed */ }
                 }
