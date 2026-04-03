@@ -73,10 +73,16 @@ class AuthRepository @Inject constructor(
                 val authData = response.body()
                 Timber.d("🔐 Login HTTP ${response.code()}, body null=${authData == null}, token=${authData?.resolvedToken()?.take(8)}, user=${authData?.user?.username}")
 
-                // Persist token if present (some instances omit it and rely on cookies)
-                authData?.resolvedToken()?.let { token ->
-                    authToken = token
-                    authTokenStorage.setToken(token)
+                // Persist new token, or clear stale token so /api/auth/me uses session cookie
+                val newToken = authData?.resolvedToken()
+                if (newToken != null) {
+                    authToken = newToken
+                    authTokenStorage.setToken(newToken)
+                } else {
+                    // No token in response — clear stale stored token so the old expired
+                    // token isn't injected into /api/auth/me by AuthInterceptor
+                    authToken = null
+                    authTokenStorage.clear()
                 }
 
                 // Get user from body, or fall back to /api/auth/me (handles empty-body 200 responses)
