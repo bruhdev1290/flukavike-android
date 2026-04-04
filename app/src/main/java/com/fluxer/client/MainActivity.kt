@@ -18,7 +18,6 @@ import com.fluxer.client.ui.screens.LoginScreen
 import com.fluxer.client.ui.theme.FluxerTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
-import timber.log.Timber
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -27,10 +26,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         enableEdgeToEdge()
-        
-        // Plant Timber tree for logging
-        Timber.plant(Timber.DebugTree())
-        
+
         setContent {
             FluxerTheme {
                 Surface(

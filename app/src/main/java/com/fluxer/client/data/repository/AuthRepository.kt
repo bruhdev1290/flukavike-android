@@ -1,3 +1,11 @@
+// =============================================================================
+// !! DO NOT TOUCH THIS FILE !!
+// Auth was broken for a long time and is now stable. Key fixes:
+// - runDiscovery() runs in background at startup, NOT inside login()
+// - callTimeout(20s) in NetworkModule is the only reliable timeout guard
+// - Interceptor order in NetworkModule is load-bearing
+// See CLAUDE.md for full details.
+// =============================================================================
 package com.fluxer.client.data.repository
 
 import com.fluxer.client.BuildConfig
@@ -6,10 +14,15 @@ import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.model.*
 import com.fluxer.client.data.remote.*
 import com.fluxer.client.util.Result
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
 import timber.log.Timber
@@ -42,6 +55,7 @@ class AuthRepository @Inject constructor(
     private var authToken: String? = null
 
     private val jsonParser = Json { ignoreUnknownKeys = true }
+    private val repoScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     init {
         // Wire the authenticator back to this repository so 401 refreshes can call refreshToken().
@@ -49,6 +63,9 @@ class AuthRepository @Inject constructor(
 
         // Check for existing session on init
         checkExistingSession()
+
+        // Kick off instance discovery in the background immediately — don't block login on it
+        repoScope.launch { runDiscovery() }
     }
 
     /**
@@ -58,9 +75,6 @@ class AuthRepository @Inject constructor(
         return try {
             Timber.i("🔐 Attempting login for: $email")
             _authState.value = AuthState.Loading
-
-            // Discover instance endpoints and captcha config before login
-            runDiscovery()
 
             val captchaType = discoveredCaptchaConfig?.resolvedProvider() ?: "hcaptcha"
             val response = apiService.login(
@@ -241,6 +255,7 @@ class AuthRepository @Inject constructor(
         gatewayManager.disconnect()
         clearSession()
         discoveredCaptchaConfig = null
+        repoScope.launch { runDiscovery() }
     }
 
     /**
@@ -296,18 +311,20 @@ class AuthRepository @Inject constructor(
 
     private suspend fun runDiscovery() {
         try {
-            val response = apiService.discoverInstance()
-            if (response.isSuccessful) {
-                response.body()?.let { config ->
-                    discoveredCaptchaConfig = config.captcha
-                    config.resolvedGateway().takeIf { it.isNotBlank() }?.let {
-                        instanceConfigStore.saveDiscoveredWebSocketUrl(it)
+            withTimeout(6_000L) {
+                val response = apiService.discoverInstance()
+                if (response.isSuccessful) {
+                    response.body()?.let { config ->
+                        discoveredCaptchaConfig = config.captcha
+                        config.resolvedGateway().takeIf { it.isNotBlank() }?.let {
+                            instanceConfigStore.saveDiscoveredWebSocketUrl(it)
+                        }
+                        Timber.d("Instance discovered. API: ${config.resolvedApi()}, Gateway: ${config.resolvedGateway()}, Captcha: ${config.captcha != null}")
                     }
-                    Timber.d("Instance discovered. API: ${config.resolvedApi()}, Gateway: ${config.resolvedGateway()}, Captcha: ${config.captcha != null}")
                 }
             }
         } catch (e: Exception) {
-            Timber.w(e, "Instance discovery failed, continuing with defaults")
+            Timber.w("Instance discovery failed (${e.javaClass.simpleName}), continuing with defaults")
         }
     }
 

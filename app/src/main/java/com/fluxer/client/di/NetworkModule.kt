@@ -1,3 +1,11 @@
+// =============================================================================
+// !! DO NOT TOUCH THIS FILE !!
+// Timeout values, interceptor order, and retry settings are all load-bearing.
+// - callTimeout(20s) is the ONLY reliable wall-clock bound on OkHttp calls
+// - retryOnConnectionFailure(false) prevents 2x timeout waits
+// - Interceptor order: baseUrlOverride -> auth -> csrf -> logging
+// See CLAUDE.md for full details.
+// =============================================================================
 package com.fluxer.client.di
 
 import android.content.Context
@@ -93,12 +101,14 @@ object NetworkModule {
             .addInterceptor(loggingInterceptor)
             // Auth handling for 401s
             .authenticator(authAuthenticator)
-            // Timeouts
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
-            // Retry on connection failure
-            .retryOnConnectionFailure(true)
+            // Timeouts — callTimeout is the absolute wall-clock limit per call,
+            // preventing keep-alive connections from bypassing readTimeout.
+            .callTimeout(20, TimeUnit.SECONDS)
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            // Don't retry — avoids 2x timeout waits when a connection is reset
+            .retryOnConnectionFailure(false)
             // Follow redirects (important for auth flows)
             .followRedirects(true)
             .followSslRedirects(true)

@@ -1,9 +1,22 @@
+// =============================================================================
+// !! DO NOT TOUCH MODEL DEFAULTS OR ChannelType SERIALIZER !!
+// - ChannelType uses a custom KSerializer: API sends integers (0=TEXT,1=DM,2=VOICE,4=CATEGORY)
+//   Do NOT revert to a plain @Serializable enum — it will break channel loading
+// - Message.authorId, .content, .createdAt default to "" — API omits these in some contexts
+// See CLAUDE.md for full details.
+// =============================================================================
 package com.fluxer.client.data.model
 
 import com.fluxer.client.data.local.model.AuthorEntity
 import com.fluxer.client.data.local.model.MessageEntity
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 @Serializable
 data class Message(
@@ -11,11 +24,11 @@ data class Message(
     @SerialName("channel_id")
     val channelId: String,
     @SerialName("author_id")
-    val authorId: String,
+    val authorId: String = "",
     val author: User? = null,
-    val content: String,
+    val content: String = "",
     @SerialName("created_at")
-    val createdAt: String,
+    val createdAt: String = "",
     @SerialName("updated_at")
     val updatedAt: String? = null,
     val embeds: List<Embed> = emptyList(),
@@ -98,9 +111,23 @@ data class Channel(
     val createdAt: String? = null
 )
 
-@Serializable
-enum class ChannelType {
-    TEXT, VOICE, DM, CATEGORY
+@Serializable(with = ChannelTypeSerializer::class)
+enum class ChannelType(val value: Int) {
+    TEXT(0), DM(1), VOICE(2), CATEGORY(4), UNKNOWN(-1)
+}
+
+object ChannelTypeSerializer : KSerializer<ChannelType> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("ChannelType", PrimitiveKind.INT)
+
+    override fun serialize(encoder: Encoder, value: ChannelType) {
+        encoder.encodeInt(value.value)
+    }
+
+    override fun deserialize(decoder: Decoder): ChannelType {
+        val raw = decoder.decodeInt()
+        return ChannelType.entries.firstOrNull { it.value == raw } ?: ChannelType.UNKNOWN
+    }
 }
 
 @Serializable

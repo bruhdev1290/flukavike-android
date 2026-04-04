@@ -1,3 +1,10 @@
+// =============================================================================
+// !! DO NOT TOUCH ENDPOINT PATHS !!
+// All paths are verified against the live Fluxer API:
+// - Current user: /api/users/@me (NOT /api/auth/me — that returns 404)
+// - Guild channels: /api/guilds/{guildId}/channels (guilds from /api/users/@me/guilds do NOT embed channels)
+// See CLAUDE.md for full details.
+// =============================================================================
 package com.fluxer.client.data.remote
 
 import com.fluxer.client.data.model.*
@@ -36,7 +43,7 @@ interface FluxerApiService {
     @GET("/api/auth/csrf")
     suspend fun getCsrfToken(): Response<CsrfResponse>
 
-    @GET("/api/auth/me")
+    @GET("/api/users/@me")
     suspend fun getCurrentUser(@Header("Authorization") authToken: String? = null): Response<User>
     
     // ==================== USERS ====================

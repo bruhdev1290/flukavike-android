@@ -125,12 +125,21 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    // !! DO NOT USE server.channels HERE !!
+    // Guild objects from /api/users/@me/guilds always have channels = emptyList().
+    // Channels must be fetched separately. See CLAUDE.md.
     fun selectServer(server: Server) {
         _selectedServer.value = server
-        _channels.value = server.channels
-        // Auto-select first text channel if none selected
-        if (_selectedChannel.value == null || _selectedChannel.value?.serverId != server.id) {
-            _selectedChannel.value = server.channels.firstOrNull { it.type == ChannelType.TEXT }
+        viewModelScope.launch {
+            val result = chatRepository.getGuildChannels(server.id)
+            result.onSuccess { channels ->
+                _channels.value = channels
+                if (_selectedChannel.value == null || _selectedChannel.value?.serverId != server.id) {
+                    _selectedChannel.value = channels.firstOrNull { it.type == ChannelType.TEXT }
+                }
+            }.onError { error ->
+                Timber.e("Failed to load channels for ${server.name}: $error")
+            }
         }
     }
 

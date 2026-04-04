@@ -1,6 +1,13 @@
+// =============================================================================
+// !! DO NOT REVERT TO A POLLING APPROACH !!
+// The captcha script uses ?onload=onCaptchaLoaded callback.
+// A previous polling/interval approach timed out before hCaptcha finished loading.
+// See CLAUDE.md for full details.
+// =============================================================================
 package com.fluxer.client.ui.components
 
 import android.annotation.SuppressLint
+import android.webkit.ConsoleMessage
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
@@ -65,6 +72,10 @@ fun CaptchaWidget(
                     }
                 }, "HCaptchaBridge")
                 webChromeClient = object : WebChromeClient() {
+                    override fun onConsoleMessage(msg: ConsoleMessage): Boolean {
+                        Timber.tag("CaptchaJS").d("[${msg.messageLevel()}] ${msg.message()} (${msg.sourceId()}:${msg.lineNumber()})")
+                        return true
+                    }
                     override fun onCreateWindow(
                         view: WebView,
                         isDialog: Boolean,
@@ -123,10 +134,13 @@ private fun generateCaptchaHtml(siteKey: String, provider: String): String {
     val escapedSiteKey = siteKey
         .replace("\\", "\\\\")
         .replace("\"", "\\\"")
+
+    // Use onload callback so rendering triggers as soon as the script is ready,
+    // regardless of network latency. The callback name must match the function below.
     val scriptUrl = if (provider == "turnstile") {
-        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onCaptchaLoaded"
     } else {
-        "https://js.hcaptcha.com/1/api.js?render=explicit"
+        "https://js.hcaptcha.com/1/api.js?render=explicit&onload=onCaptchaLoaded"
     }
 
     return """
@@ -138,55 +152,38 @@ private fun generateCaptchaHtml(siteKey: String, provider: String): String {
           body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: transparent; }
           #captcha-container { display: flex; align-items: center; justify-content: center; min-height: 78px; }
         </style>
-        <script src="$scriptUrl" async defer></script>
         <script>
           const provider = "$provider";
           const siteKey = "$escapedSiteKey";
-          let renderAttempts = 0;
-          const maxRenderAttempts = 80;
-          function postError(message) {
-            window.HCaptchaBridge.onError(message);
-          }
-          function onSolve(token) {
-            window.HCaptchaBridge.onToken(token);
-          }
-          function onError(message) {
-            postError(message);
-          }
-          function onExpired() {
-            postError("Verification expired, please try again");
-          }
-          function renderCaptcha() {
-            renderAttempts += 1;
-            if (provider === "turnstile") {
-              if (!window.turnstile || typeof window.turnstile.render !== "function") {
-                if (renderAttempts < maxRenderAttempts) { setTimeout(renderCaptcha, 100); return; }
-                postError("Failed to load captcha provider"); return;
+          function onSolve(token) { window.HCaptchaBridge.onToken(token); }
+          function onExpired() { window.HCaptchaBridge.onError("Verification expired, please try again"); }
+          function onCaptchaError(e) { window.HCaptchaBridge.onError(String(e)); }
+          function onCaptchaLoaded() {
+            try {
+              if (provider === "turnstile") {
+                window.turnstile.render("#captcha-container", {
+                  sitekey: siteKey,
+                  callback: onSolve,
+                  "error-callback": onCaptchaError,
+                  "expired-callback": onExpired,
+                  theme: "auto"
+                });
+              } else {
+                window.hcaptcha.render("captcha-container", {
+                  sitekey: siteKey,
+                  callback: onSolve,
+                  "error-callback": onCaptchaError,
+                  "expired-callback": onExpired
+                });
               }
-              window.turnstile.render("#captcha-container", {
-                sitekey: siteKey,
-                callback: onSolve,
-                "error-callback": onError,
-                "expired-callback": onExpired,
-                theme: "auto"
-              });
-              return;
+            } catch(e) {
+              window.HCaptchaBridge.onError("Render failed: " + e);
             }
-            if (!window.hcaptcha || typeof window.hcaptcha.render !== "function") {
-              if (renderAttempts < maxRenderAttempts) { setTimeout(renderCaptcha, 100); return; }
-              postError("Failed to load captcha provider"); return;
-            }
-            window.hcaptcha.render("captcha-container", {
-              sitekey: siteKey,
-              callback: onSolve,
-              "error-callback": onError,
-              "expired-callback": onExpired
-            });
           }
-          function onLoad() { renderCaptcha(); }
         </script>
+        <script src="$scriptUrl" async defer></script>
       </head>
-      <body onload="onLoad()">
+      <body>
         <div id="captcha-container"></div>
       </body>
     </html>

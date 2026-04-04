@@ -1,3 +1,9 @@
+// =============================================================================
+// !! DO NOT MAKE User.email NON-NULLABLE !!
+// Message author objects from the Fluxer API do not include email.
+// email defaults to "" so deserialization does not crash on message responses.
+// See CLAUDE.md for full details.
+// =============================================================================
 package com.fluxer.client.data.model
 
 import kotlinx.serialization.EncodeDefault
@@ -42,7 +48,7 @@ data class AuthResponse(
 @Serializable
 data class User(
     val id: String,
-    val email: String,
+    val email: String = "",
     val username: String,
     @SerialName("display_name")
     val displayName: String? = null,

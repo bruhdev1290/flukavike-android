@@ -31,6 +31,15 @@ class AuthAuthenticator @Inject constructor(
     }
 
     override fun authenticate(route: Route?, response: Response): Request? {
+        // Don't retry the refresh endpoint itself — prevents a deadlock where the
+        // refresh request also returns 401, triggering another authenticate() that
+        // tries to acquire the same Mutex already held by the outer authenticate().
+        val path = response.request.url.encodedPath
+        if (path.contains("/auth/refresh") || path.contains("/auth/login")) {
+            Timber.w("🚫 Skipping auth retry for auth endpoint: $path")
+            return null
+        }
+
         // Only attempt refresh once per 401
         if (responseCount(response) >= 2) {
             Timber.w("🚫 Authentication failed after retry, giving up")

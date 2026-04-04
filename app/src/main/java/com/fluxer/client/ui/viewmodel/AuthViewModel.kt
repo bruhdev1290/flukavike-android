@@ -77,6 +77,7 @@ class AuthViewModel @Inject constructor(
             
             when (val result = authRepository.login(email, password, _captchaToken.value)) {
                 is AuthRepository.LoginResult.Success -> {
+                    _isLoading.value = false
                     _navigateToChat.emit(Unit)
                     resetCaptchaState()
                 }

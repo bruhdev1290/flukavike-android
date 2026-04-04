@@ -2,6 +2,26 @@
 
 A native Android client for Fluxer (an open-source Discord alternative), built with bulletproof authentication handling and a sharp, gaming-inspired UI aesthetic.
 
+---
+
+## !! DO NOT EDIT — CRITICAL SYSTEMS !!
+
+The following code was broken, debugged, and fixed through extensive testing against the live Fluxer API.
+**Do not refactor, restructure, or "improve" any of it. Do not touch it for any reason unless a bug is explicitly traced here.**
+
+| System | Files | Why it must not change |
+|--------|-------|------------------------|
+| **Auth flow** | `AuthRepository.kt`, `AuthViewModel.kt`, `AuthAuthenticator.kt`, `AuthInterceptor.kt`, `CsrfInterceptor.kt` | Discovery was blocking login for 12+ min; callTimeout, interceptor order, and retry settings are all load-bearing |
+| **Network config** | `NetworkModule.kt` | Interceptor order, `callTimeout(20s)`, and `retryOnConnectionFailure(false)` prevent infinite hangs |
+| **API endpoints** | `FluxerApiService.kt` | `/api/users/@me` is correct (NOT `/api/auth/me`); guild objects do NOT embed channels |
+| **Data models** | `AuthModels.kt`, `MessageModels.kt` | `User.email` defaults to `""`; `ChannelType` uses a custom int serializer — API sends `0/1/2/4`, not strings |
+| **Captcha widget** | `CaptchaWidget.kt` | Uses `?onload=` callback — do not revert to polling |
+| **Channel loading** | `ChatViewModel.selectServer()` | Must call `getGuildChannels()` — `server.channels` is always empty from REST |
+
+See `CLAUDE.md` for full details on every fix and why it was made.
+
+---
+
 ## 🎯 Key Features
 
 ### Bulletproof Authentication
