@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -41,12 +42,19 @@ fun ChatScreen(
     val isLoading by viewModel.isLoadingMessages.collectAsState()
     val error by viewModel.error.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
-    val searchResults by viewModel.searchResults.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
     val activeChannel = selectedChannel
     
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    
+    // Responsive layout state
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val isCompact = screenWidth < 600.dp
+    val isMedium = screenWidth >= 600.dp && screenWidth < 840.dp
+    
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     
     // Scroll to bottom when new messages arrive
     LaunchedEffect(messages.itemCount) {
@@ -57,35 +65,67 @@ fun ChatScreen(
         }
     }
     
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(VelvetBlack)
-    ) {
-        Row(modifier = Modifier.fillMaxSize()) {
-            // Server Sidebar
-            ServerSidebar(
-                servers = guilds,
-                selectedServerId = selectedServer?.id,
-                onServerSelected = { viewModel.selectServer(it) },
-                onAddServer = { /* TODO */ }
-            )
-            
-            // Channel List (shown when server selected)
-            if (channels.isNotEmpty()) {
-                ChannelList(
-                    channels = channels,
-                    selectedChannelId = activeChannel?.id,
-                    onChannelSelected = { viewModel.selectChannel(it) }
-                )
+    // Responsive sidebar width
+    val sidebarWidth = when {
+        isCompact -> 56.dp
+        isMedium -> 64.dp
+        else -> 72.dp
+    }
+    
+    // Channel drawer for compact screens
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            if (isCompact && channels.isNotEmpty()) {
+                ModalDrawerSheet(
+                    drawerContainerColor = VelvetMid,
+                    drawerContentColor = TextPrimary
+                ) {
+                    ChannelListContent(
+                        channels = channels,
+                        selectedChannelId = activeChannel?.id,
+                        onChannelSelected = { 
+                            viewModel.selectChannel(it)
+                            scope.launch { drawerState.close() }
+                        },
+                        modifier = Modifier.width(280.dp)
+                    )
+                }
             }
-            
-            // Main Chat Area
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(1f)
-            ) {
+        }
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(VelvetBlack)
+        ) {
+            Row(modifier = Modifier.fillMaxSize()) {
+                // Server Sidebar
+                ServerSidebar(
+                    servers = guilds,
+                    selectedServerId = selectedServer?.id,
+                    onServerSelected = { viewModel.selectServer(it) },
+                    onAddServer = { /* TODO */ },
+                    modifier = Modifier.width(sidebarWidth),
+                    isCompact = isCompact
+                )
+                
+                // Channel List (persistent on larger screens, drawer on compact)
+                if (channels.isNotEmpty() && !isCompact) {
+                    ChannelListContent(
+                        channels = channels,
+                        selectedChannelId = activeChannel?.id,
+                        onChannelSelected = { viewModel.selectChannel(it) },
+                        modifier = Modifier.width(if (isMedium) 200.dp else 240.dp)
+                    )
+                }
+                
+                // Main Chat Area
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                ) {
                 // Top App Bar
                 TopAppBar(
                     title = {
@@ -99,7 +139,13 @@ fun ChatScreen(
                         }
                     },
                     navigationIcon = {
-                        IconButton(onClick = { /* Open drawer */ }) {
+                        IconButton(
+                            onClick = { 
+                                if (isCompact && channels.isNotEmpty()) {
+                                    scope.launch { drawerState.open() }
+                                }
+                            }
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Menu,
                                 contentDescription = "Menu",
@@ -247,13 +293,14 @@ fun ChatScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(VelvetDark)
-                            .padding(16.dp)
+                            .padding(horizontal = if (isCompact) 8.dp else 16.dp, vertical = 12.dp)
                     ) {
                         MessageInputField(
                             value = messageInput,
                             onValueChange = viewModel::updateMessageInput,
                             onSend = viewModel::sendMessage,
-                            placeholder = "Message #${activeChannel.name}"
+                            placeholder = "Message #${activeChannel.name}",
+                            isCompact = isCompact
                         )
                     }
                 }
@@ -279,6 +326,7 @@ fun ChatScreen(
             ) {
                 Text(errorMessage)
             }
+        }
         }
     }
 }

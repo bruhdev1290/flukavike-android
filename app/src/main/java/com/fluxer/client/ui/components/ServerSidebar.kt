@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.fluxer.client.data.model.Server
 import com.fluxer.client.ui.theme.*
@@ -30,14 +31,17 @@ fun ServerSidebar(
     selectedServerId: String?,
     onServerSelected: (Server) -> Unit,
     onAddServer: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isCompact: Boolean = false
 ) {
+    val iconSize = if (isCompact) 22.dp else 28.dp
+    val serverIconSize = if (isCompact) 40.dp else 48.dp
+    
     Column(
         modifier = modifier
-            .width(72.dp)
             .fillMaxHeight()
             .background(VelvetDark)
-            .padding(vertical = 12.dp),
+            .padding(vertical = if (isCompact) 8.dp else 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Home/DM button
@@ -46,23 +50,24 @@ fun ServerSidebar(
                 Icon(
                     imageVector = Icons.Default.Home,
                     contentDescription = "Direct Messages",
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(iconSize),
                     tint = if (selectedServerId == null) TextPrimary else TextSecondary
                 )
             },
             isSelected = selectedServerId == null,
             hasNotification = false,
             onClick = { /* Navigate to DMs */ },
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = if (isCompact) 6.dp else 8.dp),
+            size = serverIconSize
         )
         
         // Divider
         Box(
             modifier = Modifier
-                .width(32.dp)
+                .width(if (isCompact) 24.dp else 32.dp)
                 .height(2.dp)
                 .background(BorderSubtle)
-                .padding(vertical = 8.dp)
+                .padding(vertical = if (isCompact) 6.dp else 8.dp)
         )
         
         // Server list
@@ -72,14 +77,16 @@ fun ServerSidebar(
                 isSelected = server.id == selectedServerId,
                 hasNotification = false, // TODO: Check unread messages
                 onClick = { onServerSelected(server) },
-                modifier = Modifier.padding(vertical = 4.dp)
+                modifier = Modifier.padding(vertical = if (isCompact) 3.dp else 4.dp),
+                size = serverIconSize
             )
         }
         
         // Add server button
         AddServerButton(
             onClick = onAddServer,
-            modifier = Modifier.padding(top = 8.dp)
+            modifier = Modifier.padding(top = if (isCompact) 6.dp else 8.dp),
+            size = serverIconSize
         )
     }
 }
@@ -91,7 +98,8 @@ private fun ServerIcon(
     isSelected: Boolean,
     hasNotification: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    size: Dp = 48.dp
 ) {
     val scale by animateFloatAsState(
         targetValue = if (isSelected) 1.05f else 1f,
@@ -99,20 +107,23 @@ private fun ServerIcon(
     )
     
     val interactionSource = remember { MutableInteractionSource() }
+    val cornerRadius = if (isSelected) (size * 0.33f) else (size / 2)
+    val indicatorOffset = -(size * 0.75f)
+    val indicatorHeight = size * 0.83f
     
     Box(
         modifier = modifier
-            .size(48.dp)
+            .size(size)
             .scale(scale)
-            .clip(RoundedCornerShape(if (isSelected) 16.dp else 50.dp))
+            .clip(RoundedCornerShape(cornerRadius))
             .background(
                 if (isSelected) PhantomRed else VelvetSurface,
-                RoundedCornerShape(if (isSelected) 16.dp else 50.dp)
+                RoundedCornerShape(cornerRadius)
             )
             .border(
                 width = if (isSelected) 0.dp else 2.dp,
                 color = if (isSelected) PhantomRed else BorderSubtle,
-                shape = RoundedCornerShape(if (isSelected) 16.dp else 50.dp)
+                shape = RoundedCornerShape(cornerRadius)
             )
             .clickable(
                 interactionSource = interactionSource,
@@ -126,7 +137,7 @@ private fun ServerIcon(
         } else {
             Text(
                 text = server?.name?.take(1)?.uppercase() ?: "?",
-                style = MaterialTheme.typography.titleMedium,
+                style = if (size >= 48.dp) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall,
                 color = if (isSelected) TextPrimary else TextSecondary
             )
         }
@@ -136,9 +147,9 @@ private fun ServerIcon(
     if (isSelected) {
         Box(
             modifier = Modifier
-                .offset(x = (-36).dp)
+                .offset(x = indicatorOffset)
                 .width(4.dp)
-                .height(40.dp)
+                .height(indicatorHeight)
                 .background(PhantomRed, RoundedCornerShape(0.dp, 4.dp, 4.dp, 0.dp))
         )
     }
@@ -147,8 +158,8 @@ private fun ServerIcon(
     if (hasNotification && !isSelected) {
         Box(
             modifier = Modifier
-                .offset((-4).dp, (-4).dp)
-                .size(12.dp)
+                .offset((-size/12), (-size/12))
+                .size(size / 4)
                 .background(AlertYellow, RoundedCornerShape(50))
         )
     }
@@ -157,13 +168,15 @@ private fun ServerIcon(
 @Composable
 private fun AddServerButton(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    size: Dp = 48.dp
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val iconSize = size / 2
     
     Box(
         modifier = modifier
-            .size(48.dp)
+            .size(size)
             .clip(RoundedCornerShape(50.dp))
             .background(Color.Transparent)
             .border(2.dp, SuccessGreen, RoundedCornerShape(50.dp))
@@ -178,7 +191,7 @@ private fun AddServerButton(
             imageVector = Icons.Default.Add,
             contentDescription = "Add Server",
             tint = SuccessGreen,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(iconSize)
         )
     }
 }
@@ -193,9 +206,26 @@ fun ChannelList(
     onChannelSelected: (com.fluxer.client.data.model.Channel) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    ChannelListContent(
+        channels = channels,
+        selectedChannelId = selectedChannelId,
+        onChannelSelected = onChannelSelected,
+        modifier = modifier.width(240.dp)
+    )
+}
+
+/**
+ * Channel list content - reusable for both persistent and drawer layouts
+ */
+@Composable
+fun ChannelListContent(
+    channels: List<com.fluxer.client.data.model.Channel>,
+    selectedChannelId: String?,
+    onChannelSelected: (com.fluxer.client.data.model.Channel) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
-            .width(240.dp)
             .fillMaxHeight()
             .background(VelvetMid)
             .padding(vertical = 16.dp)

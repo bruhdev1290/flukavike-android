@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -169,18 +170,24 @@ fun MessageInputField(
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Type a message..."
+    placeholder: String = "Type a message...",
+    isCompact: Boolean = false
 ) {
     var isFocused by remember { mutableStateOf(false) }
+    
+    val horizontalPadding = if (isCompact) 12.dp else 16.dp
+    val verticalPadding = if (isCompact) 10.dp else 14.dp
+    val iconSize = if (isCompact) 20.dp else 24.dp
     
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 56.dp)
-            .background(VelvetMid)
+            .heightIn(min = if (isCompact) 48.dp else 56.dp)
+            .background(VelvetMid, RoundedCornerShape(if (isCompact) 20.dp else 24.dp))
             .border(
                 width = if (isFocused) 2.dp else 1.dp,
-                color = if (isFocused) PhantomRed else BorderSubtle
+                color = if (isFocused) PhantomRed else BorderSubtle,
+                shape = RoundedCornerShape(if (isCompact) 20.dp else 24.dp)
             )
             .onFocusChanged { isFocused = it.isFocused },
         contentAlignment = Alignment.CenterStart
@@ -188,14 +195,14 @@ fun MessageInputField(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = horizontalPadding, vertical = verticalPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(modifier = Modifier.weight(1f)) {
                 if (value.isEmpty()) {
                     Text(
                         text = placeholder,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = if (isCompact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
                         color = TextMuted
                     )
                 }
@@ -204,26 +211,33 @@ fun MessageInputField(
                     value = value,
                     onValueChange = onValueChange,
                     modifier = Modifier.fillMaxWidth(),
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    textStyle = (if (isCompact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge).copy(
                         color = TextPrimary
                     ),
                     cursorBrush = SolidColor(PhantomRed),
-                    maxLines = 5,
+                    maxLines = 4,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { onSend() })
                 )
             }
             
             // Send button
-            if (value.isNotBlank()) {
+            AnimatedVisibility(
+                visible = value.isNotBlank(),
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
+            ) {
                 IconButton(
                     onClick = onSend,
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier
+                        .padding(start = if (isCompact) 4.dp else 8.dp)
+                        .size(if (isCompact) 32.dp else 40.dp)
                 ) {
                     Icon(
                         imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Send",
-                        tint = PhantomRed
+                        tint = PhantomRed,
+                        modifier = Modifier.size(iconSize)
                     )
                 }
             }
