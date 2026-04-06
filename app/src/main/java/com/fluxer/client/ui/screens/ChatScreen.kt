@@ -1,5 +1,9 @@
+@file:OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
+
 package com.fluxer.client.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -29,6 +33,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun ChatScreen(
     onLogout: () -> Unit,
+    onNavigateToSettings: () -> Unit = {},
+    onNavigateToStarred: () -> Unit = {},
+    onNavigateToMessages: () -> Unit = {},
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
@@ -55,6 +62,13 @@ fun ChatScreen(
     val isMedium = screenWidth >= 600.dp && screenWidth < 840.dp
     
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    
+    // Open drawer when server selected and channels loaded (compact screens)
+    LaunchedEffect(channels, selectedServer) {
+        if (isCompact && channels.isNotEmpty() && selectedServer != null) {
+            scope.launch { drawerState.open() }
+        }
+    }
     
     // Scroll to bottom when new messages arrive
     LaunchedEffect(messages.itemCount) {

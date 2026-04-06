@@ -8,6 +8,7 @@ import com.fluxer.client.data.model.*
 import com.fluxer.client.data.remote.GatewayWebSocketManager
 import com.fluxer.client.data.repository.ChatRepository
 import com.fluxer.client.data.repository.AuthRepository
+import com.fluxer.client.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -85,6 +86,10 @@ class ChatViewModel @Inject constructor(
     private val _messageInput = MutableStateFlow("")
     val messageInput: StateFlow<String> = _messageInput.asStateFlow()
 
+    // Reply state
+    private val _replyingTo = MutableStateFlow<Message?>(null)
+    val replyingTo: StateFlow<Message?> = _replyingTo.asStateFlow()
+
     init {
         // Connect to Gateway when ViewModel is created
         chatRepository.connectGateway()
@@ -104,6 +109,20 @@ class ChatViewModel @Inject constructor(
                         performSearch(query)
                     } else {
                         _searchResults.value = emptyList()
+                    }
+                }
+        }
+        
+        // Reconnect Gateway when auth state becomes authenticated
+        // This ensures the session token is available for IDENTIFY
+        viewModelScope.launch {
+            authRepository.authState
+                .filter { it is AuthRepository.AuthState.Authenticated }
+                .take(1) // Only act on first authentication
+                .collect {
+                    Timber.d("🔐 Auth state is Authenticated, ensuring Gateway connection")
+                    if (connectionState.value == GatewayWebSocketManager.ConnectionState.Disconnected) {
+                        chatRepository.connectGateway()
                     }
                 }
         }
@@ -129,16 +148,32 @@ class ChatViewModel @Inject constructor(
     // Guild objects from /api/users/@me/guilds always have channels = emptyList().
     // Channels must be fetched separately. See CLAUDE.md.
     fun selectServer(server: Server) {
+        Timber.i("🖱️ selectServer called: ${server.name} (${server.id})")
         _selectedServer.value = server
-        viewModelScope.launch {
-            val result = chatRepository.getGuildChannels(server.id)
-            result.onSuccess { channels ->
-                _channels.value = channels
-                if (_selectedChannel.value == null || _selectedChannel.value?.serverId != server.id) {
-                    _selectedChannel.value = channels.firstOrNull { it.type == ChannelType.TEXT }
+        
+        // Check if channels came with the server from Gateway READY event
+        // Fluxer sends channels exclusively via Gateway, REST returns empty []
+        if (server.channels.isNotEmpty()) {
+            Timber.i("✅ Using ${server.channels.size} channels from Gateway READY for ${server.name}")
+            _channels.value = server.channels
+            if (_selectedChannel.value == null || _selectedChannel.value?.serverId != server.id) {
+                _selectedChannel.value = server.channels.firstOrNull { it.type == ChannelType.TEXT }
+                Timber.d("🎯 Auto-selected channel: ${_selectedChannel.value?.name}")
+            }
+        } else {
+            // Fallback to REST API for other compatible instances
+            Timber.d("📡 No channels in server object, falling back to REST API")
+            viewModelScope.launch {
+                val result = chatRepository.getGuildChannels(server.id)
+                result.onSuccess { channels ->
+                    Timber.i("✅ Loaded ${channels.size} channels via REST for ${server.name}")
+                    _channels.value = channels
+                    if (_selectedChannel.value == null || _selectedChannel.value?.serverId != server.id) {
+                        _selectedChannel.value = channels.firstOrNull { it.type == ChannelType.TEXT }
+                    }
+                }.onError { error ->
+                    Timber.e("❌ Failed to load channels for ${server.name}: $error")
                 }
-            }.onError { error ->
-                Timber.e("Failed to load channels for ${server.name}: $error")
             }
         }
     }
@@ -156,12 +191,56 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             // Clear input immediately for better UX
             _messageInput.value = ""
+            val replyToId = _replyingTo.value?.id
+            _replyingTo.value = null
             
-            chatRepository.sendMessage(channelId, content)
+            chatRepository.sendMessage(channelId, content, replyToId)
                 .onError { error ->
                     _error.value = error
                     // Restore input on error
                     _messageInput.value = content
+                }
+        }
+    }
+    
+    fun sendReply(replyToMessageId: String) {
+        val content = _messageInput.value.trim()
+        val channelId = _selectedChannel.value?.id ?: return
+        
+        if (content.isEmpty()) return
+
+        viewModelScope.launch {
+            _messageInput.value = ""
+            _replyingTo.value = null
+            
+            chatRepository.sendMessage(channelId, content, replyToMessageId)
+                .onError { error ->
+                    _error.value = error
+                    _messageInput.value = content
+                }
+        }
+    }
+    
+    fun startReply(message: Message) {
+        _replyingTo.value = message
+    }
+    
+    fun cancelReply() {
+        _replyingTo.value = null
+    }
+    
+    fun jumpToMessage(messageId: String) {
+        // TODO: Implement scroll to specific message
+        Timber.d("Jump to message: $messageId")
+    }
+    
+    fun addReaction(messageId: String, emoji: String) {
+        val channelId = _selectedChannel.value?.id ?: return
+        
+        viewModelScope.launch {
+            chatRepository.addReaction(channelId, messageId, emoji)
+                .onError { error ->
+                    _error.value = error
                 }
         }
     }

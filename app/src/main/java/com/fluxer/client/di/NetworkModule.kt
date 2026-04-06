@@ -140,9 +140,10 @@ object NetworkModule {
     @Singleton
     fun provideGatewayWebSocketManager(
         cookieStorage: SecureCookieStorage,
+        authTokenStorage: AuthTokenStorage,
         json: Json,
         instanceConfigStore: InstanceConfigStore
     ): GatewayWebSocketManager {
-        return GatewayWebSocketManager(cookieStorage, json, instanceConfigStore)
+        return GatewayWebSocketManager(cookieStorage, authTokenStorage, json, instanceConfigStore)
     }
 }

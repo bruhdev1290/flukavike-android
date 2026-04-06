@@ -34,8 +34,15 @@ data class Message(
     val embeds: List<Embed> = emptyList(),
     val attachments: List<Attachment> = emptyList(),
     val reactions: List<Reaction> = emptyList(),
+    val mentions: List<User> = emptyList(),
+    @SerialName("mention_everyone")
+    val mentionEveryone: Boolean = false,
+    @SerialName("mention_roles")
+    val mentionRoles: List<String> = emptyList(),
     @SerialName("reply_to_id")
     val replyToId: String? = null,
+    @SerialName("reply_to")
+    val replyTo: Message? = null,
     @SerialName("is_edited")
     val isEdited: Boolean = false
 )
@@ -48,8 +55,16 @@ data class Embed(
     val color: Int? = null,
     val image: EmbedImage? = null,
     val thumbnail: EmbedImage? = null,
+    val author: EmbedAuthor? = null,
     val footer: EmbedFooter? = null,
     val timestamp: String? = null
+)
+
+@Serializable
+data class EmbedAuthor(
+    val name: String,
+    @SerialName("icon_url")
+    val iconUrl: String? = null
 )
 
 @Serializable
@@ -141,6 +156,8 @@ data class Server(
     val channels: List<Channel> = emptyList(),
     @SerialName("member_count")
     val memberCount: Int = 0,
+    @SerialName("online_count")
+    val onlineCount: Int = 0,
     @SerialName("created_at")
     val createdAt: String? = null
 )

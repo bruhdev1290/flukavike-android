@@ -233,6 +233,193 @@ class ChatRepository @Inject constructor(
         gatewayManager.disconnect()
     }
 
+    // ==================== DIRECT MESSAGES ====================
+
+    suspend fun getDMChannels(): Result<List<Channel>> {
+        return try {
+            val response = apiService.getDMChannels()
+            if (response.isSuccessful) {
+                Result.Success(response.body() ?: emptyList())
+            } else {
+                Result.Error("Failed to load DM channels: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
+    suspend fun createDMChannel(recipientId: String): Result<Channel> {
+        return try {
+            val request = CreateDMRequest(recipientId = recipientId)
+            val response = apiService.createDMChannel(request)
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    Result.Success(it)
+                } ?: Result.Error("Empty response")
+            } else {
+                Result.Error("Failed to create DM: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
+    // ==================== VOICE CHANNELS ====================
+
+    suspend fun joinVoiceChannel(channelId: String): Result<VoiceTokenResponse> {
+        return try {
+            val request = JoinVoiceChannelRequest(channelId = channelId)
+            val response = apiService.joinVoiceChannel(channelId, request)
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    Result.Success(it)
+                } ?: Result.Error("Empty response")
+            } else {
+                Result.Error("Failed to join voice: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
+    suspend fun leaveVoiceChannel(channelId: String): Result<Unit> {
+        return try {
+            val response = apiService.leaveVoiceChannel(channelId)
+            if (response.isSuccessful) {
+                Result.Success(Unit)
+            } else {
+                Result.Error("Failed to leave voice: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
+    suspend fun getVoiceParticipants(channelId: String): Result<List<VoiceParticipant>> {
+        return try {
+            val response = apiService.getVoiceParticipants(channelId)
+            if (response.isSuccessful) {
+                Result.Success(response.body() ?: emptyList())
+            } else {
+                Result.Error("Failed to load participants: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
+    suspend fun updateVoiceState(
+        channelId: String,
+        selfMute: Boolean? = null,
+        selfDeaf: Boolean? = null,
+        selfVideo: Boolean? = null
+    ): Result<VoiceState> {
+        return try {
+            val request = UpdateVoiceStateRequest(
+                selfMute = selfMute,
+                selfDeaf = selfDeaf,
+                selfVideo = selfVideo
+            )
+            val response = apiService.updateVoiceState(channelId, request)
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    Result.Success(it)
+                } ?: Result.Error("Empty response")
+            } else {
+                Result.Error("Failed to update voice state: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
+    // ==================== CALLS ====================
+
+    suspend fun initiateCall(
+        recipientId: String? = null,
+        channelId: String? = null,
+        type: CallType = CallType.VOICE
+    ): Result<CallResponse> {
+        return try {
+            val request = InitiateCallRequest(
+                recipientId = recipientId,
+                channelId = channelId,
+                type = type
+            )
+            val response = apiService.initiateCall(request)
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    Result.Success(it)
+                } ?: Result.Error("Empty response")
+            } else {
+                Result.Error("Failed to initiate call: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
+    suspend fun joinCall(callId: String, token: String): Result<CallResponse> {
+        return try {
+            val request = JoinCallRequest(callId = callId, token = token)
+            val response = apiService.joinCall(callId, request)
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    Result.Success(it)
+                } ?: Result.Error("Empty response")
+            } else {
+                Result.Error("Failed to join call: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
+    suspend fun leaveCall(callId: String): Result<Unit> {
+        return try {
+            val response = apiService.leaveCall(callId)
+            if (response.isSuccessful) {
+                Result.Success(Unit)
+            } else {
+                Result.Error("Failed to leave call: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
+    suspend fun declineCall(callId: String): Result<Unit> {
+        return try {
+            val response = apiService.declineCall(callId)
+            if (response.isSuccessful) {
+                Result.Success(Unit)
+            } else {
+                Result.Error("Failed to decline call: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
+    // ==================== REACTIONS ====================
+
+    suspend fun addReaction(
+        channelId: String,
+        messageId: String,
+        emoji: String
+    ): Result<Unit> {
+        return try {
+            val response = apiService.addReaction(channelId, messageId, emoji)
+            if (response.isSuccessful) {
+                Result.Success(Unit)
+            } else {
+                Result.Error("Failed to add reaction: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
     private fun collectGatewayEvents() {
         gatewayManager.events.onEach { event ->
             when (event) {

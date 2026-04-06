@@ -110,4 +110,140 @@ interface FluxerApiService {
         @Path("guildId") guildId: String,
         @Path("userId") userId: String
     ): Response<Unit>
+
+    // ==================== PROFILE & SETTINGS ====================
+    
+    @GET("/api/users/{userId}/profile")
+    suspend fun getUserProfile(@Path("userId") userId: String): Response<UserProfile>
+    
+    @GET("/api/users/@me/profile")
+    suspend fun getCurrentUserProfile(): Response<UserProfile>
+    
+    @PATCH("/api/users/@me/profile")
+    suspend fun updateProfile(@Body request: UpdateProfileRequest): Response<UserProfile>
+    
+    @GET("/api/users/@me/settings")
+    suspend fun getUserSettings(): Response<UserSettings>
+    
+    @PATCH("/api/users/@me/settings")
+    suspend fun updateUserSettings(@Body request: UpdateSettingsRequest): Response<UserSettings>
+    
+    // ==================== DIRECT MESSAGES ====================
+    
+    @GET("/api/users/@me/channels")
+    suspend fun getDMChannels(): Response<List<Channel>>
+    
+    @POST("/api/users/@me/channels")
+    suspend fun createDMChannel(@Body request: CreateDMRequest): Response<Channel>
+    
+    @GET("/api/channels/{channelId}/recipients")
+    suspend fun getDMRecipients(@Path("channelId") channelId: String): Response<List<User>>
+    
+    // ==================== VOICE CHANNELS ====================
+    
+    @POST("/api/channels/{channelId}/voice/join")
+    suspend fun joinVoiceChannel(
+        @Path("channelId") channelId: String,
+        @Body request: JoinVoiceChannelRequest
+    ): Response<VoiceTokenResponse>
+    
+    @POST("/api/channels/{channelId}/voice/leave")
+    suspend fun leaveVoiceChannel(
+        @Path("channelId") channelId: String
+    ): Response<Unit>
+    
+    @GET("/api/channels/{channelId}/voice/participants")
+    suspend fun getVoiceParticipants(@Path("channelId") channelId: String): Response<List<VoiceParticipant>>
+    
+    @PATCH("/api/channels/{channelId}/voice/state")
+    suspend fun updateVoiceState(
+        @Path("channelId") channelId: String,
+        @Body request: UpdateVoiceStateRequest
+    ): Response<VoiceState>
+    
+    @GET("/api/voice/regions")
+    suspend fun getVoiceRegions(): Response<List<VoiceRegion>>
+    
+    // ==================== CALLS ====================
+    
+    @POST("/api/calls")
+    suspend fun initiateCall(@Body request: InitiateCallRequest): Response<CallResponse>
+    
+    @POST("/api/calls/{callId}/join")
+    suspend fun joinCall(
+        @Path("callId") callId: String,
+        @Body request: JoinCallRequest
+    ): Response<CallResponse>
+    
+    @POST("/api/calls/{callId}/leave")
+    suspend fun leaveCall(@Path("callId") callId: String): Response<Unit>
+    
+    @POST("/api/calls/{callId}/decline")
+    suspend fun declineCall(@Path("callId") callId: String): Response<Unit>
+    
+    @GET("/api/calls/{callId}")
+    suspend fun getCall(@Path("callId") callId: String): Response<Call>
+    
+    // ==================== NOTIFICATIONS ====================
+    
+    @POST("/api/users/@me/notifications/token")
+    suspend fun registerFcmToken(@Body request: FcmTokenRequest): Response<Unit>
+    
+    @DELETE("/api/users/@me/notifications/token")
+    suspend fun unregisterFcmToken(): Response<Unit>
+    
+    @GET("/api/users/@me/notifications/settings")
+    suspend fun getNotificationSettings(): Response<NotificationSettings>
+    
+    @PATCH("/api/users/@me/notifications/settings")
+    suspend fun updateNotificationSettings(@Body settings: NotificationSettings): Response<NotificationSettings>
+    
+    // ==================== GLOBAL SEARCH ====================
+    
+    @GET("/api/search")
+    suspend fun globalSearch(
+        @Query("q") query: String,
+        @Query("type") type: String? = null,
+        @Query("limit") limit: Int = 20
+    ): Response<GlobalSearchResults>
+    
+    @GET("/api/search/suggestions")
+    suspend fun getSearchSuggestions(@Query("q") query: String): Response<List<SearchSuggestion>>
+    
+    // ==================== REACTIONS ====================
+    
+    @PUT("/api/channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me")
+    suspend fun addReaction(
+        @Path("channelId") channelId: String,
+        @Path("messageId") messageId: String,
+        @Path("emoji") emoji: String
+    ): Response<Unit>
+    
+    @DELETE("/api/channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me")
+    suspend fun removeReaction(
+        @Path("channelId") channelId: String,
+        @Path("messageId") messageId: String,
+        @Path("emoji") emoji: String
+    ): Response<Unit>
 }
+
+@kotlinx.serialization.Serializable
+data class CreateDMRequest(
+    @kotlinx.serialization.SerialName("recipient_id")
+    val recipientId: String
+)
+
+@kotlinx.serialization.Serializable
+data class GlobalSearchResults(
+    val messages: List<Message> = emptyList(),
+    val users: List<User> = emptyList(),
+    val channels: List<Channel> = emptyList(),
+    val guilds: List<Server> = emptyList()
+)
+
+@kotlinx.serialization.Serializable
+data class SearchSuggestion(
+    val type: String,
+    val value: String,
+    val label: String
+)

@@ -50,6 +50,7 @@ data class User(
     val id: String,
     val email: String = "",
     val username: String,
+    val discriminator: String = "0001",
     @SerialName("display_name")
     val displayName: String? = null,
     @SerialName("avatar_url")

@@ -1,5 +1,6 @@
 package com.fluxer.client.data.remote
 
+import com.fluxer.client.data.local.AuthTokenStorage
 import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.local.SecureCookieStorage
 import com.fluxer.client.data.model.*
@@ -25,6 +26,7 @@ import javax.inject.Singleton
 @Singleton
 class GatewayWebSocketManager @Inject constructor(
     private val cookieStorage: SecureCookieStorage,
+    private val authTokenStorage: AuthTokenStorage,
     private val json: Json,
     private val instanceConfigStore: InstanceConfigStore
 ) {
@@ -246,9 +248,10 @@ class GatewayWebSocketManager @Inject constructor(
     }
 
     private fun sendIdentify() {
-        val token = cookieStorage.getSessionToken()
+        // Try auth token first (from login), then fall back to session cookie
+        val token = authTokenStorage.token ?: cookieStorage.getSessionToken()
         if (token == null) {
-            Timber.e("No session token for IDENTIFY")
+            Timber.e("No auth token or session token for IDENTIFY - will retry on reconnect")
             return
         }
         
