@@ -140,6 +140,9 @@ fun FluxerApp() {
                 },
                 onNavigateToMessages = {
                     navController.navigate("messages")
+                },
+                onNavigateToProfile = {
+                    navController.navigate("profile")
                 }
             )
         }
@@ -198,6 +201,17 @@ fun FluxerApp() {
             ActiveCallScreen(
                 callId = callId,
                 onEndCall = { navController.popBackStack() }
+            )
+        }
+        
+        composable("profile") {
+            ProfileScreen(
+                onBack = { navController.popBackStack() },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
     }

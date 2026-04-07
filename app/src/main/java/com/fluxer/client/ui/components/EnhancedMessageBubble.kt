@@ -335,7 +335,7 @@ private fun ReactionsRow(
         reactions.forEach { reaction ->
             ReactionChip(
                 reaction = reaction,
-                onClick = { onReactionClick(reaction.emoji) }
+                onClick = { onReactionClick(reaction.emoji.name) }
             )
         }
     }
@@ -357,7 +357,7 @@ private fun ReactionChip(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = reaction.emoji,
+                text = reaction.emoji.name,
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(modifier = Modifier.width(4.dp))

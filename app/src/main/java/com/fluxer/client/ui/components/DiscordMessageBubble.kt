@@ -465,7 +465,7 @@ private fun DiscordReactionsRow(
         reactions.forEach { reaction ->
             DiscordReactionChip(
                 reaction = reaction,
-                onClick = { onReactionClick(reaction.emoji) }
+                onClick = { onReactionClick(reaction.emoji.name) }
             )
         }
         
@@ -509,7 +509,7 @@ private fun DiscordReactionChip(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = reaction.emoji,
+                text = reaction.emoji.name,
                 style = MaterialTheme.typography.bodySmall
             )
             Spacer(modifier = Modifier.width(4.dp))

@@ -174,9 +174,15 @@ fun UserAvatar(
     user: User?,
     size: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier,
-    showStatus: Boolean = true
+    showStatus: Boolean = true,
+    onClick: (() -> Unit)? = null
 ) {
-    Box(modifier = modifier.size(size)) {
+    val clickableModifier = if (onClick != null) {
+        modifier.size(size).clickable(onClick = onClick)
+    } else {
+        modifier.size(size)
+    }
+    Box(modifier = clickableModifier) {
         // Avatar placeholder
         Surface(
             modifier = Modifier.fillMaxSize(),

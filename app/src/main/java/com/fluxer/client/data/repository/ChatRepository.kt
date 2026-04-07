@@ -12,7 +12,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private const val MESSAGE_PAGE_SIZE = 50
+private const val MESSAGE_PAGE_SIZE = 25
 
 /**
  * Repository for chat-related operations including messages and channels.
@@ -52,6 +52,7 @@ class ChatRepository @Inject constructor(
         return Pager(
             config = PagingConfig(
                 pageSize = MESSAGE_PAGE_SIZE,
+                initialLoadSize = MESSAGE_PAGE_SIZE,
                 enablePlaceholders = false
             ),
             pagingSourceFactory = { MessagePagingSource(apiService, channelId) }

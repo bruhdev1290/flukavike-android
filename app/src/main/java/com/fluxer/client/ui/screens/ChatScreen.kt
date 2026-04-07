@@ -22,12 +22,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.fluxer.client.data.model.UserStatus
 import com.fluxer.client.ui.components.*
 import com.fluxer.client.ui.theme.*
 import com.fluxer.client.ui.viewmodel.ChatViewModel
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +38,7 @@ fun ChatScreen(
     onNavigateToSettings: () -> Unit = {},
     onNavigateToStarred: () -> Unit = {},
     onNavigateToMessages: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
@@ -46,7 +49,6 @@ fun ChatScreen(
     val guilds by viewModel.guilds.collectAsState()
     val channels by viewModel.channels.collectAsState()
     val selectedServer by viewModel.selectedServer.collectAsState()
-    val isLoading by viewModel.isLoadingMessages.collectAsState()
     val error by viewModel.error.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
@@ -63,6 +65,11 @@ fun ChatScreen(
     
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     
+    // Log paging state for debugging
+    LaunchedEffect(messages.loadState) {
+        Timber.d("Messages load state: ${messages.loadState}")
+    }
+    
     // Open drawer when server selected and channels loaded (compact screens)
     LaunchedEffect(channels, selectedServer) {
         if (isCompact && channels.isNotEmpty() && selectedServer != null) {
@@ -70,13 +77,15 @@ fun ChatScreen(
         }
     }
     
-    // Scroll to bottom when new messages arrive
+    // Scroll to bottom when new messages arrive (only for new messages, not on initial load)
+    var previousMessageCount by remember { mutableIntStateOf(0) }
     LaunchedEffect(messages.itemCount) {
-        if (messages.itemCount > 0) {
+        if (messages.itemCount > 0 && messages.itemCount > previousMessageCount && previousMessageCount > 0) {
             scope.launch {
-                listState.animateScrollToItem(messages.itemCount - 1)
+                listState.animateScrollToItem(0) // With reverseLayout=true, 0 is the bottom
             }
         }
+        previousMessageCount = messages.itemCount
     }
     
     // Responsive sidebar width
@@ -169,22 +178,23 @@ fun ChatScreen(
                     },
                     actions = {
                         // Search
-                        IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
+                        IconButton(onClick = { viewModel.toggleSearch() }) {
                             Icon(
                                 imageVector = Icons.Default.Search,
                                 contentDescription = "Search",
-                                tint = TextSecondary
+                                tint = if (isSearching) PhantomRed else TextSecondary
                             )
                         }
                         
-                        // User avatar with status
+                        // User avatar with status - clickable to view profile
                         UserAvatar(
                             user = currentUser,
                             size = 36.dp,
-                            showStatus = true
+                            showStatus = true,
+                            onClick = onNavigateToProfile
                         )
                         
-                        IconButton(onClick = { /* Settings */ }) {
+                        IconButton(onClick = onNavigateToSettings) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = "Settings",
@@ -207,11 +217,11 @@ fun ChatScreen(
                 )
                 
                 // Search Bar
-                AnimatedVisibility(visible = searchQuery.isNotEmpty() || isSearching) {
+                AnimatedVisibility(visible = isSearching) {
                     FluxerTextField(
                         value = searchQuery,
                         onValueChange = { viewModel.onSearchQueryChanged(it) },
-                        hint = "Search in #${activeChannel?.name}",
+                        hint = "Search in #${activeChannel?.name ?: ""}",
                         modifier = Modifier.fillMaxWidth().padding(8.dp)
                     )
                 }
@@ -223,75 +233,130 @@ fun ChatScreen(
                         .fillMaxWidth()
                         .background(VelvetBlack)
                 ) {
-                    if (selectedChannel == null) {
-                        // No channel selected state
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
+                    when {
+                        // No channel selected
+                        selectedChannel == null -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "WELCOME TO FLUXER",
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        color = TextPrimary
+                                    )
+                                    Text(
+                                        text = "Select a channel to start messaging",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = TextMuted
+                                    )
+                                }
+                            }
+                        }
+                        // Loading state from paging
+                        messages.loadState.refresh is LoadState.Loading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = PhantomRed)
+                            }
+                        }
+                        // Error state from paging
+                        messages.loadState.refresh is LoadState.Error -> {
+                            val loadStateError = messages.loadState.refresh as LoadState.Error
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
+                                    Text(
+                                        text = "Failed to load messages",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = TextPrimary
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = loadStateError.error.message ?: "Unknown error",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = TextMuted
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Button(
+                                        onClick = { messages.retry() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = PhantomRed)
+                                    ) {
+                                        Text("Retry")
+                                    }
+                                }
+                            }
+                        }
+                        // Empty state
+                        messages.itemCount == 0 -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "WELCOME TO FLUXER",
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    color = TextPrimary
-                                )
-                                Text(
-                                    text = "Select a channel to start messaging",
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    text = "NO MESSAGES YET",
+                                    style = MaterialTheme.typography.titleMedium,
                                     color = TextMuted
                                 )
                             }
                         }
-                        } else if (messages.itemCount == 0 && !isLoading) {
-                        // Empty channel
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "NO MESSAGES YET",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = TextMuted
-                            )
-                        }
-                    } else {
-                        LazyColumn(
-                            state = listState,
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(vertical = 16.dp),
-                            reverseLayout = true
-                        ) {
-                            items(
-                                count = messages.itemCount,
-                                key = { index -> messages[index]?.id ?: index }
-                            ) { index ->
-                                val message = messages[index]
-                                if (message != null) {
-                                    val isOwnMessage = message.authorId == currentUser?.id
-                                    val showAvatar = true // TODO: Check if previous message is from same author
+                        // Messages list
+                        else -> {
+                            LazyColumn(
+                                state = listState,
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(vertical = 16.dp),
+                                reverseLayout = true
+                            ) {
+                                items(
+                                    count = messages.itemCount,
+                                    key = { index -> messages[index]?.id ?: index }
+                                ) { index ->
+                                    val message = messages[index]
+                                    if (message != null) {
+                                        val isOwnMessage = message.authorId == currentUser?.id
+                                        val showAvatar = true // TODO: Check if previous message is from same author
 
-                                    MessageBubble(
-                                        message = message,
-                                        isOwnMessage = isOwnMessage,
-                                        showAvatar = showAvatar,
-                                        onDelete = { viewModel.deleteMessage(message.id) }
-                                    )
+                                        MessageBubble(
+                                            message = message,
+                                            isOwnMessage = isOwnMessage,
+                                            showAvatar = showAvatar,
+                                            onDelete = { viewModel.deleteMessage(message.id) }
+                                        )
+                                    }
+                                }
+                                
+                                // Loading more at bottom
+                                item {
+                                    if (messages.loadState.append is LoadState.Loading) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(8.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(
+                                                color = PhantomRed,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                     
-                    // Loading indicator
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = PhantomRed
-                        )
-                    }
-
-                    // Error state
+                    // Error state from ViewModel
                     if (error != null) {
                         ErrorState(
                             message = error!!,
@@ -301,13 +366,14 @@ fun ChatScreen(
                     }
                 }
                 
-                // Message Input
+                // Message Input - with proper bottom insets handling
                 if (activeChannel != null) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(VelvetDark)
                             .padding(horizontal = if (isCompact) 8.dp else 16.dp, vertical = 12.dp)
+                            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.navigationBars)
                     ) {
                         MessageInputField(
                             value = messageInput,
@@ -320,27 +386,28 @@ fun ChatScreen(
                 }
             }
             
-            // Members sidebar (optional, collapsed by default)
-            // TODO: Implement member list
-        }
-        
-        // Error snackbar
-        error?.let { errorMessage ->
-            Snackbar(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp),
-                containerColor = DndRed,
-                contentColor = TextPrimary,
-                action = {
-                    TextButton(onClick = { viewModel.clearError() }) {
-                        Text("DISMISS", color = TextPrimary)
+            }
+            
+            // Error snackbar
+            error?.let { errorMessage ->
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    Snackbar(
+                        modifier = Modifier.padding(16.dp),
+                        containerColor = DndRed,
+                        contentColor = TextPrimary,
+                        action = {
+                            TextButton(onClick = { viewModel.clearError() }) {
+                                Text("DISMISS", color = TextPrimary)
+                            }
+                        }
+                    ) {
+                        Text(errorMessage)
                     }
                 }
-            ) {
-                Text(errorMessage)
             }
-        }
         }
     }
 }

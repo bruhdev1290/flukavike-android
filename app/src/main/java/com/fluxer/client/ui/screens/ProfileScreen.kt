@@ -47,260 +47,71 @@ fun ProfileScreen(
         viewModel.loadProfile(userId)
     }
     
+    // Get current user info for fallback
+    val currentUser = profile
+    
     Scaffold(
-        containerColor = VelvetBlack
+        containerColor = VelvetBlack,
+        topBar = {
+            TopAppBar(
+                title = { 
+                    Text(
+                        text = "Profile",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = TextPrimary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = VelvetDark,
+                    titleContentColor = TextPrimary
+                )
+            )
+        }
     ) { padding ->
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = PhantomRed)
-            }
-        } else {
-            profile?.let { userProfile ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    // Purple Banner
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            when {
+                isLoading -> {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp)
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color(0xFF5865F2),
-                                        Color(0xFF4752C4)
-                                    )
-                                )
-                            )
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        // Back button
-                        IconButton(
-                            onClick = onBack,
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .align(Alignment.TopStart)
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = TextPrimary
-                            )
-                        }
-                        
-                        // Settings button (for current user)
-                        if (isCurrentUser) {
-                            IconButton(
-                                onClick = { /* TODO: Settings */ },
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .align(Alignment.TopEnd)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Settings,
-                                    contentDescription = "Settings",
-                                    tint = TextPrimary
-                                )
-                            }
-                        }
+                        CircularProgressIndicator(color = PhantomRed)
                     }
-                    
-                    // Profile content
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                    ) {
-                        // Avatar overlapping banner
-                        Box(
-                            modifier = Modifier.offset(y = (-48).dp)
-                        ) {
-                            ProfileAvatarLarge(
-                                avatarUrl = userProfile.avatarUrl,
-                                username = userProfile.username,
-                                status = userProfile.status
-                            )
-                        }
-                        
-                        // Username and discriminator
-                        Column(
-                            modifier = Modifier.offset(y = (-32).dp)
-                        ) {
-                            Text(
-                                text = userProfile.displayName ?: userProfile.username,
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = TextPrimary,
-                                fontWeight = FontWeight.Bold
-                            )
-                            
-                            Text(
-                                text = "${userProfile.username}#${userProfile.discriminator}",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = TextMuted
-                            )
-                            
-                            Spacer(modifier = Modifier.height(16.dp))
-                            
-                            // Edit Profile Button (for current user)
-                            if (isCurrentUser) {
-                                Surface(
-                                    onClick = { viewModel.showEditDialog() },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(24.dp),
-                                    color = Color(0xFF5865F2)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(vertical = 12.dp),
-                                        horizontalArrangement = Arrangement.Center,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Edit,
-                                            contentDescription = null,
-                                            tint = TextPrimary,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "Edit Profile",
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            color = TextPrimary,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    }
-                                }
-                            }
-                            
-                            Spacer(modifier = Modifier.height(24.dp))
-                            
-                            // About Me Section
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                color = VelvetSurface
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp)
-                                ) {
-                                    Text(
-                                        text = "About me",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = TextPrimary,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    
-                                    if (userProfile.bio.isNullOrBlank()) {
-                                        Text(
-                                            text = "i eat cement", // Placeholder like screenshot
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            color = TextSecondary
-                                        )
-                                    } else {
-                                        Text(
-                                            text = userProfile.bio,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            color = TextSecondary
-                                        )
-                                    }
-                                    
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    
-                                    // Member Since
-                                    Text(
-                                        text = "Fluxer Member Since",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = TextPrimary,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    
-                                    Text(
-                                        text = formatMemberSince(userProfile.createdAt),
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = TextSecondary
-                                    )
-                                }
-                            }
-                            
-                            Spacer(modifier = Modifier.height(16.dp))
-                            
-                            // Note Section
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                color = VelvetSurface
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = "Note",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = TextPrimary,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                        
-                                        IconButton(
-                                            onClick = { /* TODO: Edit note */ },
-                                            modifier = Modifier.size(32.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Edit,
-                                                contentDescription = "Edit note",
-                                                tint = TextMuted,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                        }
-                                    }
-                                    
-                                    Text(
-                                        text = "(only visible to you)",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = TextMuted
-                                    )
-                                    
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    
-                                    Text(
-                                        text = "No note yet.",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = TextMuted
-                                    )
-                                }
-                            }
-                            
-                            Spacer(modifier = Modifier.height(24.dp))
-                            
-                            // Actions for other users
-                            if (!isCurrentUser) {
-                                OtherUserActions(
-                                    onMessage = { /* TODO */ },
-                                    onCall = { /* TODO */ },
-                                    onFriendRequest = { /* TODO */ }
-                                )
-                            }
-                            
-                            Spacer(modifier = Modifier.height(32.dp))
-                        }
-                    }
+                }
+                currentUser != null -> {
+                    ProfileContent(
+                        profile = currentUser,
+                        isCurrentUser = isCurrentUser,
+                        onEditClick = { viewModel.showEditDialog() },
+                        onLogout = onLogout
+                    )
+                }
+                else -> {
+                    // Fallback when no profile data - show basic current user info
+                    FallbackProfileContent(
+                        onBack = onBack,
+                        onLogout = onLogout
+                    )
                 }
             }
         }
     }
     
-    if (showEditDialog) {
+    if (showEditDialog && profile != null) {
         EditProfileDialog(
             currentProfile = profile,
             onDismiss = { viewModel.hideEditDialog() },
@@ -312,125 +123,345 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileAvatarLarge(
-    avatarUrl: String?,
-    username: String,
-    status: UserStatus
+private fun ProfileContent(
+    profile: UserProfile,
+    isCurrentUser: Boolean,
+    onEditClick: () -> Unit,
+    onLogout: () -> Unit
 ) {
-    Box {
-        Surface(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Avatar
+        Box(
             modifier = Modifier
-                .size(96.dp)
-                .border(6.dp, VelvetBlack, CircleShape),
-            shape = CircleShape,
-            color = VelvetSurface
+                .size(120.dp)
+                .background(VelvetSurface, CircleShape)
+                .border(4.dp, PhantomRed.copy(alpha = 0.3f), CircleShape),
+            contentAlignment = Alignment.Center
         ) {
-            if (avatarUrl != null) {
+            if (profile.avatarUrl != null) {
                 AsyncImage(
-                    model = avatarUrl,
-                    contentDescription = username,
-                    modifier = Modifier.fillMaxSize(),
+                    model = profile.avatarUrl,
+                    contentDescription = profile.username,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape),
                     contentScale = ContentScale.Crop
                 )
             } else {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = username.take(1).uppercase(),
-                        style = MaterialTheme.typography.displaySmall,
-                        color = PhantomRed
-                    )
-                }
+                Text(
+                    text = profile.username.take(1).uppercase(),
+                    style = MaterialTheme.typography.displayLarge,
+                    color = PhantomRed,
+                    fontWeight = FontWeight.Bold
+                )
             }
+            
+            // Status indicator
+            val statusColor = when (profile.status) {
+                UserStatus.ONLINE -> OnlineGreen
+                UserStatus.AWAY -> AwayYellow
+                UserStatus.DND -> DndRed
+                else -> OfflineGray
+            }
+            
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .align(Alignment.BottomEnd)
+                    .offset(x = (-4).dp, y = (-4).dp)
+                    .background(VelvetBlack, CircleShape)
+                    .padding(3.dp)
+                    .background(statusColor, CircleShape)
+            )
         }
         
-        // Status indicator
-        val statusColor = when (status) {
-            UserStatus.ONLINE -> OnlineGreen
-            UserStatus.AWAY -> AwayYellow
-            UserStatus.DND -> DndRed
-            UserStatus.OFFLINE -> OfflineGray
-        }
+        Spacer(modifier = Modifier.height(16.dp))
         
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .align(Alignment.BottomEnd)
-                .offset(x = (-4).dp, y = (-4).dp)
-                .background(VelvetBlack, CircleShape)
-                .padding(3.dp)
-                .background(statusColor, CircleShape)
-        )
-    }
-}
-
-@Composable
-private fun OtherUserActions(
-    onMessage: () -> Unit,
-    onCall: () -> Unit,
-    onFriendRequest: () -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
+        // Display Name
         Text(
-            text = "ACTIONS",
-            style = MaterialTheme.typography.labelMedium,
-            color = PhantomRed,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 12.dp)
+            text = profile.displayName ?: profile.username,
+            style = MaterialTheme.typography.headlineMedium,
+            color = TextPrimary,
+            fontWeight = FontWeight.Bold
         )
         
+        // Username
+        Text(
+            text = "@${profile.username}",
+            style = MaterialTheme.typography.bodyLarge,
+            color = TextMuted
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Custom Status
+        if (!profile.customStatus.isNullOrBlank()) {
+            Surface(
+                color = VelvetSurface,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(
+                    text = profile.customStatus,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // About Me Section
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            color = VelvetSurface
+            color = VelvetSurface,
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Column {
-                ActionItem(
-                    icon = Icons.Default.Message,
-                    title = "Send Message",
-                    onClick = onMessage
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "About Me",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.SemiBold
                 )
-                ActionItem(
-                    icon = Icons.Default.Call,
-                    title = "Start Voice Call",
-                    onClick = onCall
-                )
-                ActionItem(
-                    icon = Icons.Default.PersonAdd,
-                    title = "Add Friend",
-                    onClick = onFriendRequest
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = profile.bio ?: "No bio yet.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (profile.bio.isNullOrBlank()) TextMuted else TextSecondary
                 )
             }
         }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Member Since
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = VelvetSurface,
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "Member Since",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.SemiBold
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                Text(
+                    text = formatMemberSince(profile.createdAt),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextSecondary
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Action Buttons
+        if (isCurrentUser) {
+            // Edit Profile Button
+            Button(
+                onClick = onEditClick,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PhantomRed
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Edit Profile",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Logout Button
+            OutlinedButton(
+                onClick = onLogout,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = DndRed
+                ),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = androidx.compose.ui.graphics.SolidColor(DndRed)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Log Out",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        } else {
+            // Message Button for other users
+            Button(
+                onClick = { /* TODO */ },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PhantomRed
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Message,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Send Message",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 
 @Composable
-private fun ActionItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: String,
-    onClick: () -> Unit
+private fun FallbackProfileContent(
+    onBack: () -> Unit,
+    onLogout: () -> Unit
 ) {
-    Row(
+    Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = PhantomRed,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
+        // Avatar placeholder
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .background(VelvetSurface, CircleShape)
+                .border(4.dp, PhantomRed.copy(alpha = 0.3f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "?",
+                style = MaterialTheme.typography.displayLarge,
+                color = PhantomRed,
+                fontWeight = FontWeight.Bold
+            )
+            
+            // Online status
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .align(Alignment.BottomEnd)
+                    .offset(x = (-4).dp, y = (-4).dp)
+                    .background(VelvetBlack, CircleShape)
+                    .padding(3.dp)
+                    .background(OnlineGreen, CircleShape)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
         Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            color = TextPrimary
+            text = "My Profile",
+            style = MaterialTheme.typography.headlineMedium,
+            color = TextPrimary,
+            fontWeight = FontWeight.Bold
         )
+        
+        Text(
+            text = "@user",
+            style = MaterialTheme.typography.bodyLarge,
+            color = TextMuted
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // About placeholder
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = VelvetSurface,
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "About Me",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.SemiBold
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = "No bio yet.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextMuted
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Logout Button
+        OutlinedButton(
+            onClick = onLogout,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = DndRed
+            ),
+            border = ButtonDefaults.outlinedButtonBorder.copy(
+                brush = androidx.compose.ui.graphics.SolidColor(DndRed)
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Log Out",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 
@@ -521,6 +552,6 @@ private fun formatMemberSince(isoString: String?): String {
             .withZone(java.time.ZoneId.systemDefault())
         formatter.format(instant)
     } catch (e: Exception) {
-        "Feb 10, 2026" // Placeholder
+        "Unknown"
     }
 }

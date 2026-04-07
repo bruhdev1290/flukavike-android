@@ -45,8 +45,16 @@ class ChatViewModel @Inject constructor(
     private val _selectedServer = MutableStateFlow<Server?>(null)
     val selectedServer: StateFlow<Server?> = _selectedServer.asStateFlow()
 
+    // Refresh trigger for when messages change
+    private val _refreshTrigger = MutableStateFlow(0)
+    
     // Messages for selected channel using Paging
-    val messages: Flow<PagingData<Message>> = _selectedChannel
+    val messages: Flow<PagingData<Message>> = combine(
+        _selectedChannel,
+        _refreshTrigger
+    ) { channel, _ ->
+        channel
+    }
         .flatMapLatest { channel ->
             channel?.let { 
                 chatRepository.getMessagesPaginated(it.id)
@@ -132,6 +140,14 @@ class ChatViewModel @Inject constructor(
     fun onSearchQueryChanged(query: String) {
         _searchQuery.value = query
     }
+    
+    fun toggleSearch() {
+        _isSearching.value = !_isSearching.value
+        if (!_isSearching.value) {
+            _searchQuery.value = ""
+            _searchResults.value = emptyList()
+        }
+    }
 
     private fun performSearch(query: String) {
         val channelId = _selectedChannel.value?.id ?: return
@@ -193,6 +209,10 @@ class ChatViewModel @Inject constructor(
             _replyingTo.value = null
             
             chatRepository.sendMessage(channelId, content, replyToId)
+                .onSuccess {
+                    // Trigger refresh to show new message
+                    _refreshTrigger.value += 1
+                }
                 .onError { error ->
                     _error.value = error
                     // Restore input on error

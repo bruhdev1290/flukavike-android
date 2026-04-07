@@ -95,10 +95,17 @@ data class Attachment(
 
 @Serializable
 data class Reaction(
-    val emoji: String,
+    val emoji: Emoji,
     val count: Int,
     @SerialName("user_reacted")
     val userReacted: Boolean = false
+)
+
+@Serializable
+data class Emoji(
+    val id: String? = null,
+    val name: String,
+    val animated: Boolean = false
 )
 
 @Serializable
