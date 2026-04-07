@@ -87,7 +87,7 @@ object GatewayEventTypes {
 @Serializable
 data class ReadyEvent(
     @SerialName("v")
-    val version: Int,
+    val version: Int = 1,
     val user: User,
     @SerialName("session_id")
     val sessionId: String,

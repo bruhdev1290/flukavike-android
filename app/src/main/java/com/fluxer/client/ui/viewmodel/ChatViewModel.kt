@@ -96,8 +96,9 @@ class ChatViewModel @Inject constructor(
         
         // Collect Gateway events
         collectGatewayEvents()
+        collectChannelCache()
 
-        // Load servers/guilds from REST API (fallback to Gateway READY event)
+        // Load servers/guilds from REST API (Gateway READY will populate channels)
         loadGuilds()
 
         // Debounced search
@@ -146,11 +147,11 @@ class ChatViewModel @Inject constructor(
 
     // !! DO NOT USE server.channels HERE !!
     // Guild objects from /api/users/@me/guilds always have channels = emptyList().
-    // Channels must be fetched separately. See CLAUDE.md.
-    fun selectServer(server: Server) {
+    // Channels must be populated from Gateway READY on Fluxer. See CLAUDE.md.
+        fun selectServer(server: Server) {
         Timber.i("🖱️ selectServer called: ${server.name} (${server.id})")
         _selectedServer.value = server
-        
+
         // Check if channels came with the server from Gateway READY event
         // Fluxer sends channels exclusively via Gateway, REST returns empty []
         if (server.channels.isNotEmpty()) {
@@ -161,19 +162,16 @@ class ChatViewModel @Inject constructor(
                 Timber.d("🎯 Auto-selected channel: ${_selectedChannel.value?.name}")
             }
         } else {
-            // Fallback to REST API for other compatible instances
-            Timber.d("📡 No channels in server object, falling back to REST API")
-            viewModelScope.launch {
-                val result = chatRepository.getGuildChannels(server.id)
-                result.onSuccess { channels ->
-                    Timber.i("✅ Loaded ${channels.size} channels via REST for ${server.name}")
-                    _channels.value = channels
-                    if (_selectedChannel.value == null || _selectedChannel.value?.serverId != server.id) {
-                        _selectedChannel.value = channels.firstOrNull { it.type == ChannelType.TEXT }
-                    }
-                }.onError { error ->
-                    Timber.e("❌ Failed to load channels for ${server.name}: $error")
+            val cached = chatRepository.getCachedGuildChannels(server.id)
+            if (cached.isNotEmpty()) {
+                Timber.i("✅ Using ${cached.size} cached channels for ${server.name}")
+                _channels.value = cached
+                if (_selectedChannel.value == null || _selectedChannel.value?.serverId != server.id) {
+                    _selectedChannel.value = cached.firstOrNull { it.type == ChannelType.TEXT }
                 }
+            } else {
+                Timber.d("📡 No cached channels yet for ${server.name} (waiting for READY)")
+                _channels.value = emptyList()
             }
         }
     }
@@ -315,4 +313,20 @@ class ChatViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
     }
+    private fun collectChannelCache() {
+        chatRepository.channelCacheFlow
+            .onEach { cache ->
+                val selected = _selectedServer.value ?: return@onEach
+                val channels = cache[selected.id].orEmpty()
+                if (channels.isNotEmpty()) {
+                    _channels.value = channels
+                    if (_selectedChannel.value == null || _selectedChannel.value?.serverId != selected.id) {
+                        _selectedChannel.value = channels.firstOrNull { it.type == ChannelType.TEXT }
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
+    }
 }
+
+

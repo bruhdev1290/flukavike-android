@@ -148,11 +148,11 @@ object ChannelTypeSerializer : KSerializer<ChannelType> {
 @Serializable
 data class Server(
     val id: String,
-    val name: String,
+    val name: String = "",
     @SerialName("icon_url")
     val iconUrl: String? = null,
     @SerialName("owner_id")
-    val ownerId: String,
+    val ownerId: String = "",
     val channels: List<Channel> = emptyList(),
     @SerialName("member_count")
     val memberCount: Int = 0,

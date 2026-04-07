@@ -28,6 +28,10 @@ class ChatRepository @Inject constructor(
     
     // Cache for channels per guild
     private val channelCache = mutableMapOf<String, List<Channel>>()
+    private val _channelCacheFlow =
+        MutableStateFlow<Map<String, List<Channel>>>(emptyMap())
+    val channelCacheFlow: StateFlow<Map<String, List<Channel>>> =
+        _channelCacheFlow.asStateFlow()
     
     // Expose Gateway events as repository events
     val gatewayEvents: Flow<GatewayWebSocketManager.GatewayEvent> = gatewayManager.events
@@ -177,20 +181,22 @@ class ChatRepository @Inject constructor(
      * Get channels for a guild/server
      */
     suspend fun getGuildChannels(guildId: String): Result<List<Channel>> {
-        return try {
-            val response = apiService.getGuildChannels(guildId)
-            
-            if (response.isSuccessful) {
-                val channels = response.body() ?: emptyList()
-                channelCache[guildId] = channels
-                Result.Success(channels)
-            } else {
-                Result.Error("Failed to load channels: ${response.code()}")
-            }
-        } catch (e: Exception) {
-            Result.Error("Network error: ${e.message}")
+        val cached = channelCache[guildId].orEmpty()
+        return if (cached.isNotEmpty()) {
+            Result.Success(cached)
+        } else {
+            Result.Error(
+                "Guild channels are provided by the Gateway READY payload on Fluxer. " +
+                    "Connect the gateway and wait for READY before requesting channels."
+            )
         }
     }
+
+    /**
+     * Get cached channels for a guild/server (non-suspending).
+     */
+    fun getCachedGuildChannels(guildId: String): List<Channel> =
+        channelCache[guildId].orEmpty()
 
     /**
      * Get a specific channel
@@ -423,6 +429,9 @@ class ChatRepository @Inject constructor(
     private fun collectGatewayEvents() {
         gatewayManager.events.onEach { event ->
             when (event) {
+                is GatewayWebSocketManager.GatewayEvent.Ready -> {
+                    cacheChannelsFromReady(event.data)
+                }
                 is GatewayWebSocketManager.GatewayEvent.MessageCreate -> {
                     addMessageToCache(event.message.channelId, event.message)
                 }
@@ -435,6 +444,18 @@ class ChatRepository @Inject constructor(
                 else -> { /* Handle other events */ }
             }
         }.launchIn(kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default))
+    }
+
+    private fun cacheChannelsFromReady(ready: ReadyEvent) {
+        if (ready.guilds.isEmpty()) return
+
+        ready.guilds.forEach { guild ->
+            if (guild.channels.isNotEmpty()) {
+                channelCache[guild.id] = guild.channels
+            }
+        }
+        _channelCacheFlow.value = channelCache.toMap()
+        Timber.i("Cached channels for ${channelCache.size} guilds from READY")
     }
 
     private fun updateMessageCache(channelId: String, messages: List<Message>, replace: Boolean) {
