@@ -26,6 +26,7 @@ import com.fluxer.client.ui.viewmodel.SettingsViewModel
 fun SettingsScreen(
     onBack: () -> Unit,
     onNavigateToNotifications: () -> Unit,
+    onNavigateToSupport: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val isLoading by viewModel.isLoading.collectAsState()

@@ -152,6 +152,9 @@ fun FluxerApp() {
                 onBack = { navController.popBackStack() },
                 onNavigateToNotifications = {
                     navController.navigate("notifications")
+                },
+                onNavigateToSupport = {
+                    navController.navigate("support")
                 }
             )
         }
@@ -212,6 +215,12 @@ fun FluxerApp() {
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            )
+        }
+        
+        composable("support") {
+            SupportScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }
