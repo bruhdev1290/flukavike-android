@@ -130,7 +130,16 @@ dependencies {
     // Paging
     implementation("androidx.paging:paging-runtime-ktx:3.2.1")
     implementation("androidx.paging:paging-compose:3.2.1")
-
+    
+    // Firebase BOM
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    
+    // Firebase Cloud Messaging
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-analytics")
+    
+    // LiveKit SDK for voice/video
+    implementation("io.livekit:livekit-android:2.5.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")
@@ -142,3 +151,6 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
+
+// Apply Google Services plugin
+apply(plugin = "com.google.gms.google-services")

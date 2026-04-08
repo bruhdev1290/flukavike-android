@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import com.fluxer.client.service.LiveKitVoiceManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,4 +35,10 @@ object AppModule {
             Timber.DebugTree()
         }
     }
+
+    @Provides
+    @Singleton
+    fun provideLiveKitVoiceManager(
+        @ApplicationContext context: Context
+    ): LiveKitVoiceManager = LiveKitVoiceManager(context)
 }

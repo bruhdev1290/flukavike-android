@@ -85,6 +85,10 @@ data class VoiceTokenResponse(
     val token: String,
     @SerialName("server_id")
     val serverId: String? = null,
+    @SerialName("room_name")
+    val roomName: String? = null,
+    @SerialName("livekit_url")
+    val livekitUrl: String? = null,
     val endpoint: String? = null
 )
 

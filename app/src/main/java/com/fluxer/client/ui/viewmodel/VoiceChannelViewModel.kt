@@ -3,9 +3,11 @@ package com.fluxer.client.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fluxer.client.data.model.Channel
+import com.fluxer.client.data.model.User
 import com.fluxer.client.data.model.VoiceParticipant
 import com.fluxer.client.data.model.VoiceState
 import com.fluxer.client.data.repository.ChatRepository
+import com.fluxer.client.service.LiveKitVoiceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -14,20 +16,32 @@ import javax.inject.Inject
 
 @HiltViewModel
 class VoiceChannelViewModel @Inject constructor(
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val liveKitVoiceManager: LiveKitVoiceManager
 ) : ViewModel() {
 
+    // Participants from server API
     private val _participants = MutableStateFlow<List<VoiceParticipant>>(emptyList())
     val participants: StateFlow<List<VoiceParticipant>> = _participants.asStateFlow()
 
+    // Voice state from server
     private val _voiceState = MutableStateFlow<VoiceState?>(null)
     val voiceState: StateFlow<VoiceState?> = _voiceState.asStateFlow()
 
+    // Channel info
     private val _channelInfo = MutableStateFlow<Channel?>(null)
     val channelInfo: StateFlow<Channel?> = _channelInfo.asStateFlow()
 
+    // Connection state
     private val _isConnecting = MutableStateFlow(false)
     val isConnecting: StateFlow<Boolean> = _isConnecting.asStateFlow()
+
+    // LiveKit connection state
+    val isConnected = liveKitVoiceManager.isConnected
+    val isMuted = liveKitVoiceManager.isMuted
+    val isDeafened = liveKitVoiceManager.isDeafened
+    val livekitParticipants = liveKitVoiceManager.participants
+    val speakingParticipants = liveKitVoiceManager.speakingParticipants
 
     private var currentChannelId: String? = null
 
@@ -44,15 +58,26 @@ class VoiceChannelViewModel @Inject constructor(
                 _channelInfo.value = channel
             }
             
-            // Join voice channel
+            // Join voice channel via API
             val result = chatRepository.joinVoiceChannel(channelId)
             result.onSuccess { tokenResponse ->
                 Timber.d("Joined voice channel, token received")
-                // Start WebRTC connection here with token
-                startVoiceConnection(tokenResponse.token)
                 
-                // Load participants
-                loadParticipants(channelId)
+                // Connect to LiveKit
+                val livekitUrl = tokenResponse.livekitUrl ?: "wss://livekit.fluxer.app"
+                val token = tokenResponse.token
+                val roomName = tokenResponse.roomName ?: channelId
+                
+                val connectResult = liveKitVoiceManager.connect(livekitUrl, token, roomName)
+                connectResult.onSuccess {
+                    Timber.d("LiveKit connected successfully")
+                    // Load participants from server
+                    loadParticipants(channelId)
+                }.onFailure { error ->
+                    Timber.e(error, "Failed to connect to LiveKit")
+                    _isConnecting.value = false
+                }
+                
             }.onError { error ->
                 Timber.e("Failed to join voice channel: $error")
                 _isConnecting.value = false
@@ -64,7 +89,7 @@ class VoiceChannelViewModel @Inject constructor(
         currentChannelId?.let { channelId ->
             viewModelScope.launch {
                 chatRepository.leaveVoiceChannel(channelId)
-                stopVoiceConnection()
+                liveKitVoiceManager.disconnect()
             }
         }
         currentChannelId = null
@@ -73,6 +98,9 @@ class VoiceChannelViewModel @Inject constructor(
     }
 
     fun toggleMute() {
+        liveKitVoiceManager.toggleMute()
+        
+        // Also update server state
         val channelId = currentChannelId ?: return
         val currentMute = _voiceState.value?.selfMute ?: false
         
@@ -88,6 +116,9 @@ class VoiceChannelViewModel @Inject constructor(
     }
 
     fun toggleDeafen() {
+        liveKitVoiceManager.toggleDeafen()
+        
+        // Also update server state
         val channelId = currentChannelId ?: return
         val currentDeaf = _voiceState.value?.selfDeaf ?: false
         
@@ -100,6 +131,10 @@ class VoiceChannelViewModel @Inject constructor(
                 _voiceState.value = state
             }
         }
+    }
+
+    fun isParticipantSpeaking(participantSid: String): Boolean {
+        return liveKitVoiceManager.isParticipantSpeaking(participantSid)
     }
 
     private fun loadParticipants(channelId: String) {
@@ -115,17 +150,9 @@ class VoiceChannelViewModel @Inject constructor(
         }
     }
 
-    private fun startVoiceConnection(token: String) {
-        // TODO: Initialize WebRTC connection
-        // This would set up the actual voice connection using WebRTC
-    }
-
-    private fun stopVoiceConnection() {
-        // TODO: Clean up WebRTC connection
-    }
-
     override fun onCleared() {
         super.onCleared()
         leaveChannel()
+        liveKitVoiceManager.cleanup()
     }
 }
