@@ -34,7 +34,6 @@ fun ServerSidebar(
     servers: List<Server>,
     selectedServerId: String?,
     onServerSelected: (Server) -> Unit,
-    onAddServer: () -> Unit,
     modifier: Modifier = Modifier,
     isCompact: Boolean = false
 ) {
@@ -86,12 +85,7 @@ fun ServerSidebar(
             )
         }
         
-        // Add server button
-        AddServerButton(
-            onClick = onAddServer,
-            modifier = Modifier.padding(top = if (isCompact) 6.dp else 8.dp),
-            size = serverIconSize
-        )
+
     }
 }
 

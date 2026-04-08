@@ -104,7 +104,6 @@ fun ChatScreen(
                     channelDrawerOpen = true
                 }
             },
-            onAddServer = { /* TODO */ },
             modifier = Modifier.width(sidebarWidth),
             isCompact = isCompact
         )
