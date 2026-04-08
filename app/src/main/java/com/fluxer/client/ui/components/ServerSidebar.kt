@@ -17,8 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.fluxer.client.data.model.Server
 import com.fluxer.client.ui.theme.*
 
@@ -134,6 +138,36 @@ private fun ServerIcon(
     ) {
         if (icon != null) {
             icon()
+        } else if (!server?.iconUrl.isNullOrBlank()) {
+            // Load server icon image
+            SubcomposeAsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(server?.iconUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = server?.name ?: "Server",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+                loading = {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = server?.name?.take(1)?.uppercase() ?: "?",
+                            style = if (size >= 48.dp) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall,
+                            color = if (isSelected) TextPrimary else TextSecondary
+                        )
+                    }
+                },
+                error = {
+                    Text(
+                        text = server?.name?.take(1)?.uppercase() ?: "?",
+                        style = if (size >= 48.dp) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall,
+                        color = if (isSelected) TextPrimary else TextSecondary
+                    )
+                }
+            )
         } else {
             Text(
                 text = server?.name?.take(1)?.uppercase() ?: "?",

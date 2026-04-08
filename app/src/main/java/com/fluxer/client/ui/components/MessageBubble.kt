@@ -14,8 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.fluxer.client.data.model.Message
 import com.fluxer.client.data.model.User
 import com.fluxer.client.ui.theme.*
@@ -167,7 +171,7 @@ fun MessageBubble(
 }
 
 /**
- * User avatar component
+ * User avatar component with image loading
  */
 @Composable
 fun UserAvatar(
@@ -183,19 +187,57 @@ fun UserAvatar(
         modifier.size(size)
     }
     Box(modifier = clickableModifier) {
-        // Avatar placeholder
+        // Avatar image or placeholder
         Surface(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(50),
             color = VelvetSurface,
             border = androidx.compose.foundation.BorderStroke(2.dp, BorderSubtle)
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    text = user?.username?.take(1)?.uppercase() ?: "?",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = PhantomRed
+            if (!user?.avatarUrl.isNullOrBlank()) {
+                // Load user avatar image
+                SubcomposeAsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(user?.avatarUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = user?.username ?: "User",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                    loading = {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = user?.username?.take(1)?.uppercase() ?: "?",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = PhantomRed
+                            )
+                        }
+                    },
+                    error = {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = user?.username?.take(1)?.uppercase() ?: "?",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = PhantomRed
+                            )
+                        }
+                    }
                 )
+            } else {
+                // Fallback to initials
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = user?.username?.take(1)?.uppercase() ?: "?",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = PhantomRed
+                    )
+                }
             }
         }
         
