@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#0D0D0D</color>
+    <color name="ic_launcher_background">#FFE63946</color>
+    <color name="phantom_red">#FFE63946</color>
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#FFB3B3B3</color>
+    <color name="velvet_black">#FF0D0D0D</color>
+    <color name="velvet_dark">#FF141414</color>
     <string name="app_name">Fluxer</string>
     <string name="channel_list_title">TEXT CHANNELS</string>
     <string name="email_hint">Email</string>
@@ -8,10 +13,16 @@
     <string name="error_network">Network error. Please check your connection.</string>
     <string name="error_unknown">An unexpected error occurred.</string>
     <string name="forgot_password">FORGOT PASSWORD?</string>
+    <string name="gcm_defaultSenderId" translatable="false">123456789</string>
+    <string name="google_api_key" translatable="false">dummy-api-key-for-building</string>
+    <string name="google_app_id" translatable="false">1:123456789:android:abcdef123456</string>
+    <string name="google_crash_reporting_api_key" translatable="false">dummy-api-key-for-building</string>
+    <string name="google_storage_bucket" translatable="false">fluxer-android.appspot.com</string>
     <string name="login_button">SIGN IN</string>
     <string name="login_title">Sign In</string>
     <string name="message_hint">Type a message...</string>
     <string name="password_hint">Password</string>
+    <string name="project_id" translatable="false">fluxer-android</string>
     <string name="register_button">CREATE ACCOUNT</string>
     <string name="register_title">Create Account</string>
     <string name="status_connected">Connected</string>

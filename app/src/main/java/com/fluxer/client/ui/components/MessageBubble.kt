@@ -267,7 +267,7 @@ fun MessageBubble(
 }
 
 /**
- * Reply preview for quoted messages
+ * Reply preview for quoted messages - Discord-style inline reply
  */
 @Composable
 private fun ReplyPreview(
@@ -277,30 +277,84 @@ private fun ReplyPreview(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(VelvetDark.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-            .padding(8.dp)
+            .padding(bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // Accent line
+        // L-shaped reply indicator line
         Box(
             modifier = Modifier
-                .width(3.dp)
-                .heightIn(min = 24.dp)
-                .background(PhantomRed, RoundedCornerShape(2.dp))
-                .padding(end = 8.dp)
-        )
+                .width(24.dp)
+                .height(16.dp)
+        ) {
+            // Vertical line
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(16.dp)
+                    .background(TextMuted.copy(alpha = 0.6f), RoundedCornerShape(1.dp))
+                    .align(Alignment.TopStart)
+            )
+            // Horizontal line
+            Box(
+                modifier = Modifier
+                    .width(20.dp)
+                    .height(2.dp)
+                    .background(TextMuted.copy(alpha = 0.6f), RoundedCornerShape(1.dp))
+                    .align(Alignment.CenterStart)
+            )
+        }
         
-        Column(modifier = Modifier.padding(start = 8.dp)) {
+        // Reply info
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 4.dp)
+        ) {
+            // Author avatar (small)
+            if (!message.author?.avatarUrl.isNullOrBlank()) {
+                SubcomposeAsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(message.author?.avatarUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clip(RoundedCornerShape(50))
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(16.dp)
+                        .background(VelvetSurface, RoundedCornerShape(50)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = message.author?.username?.take(1)?.uppercase() ?: "?",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSecondary
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.width(6.dp))
+            
+            // Author name
             Text(
                 text = message.author?.username ?: "Unknown",
-                style = FluxerTextStyles.gamerTag,
+                style = MaterialTheme.typography.labelMedium,
                 color = PhantomRed,
                 maxLines = 1
             )
+            
+            Spacer(modifier = Modifier.width(6.dp))
+            
+            // Message preview
             Text(
-                text = message.content.take(50) + if (message.content.length > 50) "..." else "",
-                style = FluxerTextStyles.messageContent,
+                text = message.content.take(40) + if (message.content.length > 40) "..." else "",
+                style = MaterialTheme.typography.labelMedium,
                 color = TextMuted,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }

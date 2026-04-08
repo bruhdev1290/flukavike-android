@@ -2,6 +2,8 @@ package com.fluxer.client.di;
 
 import com.fluxer.client.data.local.SecureCookieStorage;
 import com.fluxer.client.data.remote.AuthAuthenticator;
+import com.fluxer.client.data.remote.AuthInterceptor;
+import com.fluxer.client.data.remote.BaseUrlOverrideInterceptor;
 import com.fluxer.client.data.remote.CsrfInterceptor;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
@@ -31,6 +33,10 @@ public final class NetworkModule_ProvideOkHttpClientFactory implements Factory<O
 
   private final Provider<CsrfInterceptor> csrfInterceptorProvider;
 
+  private final Provider<BaseUrlOverrideInterceptor> baseUrlOverrideInterceptorProvider;
+
+  private final Provider<AuthInterceptor> authInterceptorProvider;
+
   private final Provider<HttpLoggingInterceptor> loggingInterceptorProvider;
 
   private final Provider<AuthAuthenticator> authAuthenticatorProvider;
@@ -38,30 +44,37 @@ public final class NetworkModule_ProvideOkHttpClientFactory implements Factory<O
   public NetworkModule_ProvideOkHttpClientFactory(
       Provider<SecureCookieStorage> cookieStorageProvider,
       Provider<CsrfInterceptor> csrfInterceptorProvider,
+      Provider<BaseUrlOverrideInterceptor> baseUrlOverrideInterceptorProvider,
+      Provider<AuthInterceptor> authInterceptorProvider,
       Provider<HttpLoggingInterceptor> loggingInterceptorProvider,
       Provider<AuthAuthenticator> authAuthenticatorProvider) {
     this.cookieStorageProvider = cookieStorageProvider;
     this.csrfInterceptorProvider = csrfInterceptorProvider;
+    this.baseUrlOverrideInterceptorProvider = baseUrlOverrideInterceptorProvider;
+    this.authInterceptorProvider = authInterceptorProvider;
     this.loggingInterceptorProvider = loggingInterceptorProvider;
     this.authAuthenticatorProvider = authAuthenticatorProvider;
   }
 
   @Override
   public OkHttpClient get() {
-    return provideOkHttpClient(cookieStorageProvider.get(), csrfInterceptorProvider.get(), loggingInterceptorProvider.get(), authAuthenticatorProvider.get());
+    return provideOkHttpClient(cookieStorageProvider.get(), csrfInterceptorProvider.get(), baseUrlOverrideInterceptorProvider.get(), authInterceptorProvider.get(), loggingInterceptorProvider.get(), authAuthenticatorProvider.get());
   }
 
   public static NetworkModule_ProvideOkHttpClientFactory create(
       Provider<SecureCookieStorage> cookieStorageProvider,
       Provider<CsrfInterceptor> csrfInterceptorProvider,
+      Provider<BaseUrlOverrideInterceptor> baseUrlOverrideInterceptorProvider,
+      Provider<AuthInterceptor> authInterceptorProvider,
       Provider<HttpLoggingInterceptor> loggingInterceptorProvider,
       Provider<AuthAuthenticator> authAuthenticatorProvider) {
-    return new NetworkModule_ProvideOkHttpClientFactory(cookieStorageProvider, csrfInterceptorProvider, loggingInterceptorProvider, authAuthenticatorProvider);
+    return new NetworkModule_ProvideOkHttpClientFactory(cookieStorageProvider, csrfInterceptorProvider, baseUrlOverrideInterceptorProvider, authInterceptorProvider, loggingInterceptorProvider, authAuthenticatorProvider);
   }
 
   public static OkHttpClient provideOkHttpClient(SecureCookieStorage cookieStorage,
-      CsrfInterceptor csrfInterceptor, HttpLoggingInterceptor loggingInterceptor,
+      CsrfInterceptor csrfInterceptor, BaseUrlOverrideInterceptor baseUrlOverrideInterceptor,
+      AuthInterceptor authInterceptor, HttpLoggingInterceptor loggingInterceptor,
       AuthAuthenticator authAuthenticator) {
-    return Preconditions.checkNotNullFromProvides(NetworkModule.INSTANCE.provideOkHttpClient(cookieStorage, csrfInterceptor, loggingInterceptor, authAuthenticator));
+    return Preconditions.checkNotNullFromProvides(NetworkModule.INSTANCE.provideOkHttpClient(cookieStorage, csrfInterceptor, baseUrlOverrideInterceptor, authInterceptor, loggingInterceptor, authAuthenticator));
   }
 }

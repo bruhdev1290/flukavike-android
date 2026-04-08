@@ -1,5 +1,7 @@
 package com.fluxer.client.di;
 
+import com.fluxer.client.data.local.AuthTokenStorage;
+import com.fluxer.client.data.local.InstanceConfigStore;
 import com.fluxer.client.data.local.SecureCookieStorage;
 import com.fluxer.client.data.remote.GatewayWebSocketManager;
 import dagger.internal.DaggerGenerated;
@@ -27,26 +29,37 @@ import kotlinx.serialization.json.Json;
 public final class NetworkModule_ProvideGatewayWebSocketManagerFactory implements Factory<GatewayWebSocketManager> {
   private final Provider<SecureCookieStorage> cookieStorageProvider;
 
+  private final Provider<AuthTokenStorage> authTokenStorageProvider;
+
   private final Provider<Json> jsonProvider;
 
+  private final Provider<InstanceConfigStore> instanceConfigStoreProvider;
+
   public NetworkModule_ProvideGatewayWebSocketManagerFactory(
-      Provider<SecureCookieStorage> cookieStorageProvider, Provider<Json> jsonProvider) {
+      Provider<SecureCookieStorage> cookieStorageProvider,
+      Provider<AuthTokenStorage> authTokenStorageProvider, Provider<Json> jsonProvider,
+      Provider<InstanceConfigStore> instanceConfigStoreProvider) {
     this.cookieStorageProvider = cookieStorageProvider;
+    this.authTokenStorageProvider = authTokenStorageProvider;
     this.jsonProvider = jsonProvider;
+    this.instanceConfigStoreProvider = instanceConfigStoreProvider;
   }
 
   @Override
   public GatewayWebSocketManager get() {
-    return provideGatewayWebSocketManager(cookieStorageProvider.get(), jsonProvider.get());
+    return provideGatewayWebSocketManager(cookieStorageProvider.get(), authTokenStorageProvider.get(), jsonProvider.get(), instanceConfigStoreProvider.get());
   }
 
   public static NetworkModule_ProvideGatewayWebSocketManagerFactory create(
-      Provider<SecureCookieStorage> cookieStorageProvider, Provider<Json> jsonProvider) {
-    return new NetworkModule_ProvideGatewayWebSocketManagerFactory(cookieStorageProvider, jsonProvider);
+      Provider<SecureCookieStorage> cookieStorageProvider,
+      Provider<AuthTokenStorage> authTokenStorageProvider, Provider<Json> jsonProvider,
+      Provider<InstanceConfigStore> instanceConfigStoreProvider) {
+    return new NetworkModule_ProvideGatewayWebSocketManagerFactory(cookieStorageProvider, authTokenStorageProvider, jsonProvider, instanceConfigStoreProvider);
   }
 
   public static GatewayWebSocketManager provideGatewayWebSocketManager(
-      SecureCookieStorage cookieStorage, Json json) {
-    return Preconditions.checkNotNullFromProvides(NetworkModule.INSTANCE.provideGatewayWebSocketManager(cookieStorage, json));
+      SecureCookieStorage cookieStorage, AuthTokenStorage authTokenStorage, Json json,
+      InstanceConfigStore instanceConfigStore) {
+    return Preconditions.checkNotNullFromProvides(NetworkModule.INSTANCE.provideGatewayWebSocketManager(cookieStorage, authTokenStorage, json, instanceConfigStore));
   }
 }

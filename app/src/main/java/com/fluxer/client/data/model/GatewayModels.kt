@@ -82,6 +82,8 @@ object GatewayEventTypes {
     const val PRESENCE_UPDATE = "PRESENCE_UPDATE"
     const val TYPING_START = "TYPING_START"
     const val USER_UPDATE = "USER_UPDATE"
+    const val MESSAGE_REACTION_ADD = "MESSAGE_REACTION_ADD"
+    const val MESSAGE_REACTION_REMOVE = "MESSAGE_REACTION_REMOVE"
 }
 
 @Serializable
@@ -113,4 +115,17 @@ data class PresenceUpdateEvent(
     val status: UserStatus,
     @SerialName("guild_id")
     val guildId: String? = null
+)
+
+@Serializable
+data class ReactionEvent(
+    @SerialName("message_id")
+    val messageId: String,
+    @SerialName("channel_id")
+    val channelId: String,
+    val emoji: Emoji,
+    @SerialName("user_id")
+    val userId: String? = null,
+    @SerialName("burst")
+    val isBurst: Boolean = false
 )

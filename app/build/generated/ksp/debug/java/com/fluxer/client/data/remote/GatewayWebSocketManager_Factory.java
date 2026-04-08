@@ -1,5 +1,7 @@
 package com.fluxer.client.data.remote;
 
+import com.fluxer.client.data.local.AuthTokenStorage;
+import com.fluxer.client.data.local.InstanceConfigStore;
 import com.fluxer.client.data.local.SecureCookieStorage;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
@@ -25,25 +27,35 @@ import kotlinx.serialization.json.Json;
 public final class GatewayWebSocketManager_Factory implements Factory<GatewayWebSocketManager> {
   private final Provider<SecureCookieStorage> cookieStorageProvider;
 
+  private final Provider<AuthTokenStorage> authTokenStorageProvider;
+
   private final Provider<Json> jsonProvider;
 
+  private final Provider<InstanceConfigStore> instanceConfigStoreProvider;
+
   public GatewayWebSocketManager_Factory(Provider<SecureCookieStorage> cookieStorageProvider,
-      Provider<Json> jsonProvider) {
+      Provider<AuthTokenStorage> authTokenStorageProvider, Provider<Json> jsonProvider,
+      Provider<InstanceConfigStore> instanceConfigStoreProvider) {
     this.cookieStorageProvider = cookieStorageProvider;
+    this.authTokenStorageProvider = authTokenStorageProvider;
     this.jsonProvider = jsonProvider;
+    this.instanceConfigStoreProvider = instanceConfigStoreProvider;
   }
 
   @Override
   public GatewayWebSocketManager get() {
-    return newInstance(cookieStorageProvider.get(), jsonProvider.get());
+    return newInstance(cookieStorageProvider.get(), authTokenStorageProvider.get(), jsonProvider.get(), instanceConfigStoreProvider.get());
   }
 
   public static GatewayWebSocketManager_Factory create(
-      Provider<SecureCookieStorage> cookieStorageProvider, Provider<Json> jsonProvider) {
-    return new GatewayWebSocketManager_Factory(cookieStorageProvider, jsonProvider);
+      Provider<SecureCookieStorage> cookieStorageProvider,
+      Provider<AuthTokenStorage> authTokenStorageProvider, Provider<Json> jsonProvider,
+      Provider<InstanceConfigStore> instanceConfigStoreProvider) {
+    return new GatewayWebSocketManager_Factory(cookieStorageProvider, authTokenStorageProvider, jsonProvider, instanceConfigStoreProvider);
   }
 
-  public static GatewayWebSocketManager newInstance(SecureCookieStorage cookieStorage, Json json) {
-    return new GatewayWebSocketManager(cookieStorage, json);
+  public static GatewayWebSocketManager newInstance(SecureCookieStorage cookieStorage,
+      AuthTokenStorage authTokenStorage, Json json, InstanceConfigStore instanceConfigStore) {
+    return new GatewayWebSocketManager(cookieStorage, authTokenStorage, json, instanceConfigStore);
   }
 }

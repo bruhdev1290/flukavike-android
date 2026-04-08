@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.fluxer.client.app-mergeDebugResources-70:/values-v31/values-v31.xml",
+            "outputFile": "com.fluxer.client.app-mergeDebugResources-77:/values-v31/values-v31.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\plane\\.gradle\\caches\\transforms-3\\dbe6d914238ec7e21a4c4fd3bd00b1bd\\transformed\\core-splashscreen-1.0.1\\res\\values-v31\\values-v31.xml",
+                    "source": "C:\\Users\\andrew\\.gradle\\caches\\transforms-3\\436518e38ed1a439541309eff4269a9b\\transformed\\core-splashscreen-1.0.1\\res\\values-v31\\values-v31.xml",
                     "from": {
                         "startLines": "2,9",
                         "startColumns": "4,4",

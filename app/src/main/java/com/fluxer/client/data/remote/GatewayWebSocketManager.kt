@@ -228,6 +228,14 @@ class GatewayWebSocketManager @Inject constructor(
                 val typing = json.decodeFromJsonElement<TypingEvent>(eventData)
                 _events.trySend(GatewayEvent.TypingStart(typing))
             }
+            GatewayEventTypes.MESSAGE_REACTION_ADD -> {
+                val reaction = json.decodeFromJsonElement<ReactionEvent>(eventData)
+                _events.trySend(GatewayEvent.ReactionAdd(reaction))
+            }
+            GatewayEventTypes.MESSAGE_REACTION_REMOVE -> {
+                val reaction = json.decodeFromJsonElement<ReactionEvent>(eventData)
+                _events.trySend(GatewayEvent.ReactionRemove(reaction))
+            }
             else -> {
                 Timber.d("Unhandled event type: $eventType")
             }
@@ -347,6 +355,8 @@ class GatewayWebSocketManager @Inject constructor(
         data class MessageDelete(val messageId: String, val channelId: String) : GatewayEvent()
         data class PresenceUpdate(val data: PresenceUpdateEvent) : GatewayEvent()
         data class TypingStart(val data: TypingEvent) : GatewayEvent()
+        data class ReactionAdd(val data: ReactionEvent) : GatewayEvent()
+        data class ReactionRemove(val data: ReactionEvent) : GatewayEvent()
     }
 
     @kotlinx.serialization.Serializable

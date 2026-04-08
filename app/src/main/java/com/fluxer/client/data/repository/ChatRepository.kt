@@ -9,6 +9,7 @@ import com.fluxer.client.data.remote.*
 import com.fluxer.client.util.Result
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
+import java.net.URLEncoder
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -416,7 +417,9 @@ class ChatRepository @Inject constructor(
         emoji: String
     ): Result<Unit> {
         return try {
-            val response = apiService.addReaction(channelId, messageId, emoji)
+            // URL-encode the emoji for the API path
+            val encodedEmoji = URLEncoder.encode(emoji, "UTF-8")
+            val response = apiService.addReaction(channelId, messageId, encodedEmoji)
             if (response.isSuccessful) {
                 Result.Success(Unit)
             } else {
@@ -441,6 +444,12 @@ class ChatRepository @Inject constructor(
                 }
                 is GatewayWebSocketManager.GatewayEvent.MessageDelete -> {
                     removeMessageFromCache(event.channelId, event.messageId)
+                }
+                is GatewayWebSocketManager.GatewayEvent.ReactionAdd -> {
+                    addReactionToCache(event.data)
+                }
+                is GatewayWebSocketManager.GatewayEvent.ReactionRemove -> {
+                    removeReactionFromCache(event.data)
                 }
                 else -> { /* Handle other events */ }
             }
@@ -493,5 +502,47 @@ class ChatRepository @Inject constructor(
     private fun removeMessageFromCache(channelId: String, messageId: String) {
         val flow = messageCache[channelId] ?: return
         flow.value = flow.value.filter { it.id != messageId }
+    }
+    
+    private fun addReactionToCache(event: ReactionEvent) {
+        val flow = messageCache[event.channelId] ?: return
+        flow.value = flow.value.map { message ->
+            if (message.id == event.messageId) {
+                // Check if this reaction already exists
+                val existingReaction = message.reactions.find { it.emoji.name == event.emoji.name }
+                val updatedReactions = if (existingReaction != null) {
+                    // Increment count
+                    message.reactions.map { reaction ->
+                        if (reaction.emoji.name == event.emoji.name) {
+                            reaction.copy(count = reaction.count + 1, userReacted = true)
+                        } else reaction
+                    }
+                } else {
+                    // Add new reaction
+                    message.reactions + Reaction(
+                        emoji = event.emoji,
+                        count = 1,
+                        userReacted = true
+                    )
+                }
+                message.copy(reactions = updatedReactions)
+            } else message
+        }
+    }
+    
+    private fun removeReactionFromCache(event: ReactionEvent) {
+        val flow = messageCache[event.channelId] ?: return
+        flow.value = flow.value.map { message ->
+            if (message.id == event.messageId) {
+                val updatedReactions = message.reactions.mapNotNull { reaction ->
+                    if (reaction.emoji.name == event.emoji.name) {
+                        if (reaction.count > 1) {
+                            reaction.copy(count = reaction.count - 1, userReacted = false)
+                        } else null // Remove if count would be 0
+                    } else reaction
+                }
+                message.copy(reactions = updatedReactions)
+            } else message
+        }
     }
 }
