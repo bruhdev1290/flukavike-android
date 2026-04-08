@@ -1,8 +1,11 @@
 package com.fluxer.client.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -20,6 +23,7 @@ import com.fluxer.client.ui.viewmodel.NotificationSettingsViewModel
 @Composable
 fun NotificationSettingsScreen(
     onBack: () -> Unit,
+    onNavigateToNotificationCenter: () -> Unit = {},
     viewModel: NotificationSettingsViewModel = hiltViewModel()
 ) {
     val settings by viewModel.settings.collectAsState()
@@ -72,6 +76,51 @@ fun NotificationSettingsScreen(
                     checked = settings.globalEnabled,
                     onCheckedChange = { viewModel.updateGlobalEnabled(it) }
                 )
+                
+                // View Notification Center
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onNavigateToNotificationCenter)
+                        .padding(16.dp),
+                    color = Color.Transparent
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = null,
+                            tint = TextSecondary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        
+                        Spacer(modifier = Modifier.width(16.dp))
+                        
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Notification History",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = "View past notifications",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextMuted
+                            )
+                        }
+                        
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null,
+                            tint = TextMuted,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
                 
                 if (settings.globalEnabled) {
                     Divider(color = BorderSubtle, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))

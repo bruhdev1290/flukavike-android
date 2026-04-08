@@ -238,7 +238,22 @@ fun FluxerApp() {
         
         composable("notifications") {
             NotificationSettingsScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onNavigateToNotificationCenter = {
+                    navController.navigate("notification_center")
+                }
+            )
+        }
+        
+        composable("notification_center") {
+            NotificationCenterScreen(
+                onBack = { navController.popBackStack() },
+                onNotificationClick = { notification ->
+                    // Handle notification click
+                    navController.navigate("chat") {
+                        popUpTo("notification_center") { inclusive = true }
+                    }
+                }
             )
         }
         
