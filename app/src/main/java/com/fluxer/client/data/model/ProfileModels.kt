@@ -8,6 +8,7 @@ data class UserProfile(
     val id: String,
     val username: String,
     val discriminator: String = "0001",
+    val email: String? = null,
     @SerialName("display_name")
     val displayName: String? = null,
     @SerialName("avatar_url")

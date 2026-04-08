@@ -155,7 +155,62 @@ fun FluxerApp() {
                 },
                 onNavigateToSupport = {
                     navController.navigate("support")
+                },
+                onNavigateToAccount = {
+                    navController.navigate("account")
+                },
+                onNavigateToAppearance = {
+                    navController.navigate("appearance")
+                },
+                onNavigateToStorage = {
+                    navController.navigate("storage")
+                },
+                onNavigateToLanguage = {
+                    navController.navigate("language")
+                },
+                onNavigateToAbout = {
+                    navController.navigate("about")
+                },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
+            )
+        }
+        
+        composable("account") {
+            AccountScreen(
+                onBack = { navController.popBackStack() },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+        
+        composable("appearance") {
+            AppearanceScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable("storage") {
+            StorageScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable("language") {
+            LanguageScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable("about") {
+            AboutScreen(
+                onBack = { navController.popBackStack() }
             )
         }
         

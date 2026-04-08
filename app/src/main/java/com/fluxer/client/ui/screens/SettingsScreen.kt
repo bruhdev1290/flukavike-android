@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Help
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,6 +29,12 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onNavigateToNotifications: () -> Unit,
     onNavigateToSupport: () -> Unit,
+    onNavigateToAccount: () -> Unit,
+    onNavigateToAppearance: () -> Unit,
+    onNavigateToStorage: () -> Unit,
+    onNavigateToLanguage: () -> Unit,
+    onNavigateToAbout: () -> Unit,
+    onLogout: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val isLoading by viewModel.isLoading.collectAsState()
@@ -81,7 +89,7 @@ fun SettingsScreen(
                         icon = Icons.Default.Person,
                         title = "My Account",
                         subtitle = "Manage your account settings",
-                        onClick = { /* TODO */ }
+                        onClick = onNavigateToAccount
                     )
                     SettingsDivider()
                     SettingsMenuItem(
@@ -95,7 +103,7 @@ fun SettingsScreen(
                         icon = Icons.Default.Palette,
                         title = "Appearance",
                         subtitle = "Theme and display options",
-                        onClick = { /* TODO */ }
+                        onClick = onNavigateToAppearance
                     )
                 }
                 
@@ -107,14 +115,14 @@ fun SettingsScreen(
                         icon = Icons.Default.Storage,
                         title = "Storage & Data",
                         subtitle = "Manage cache and downloads",
-                        onClick = { /* TODO */ }
+                        onClick = onNavigateToStorage
                     )
                     SettingsDivider()
                     SettingsMenuItem(
                         icon = Icons.Default.Language,
                         title = "Language",
                         subtitle = "English (US)",
-                        onClick = { /* TODO */ }
+                        onClick = onNavigateToLanguage
                     )
                 }
                 
@@ -123,17 +131,17 @@ fun SettingsScreen(
                 // Support Section
                 SettingsSection("Support") {
                     SettingsMenuItem(
-                        icon = Icons.Default.Help,
+                        icon = Icons.AutoMirrored.Filled.Help,
                         title = "Help & Support",
                         subtitle = "Get help with Fluxer",
-                        onClick = { /* TODO */ }
+                        onClick = onNavigateToSupport
                     )
                     SettingsDivider()
                     SettingsMenuItem(
                         icon = Icons.Default.Info,
                         title = "About",
                         subtitle = "Version 1.0.0",
-                        onClick = { /* TODO */ }
+                        onClick = onNavigateToAbout
                     )
                 }
                 
@@ -143,19 +151,17 @@ fun SettingsScreen(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 16.dp)
+                        .clickable(onClick = onLogout),
                     color = VelvetSurface,
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { /* TODO */ }
-                            .padding(16.dp),
+                        modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Logout,
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
                             contentDescription = null,
                             tint = DndRed,
                             modifier = Modifier.size(24.dp)
@@ -179,7 +185,7 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SettingsSection(
+fun SettingsSection(
     title: String,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -209,7 +215,7 @@ private fun SettingsSection(
 }
 
 @Composable
-private fun SettingsMenuItem(
+fun SettingsMenuItem(
     icon: ImageVector,
     title: String,
     subtitle: String,
@@ -263,7 +269,7 @@ private fun SettingsMenuItem(
 }
 
 @Composable
-private fun SettingsDivider() {
+fun SettingsDivider() {
     Divider(
         color = BorderSubtle.copy(alpha = 0.3f),
         thickness = 0.5.dp,
