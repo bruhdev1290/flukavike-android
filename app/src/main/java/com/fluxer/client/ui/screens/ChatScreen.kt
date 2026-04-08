@@ -6,6 +6,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -63,18 +64,13 @@ fun ChatScreen(
     val isCompact = screenWidth < 600.dp
     val isMedium = screenWidth >= 600.dp && screenWidth < 840.dp
     
+    // Channel drawer state (for compact screens)
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    var channelDrawerOpen by remember { mutableStateOf(false) }
     
     // Log paging state for debugging
     LaunchedEffect(messages.loadState) {
         Timber.d("Messages load state: ${messages.loadState}")
-    }
-    
-    // Open drawer when server selected and channels loaded (compact screens)
-    LaunchedEffect(channels, selectedServer) {
-        if (isCompact && channels.isNotEmpty() && selectedServer != null) {
-            scope.launch { drawerState.open() }
-        }
     }
     
     // Scroll to bottom when new messages arrive (only for new messages, not on initial load)
@@ -95,45 +91,28 @@ fun ChatScreen(
         else -> 72.dp
     }
     
-    // Channel drawer for compact screens
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            if (isCompact && channels.isNotEmpty()) {
-                ModalDrawerSheet(
-                    drawerContainerColor = VelvetMid,
-                    drawerContentColor = TextPrimary
-                ) {
-                    ChannelListContent(
-                        channels = channels,
-                        selectedChannelId = activeChannel?.id,
-                        onChannelSelected = { 
-                            viewModel.selectChannel(it)
-                            scope.launch { drawerState.close() }
-                        },
-                        modifier = Modifier.width(280.dp)
-                    )
+    // Root layout - Server Sidebar is always visible on the left
+    Row(modifier = Modifier.fillMaxSize()) {
+        // Server Sidebar - Always visible, never covered
+        ServerSidebar(
+            servers = guilds,
+            selectedServerId = selectedServer?.id,
+            onServerSelected = { 
+                viewModel.selectServer(it)
+                // On compact screens, open channel drawer when server selected
+                if (isCompact && channels.isNotEmpty()) {
+                    channelDrawerOpen = true
                 }
-            }
-        }
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(VelvetBlack)
-        ) {
+            },
+            onAddServer = { /* TODO */ },
+            modifier = Modifier.width(sidebarWidth),
+            isCompact = isCompact
+        )
+        
+        // Main Content Area with optional Channel List
+        Box(modifier = Modifier.weight(1f)) {
             Row(modifier = Modifier.fillMaxSize()) {
-                // Server Sidebar
-                ServerSidebar(
-                    servers = guilds,
-                    selectedServerId = selectedServer?.id,
-                    onServerSelected = { viewModel.selectServer(it) },
-                    onAddServer = { /* TODO */ },
-                    modifier = Modifier.width(sidebarWidth),
-                    isCompact = isCompact
-                )
-                
-                // Channel List (persistent on larger screens, drawer on compact)
+                // Channel List (persistent on larger screens)
                 if (channels.isNotEmpty() && !isCompact) {
                     ChannelListContent(
                         channels = channels,
@@ -149,243 +128,312 @@ fun ChatScreen(
                         .fillMaxHeight()
                         .weight(1f)
                 ) {
-                // Top App Bar
-                TopAppBar(
-                    title = {
-                        Column {
-                            Text(
-                                text = selectedChannel?.name?.uppercase() ?: "SELECT A CHANNEL",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = TextPrimary
-                            )
-                            ConnectionStatus(connectionState)
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = { 
-                                if (isCompact && channels.isNotEmpty()) {
-                                    scope.launch { drawerState.open() }
-                                }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Menu,
-                                contentDescription = "Menu",
-                                tint = TextSecondary
-                            )
-                        }
-                    },
-                    actions = {
-                        // Search
-                        IconButton(onClick = { viewModel.toggleSearch() }) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
-                                tint = if (isSearching) PhantomRed else TextSecondary
-                            )
-                        }
-                        
-                        // User avatar with status - clickable to view profile
-                        UserAvatar(
-                            user = currentUser,
-                            size = 36.dp,
-                            showStatus = true,
-                            onClick = onNavigateToProfile
-                        )
-                        
-                        IconButton(onClick = onNavigateToSettings) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "Settings",
-                                tint = TextSecondary
-                            )
-                        }
-                        
-                        IconButton(onClick = onLogout) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Logout,
-                                contentDescription = "Logout",
-                                tint = PhantomRed
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = VelvetDark,
-                        titleContentColor = TextPrimary
-                    )
-                )
-                
-                // Search Bar
-                AnimatedVisibility(visible = isSearching) {
-                    FluxerTextField(
-                        value = searchQuery,
-                        onValueChange = { viewModel.onSearchQueryChanged(it) },
-                        hint = "Search in #${activeChannel?.name ?: ""}",
-                        modifier = Modifier.fillMaxWidth().padding(8.dp)
-                    )
-                }
-
-                // Messages List
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .background(VelvetBlack)
-                ) {
-                    when {
-                        // No channel selected
-                        selectedChannel == null -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "WELCOME TO FLUXER",
-                                        style = MaterialTheme.typography.headlineMedium,
-                                        color = TextPrimary
-                                    )
-                                    Text(
-                                        text = "Select a channel to start messaging",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = TextMuted
-                                    )
-                                }
-                            }
-                        }
-                        // Loading state from paging
-                        messages.loadState.refresh is LoadState.Loading -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(color = PhantomRed)
-                            }
-                        }
-                        // Error state from paging
-                        messages.loadState.refresh is LoadState.Error -> {
-                            val loadStateError = messages.loadState.refresh as LoadState.Error
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.padding(16.dp)
-                                ) {
-                                    Text(
-                                        text = "Failed to load messages",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = TextPrimary
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = loadStateError.error.message ?: "Unknown error",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = TextMuted
-                                    )
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    Button(
-                                        onClick = { messages.retry() },
-                                        colors = ButtonDefaults.buttonColors(containerColor = PhantomRed)
-                                    ) {
-                                        Text("Retry")
-                                    }
-                                }
-                            }
-                        }
-                        // Empty state
-                        messages.itemCount == 0 -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
+                    // Top App Bar
+                    TopAppBar(
+                        title = {
+                            Column {
                                 Text(
-                                    text = "NO MESSAGES YET",
+                                    text = selectedChannel?.name?.uppercase() ?: "SELECT A CHANNEL",
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = TextMuted
+                                    color = TextPrimary
+                                )
+                                ConnectionStatus(connectionState)
+                            }
+                        },
+                        navigationIcon = {
+                            // Show hamburger menu on compact screens when channels exist
+                            if (isCompact && channels.isNotEmpty()) {
+                                IconButton(
+                                    onClick = { channelDrawerOpen = true }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Menu,
+                                        contentDescription = "Channels",
+                                        tint = TextSecondary
+                                    )
+                                }
+                            }
+                        },
+                        actions = {
+                            // Search
+                            IconButton(onClick = { viewModel.toggleSearch() }) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    tint = if (isSearching) PhantomRed else TextSecondary
                                 )
                             }
-                        }
-                        // Messages list
-                        else -> {
-                            LazyColumn(
-                                state = listState,
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(vertical = 16.dp),
-                                reverseLayout = true
-                            ) {
-                                items(
-                                    count = messages.itemCount,
-                                    key = { index -> messages[index]?.id ?: index }
-                                ) { index ->
-                                    val message = messages[index]
-                                    if (message != null) {
-                                        val isOwnMessage = message.authorId == currentUser?.id
-                                        val showAvatar = true // TODO: Check if previous message is from same author
+                            
+                            // User avatar with status - clickable to view profile
+                            UserAvatar(
+                                user = currentUser,
+                                size = 36.dp,
+                                showStatus = true,
+                                onClick = onNavigateToProfile
+                            )
+                            
+                            IconButton(onClick = onNavigateToSettings) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Settings",
+                                    tint = TextSecondary
+                                )
+                            }
+                            
+                            IconButton(onClick = onLogout) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                                    contentDescription = "Logout",
+                                    tint = PhantomRed
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = VelvetDark,
+                            titleContentColor = TextPrimary
+                        )
+                    )
+                    
+                    // Search Bar
+                    AnimatedVisibility(visible = isSearching) {
+                        FluxerTextField(
+                            value = searchQuery,
+                            onValueChange = { viewModel.onSearchQueryChanged(it) },
+                            hint = "Search in #${activeChannel?.name ?: ""}",
+                            modifier = Modifier.fillMaxWidth().padding(8.dp)
+                        )
+                    }
 
-                                        MessageBubble(
-                                            message = message,
-                                            isOwnMessage = isOwnMessage,
-                                            showAvatar = showAvatar,
-                                            onDelete = { viewModel.deleteMessage(message.id) }
+                    // Messages List
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .background(VelvetBlack)
+                    ) {
+                        when {
+                            // No channel selected
+                            selectedChannel == null -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            text = "WELCOME TO FLUXER",
+                                            style = MaterialTheme.typography.headlineMedium,
+                                            color = TextPrimary
+                                        )
+                                        Text(
+                                            text = "Select a channel to start messaging",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = TextMuted
                                         )
                                     }
                                 }
-                                
-                                // Loading more at bottom
-                                item {
-                                    if (messages.loadState.append is LoadState.Loading) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(8.dp),
-                                            contentAlignment = Alignment.Center
+                            }
+                            // Loading state from paging
+                            messages.loadState.refresh is LoadState.Loading -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = PhantomRed)
+                                }
+                            }
+                            // Error state from paging
+                            messages.loadState.refresh is LoadState.Error -> {
+                                val loadStateError = messages.loadState.refresh as LoadState.Error
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.padding(16.dp)
+                                    ) {
+                                        Text(
+                                            text = "Failed to load messages",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = TextPrimary
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = loadStateError.error.message ?: "Unknown error",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = TextMuted
+                                        )
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        Button(
+                                            onClick = { messages.retry() },
+                                            colors = ButtonDefaults.buttonColors(containerColor = PhantomRed)
                                         ) {
-                                            CircularProgressIndicator(
-                                                color = PhantomRed,
-                                                modifier = Modifier.size(24.dp)
+                                            Text("Retry")
+                                        }
+                                    }
+                                }
+                            }
+                            // Empty state
+                            messages.itemCount == 0 -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "NO MESSAGES YET",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = TextMuted
+                                    )
+                                }
+                            }
+                            // Messages list
+                            else -> {
+                                LazyColumn(
+                                    state = listState,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(vertical = 16.dp),
+                                    reverseLayout = true
+                                ) {
+                                    items(
+                                        count = messages.itemCount,
+                                        key = { index -> messages[index]?.id ?: index }
+                                    ) { index ->
+                                        val message = messages[index]
+                                        if (message != null) {
+                                            val isOwnMessage = message.authorId == currentUser?.id
+                                            val showAvatar = true // TODO: Check if previous message is from same author
+
+                                            MessageBubble(
+                                                message = message,
+                                                isOwnMessage = isOwnMessage,
+                                                showAvatar = showAvatar,
+                                                onDelete = { viewModel.deleteMessage(message.id) }
                                             )
+                                        }
+                                    }
+                                    
+                                    // Loading more at bottom
+                                    item {
+                                        if (messages.loadState.append is LoadState.Loading) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(8.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                CircularProgressIndicator(
+                                                    color = PhantomRed,
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
+                        
+                        // Error state from ViewModel
+                        if (error != null) {
+                            ErrorState(
+                                message = error!!,
+                                onRetry = { messages.retry() },
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
                     }
                     
-                    // Error state from ViewModel
-                    if (error != null) {
-                        ErrorState(
-                            message = error!!,
-                            onRetry = { messages.retry() },
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
-                }
-                
-                // Message Input - with proper bottom insets handling
-                if (activeChannel != null) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(VelvetDark)
-                            .padding(horizontal = if (isCompact) 8.dp else 16.dp, vertical = 12.dp)
-                            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.navigationBars)
-                    ) {
-                        MessageInputField(
-                            value = messageInput,
-                            onValueChange = viewModel::updateMessageInput,
-                            onSend = viewModel::sendMessage,
-                            placeholder = "Message #${activeChannel.name}",
-                            isCompact = isCompact
-                        )
+                    // Message Input - with proper bottom insets handling
+                    if (activeChannel != null) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(VelvetDark)
+                                .padding(horizontal = if (isCompact) 8.dp else 16.dp, vertical = 12.dp)
+                                .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.navigationBars)
+                        ) {
+                            MessageInputField(
+                                value = messageInput,
+                                onValueChange = viewModel::updateMessageInput,
+                                onSend = viewModel::sendMessage,
+                                placeholder = "Message #${activeChannel.name}",
+                                isCompact = isCompact
+                            )
+                        }
                     }
                 }
             }
             
+            // Compact Channel Drawer - Slides OVER the content, not replacing server sidebar
+            if (isCompact && channelDrawerOpen && channels.isNotEmpty()) {
+                // Backdrop to close drawer when clicking outside
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f))
+                        .clickable { channelDrawerOpen = false }
+                )
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(280.dp)
+                        .background(VelvetMid)
+                ) {
+                        Column {
+                            // Drawer Header
+                            Surface(
+                                color = VelvetDark,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = selectedServer?.name?.uppercase() ?: "CHANNELS",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = TextPrimary,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    
+                                    IconButton(
+                                        onClick = { channelDrawerOpen = false }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Menu,
+                                            contentDescription = "Close",
+                                            tint = TextSecondary
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            // Channel List
+                            ChannelListContent(
+                                channels = channels,
+                                selectedChannelId = activeChannel?.id,
+                                onChannelSelected = { 
+                                    viewModel.selectChannel(it)
+                                    channelDrawerOpen = false
+                                },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
+                }
+                
+                // Backdrop to close drawer when clicking outside
+                if (channelDrawerOpen) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f))
+                            .clickable { channelDrawerOpen = false }
+                    )
             }
             
             // Error snackbar
