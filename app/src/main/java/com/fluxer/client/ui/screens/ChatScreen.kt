@@ -424,16 +424,6 @@ fun ChatScreen(
                             )
                         }
                     }
-                }
-                
-                // Backdrop to close drawer when clicking outside
-                if (channelDrawerOpen) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f))
-                            .clickable { channelDrawerOpen = false }
-                    )
             }
             
             // Error snackbar
