@@ -2,6 +2,8 @@
 
 package com.fluxer.client.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.animation.*
@@ -53,6 +55,7 @@ fun ChatScreen(
     val error by viewModel.error.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
+    val replyingTo by viewModel.replyingTo.collectAsState()
     val activeChannel = selectedChannel
     
     val listState = rememberLazyListState()
@@ -67,6 +70,16 @@ fun ChatScreen(
     // Channel drawer state (for compact screens)
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var channelDrawerOpen by remember { mutableStateOf(false) }
+    
+    // Image picker for attachments
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            // TODO: Upload image and send as attachment
+            Timber.d("Selected image: $uri")
+        }
+    }
     
     // Log paging state for debugging
     LaunchedEffect(messages.loadState) {
@@ -308,7 +321,11 @@ fun ChatScreen(
                                                 message = message,
                                                 isOwnMessage = isOwnMessage,
                                                 showAvatar = showAvatar,
-                                                onDelete = { viewModel.deleteMessage(message.id) }
+                                                onDelete = { viewModel.deleteMessage(message.id) },
+                                                onReply = { viewModel.startReply(message) },
+                                                onAddReaction = { emoji ->
+                                                    viewModel.addReaction(message.id, emoji)
+                                                }
                                             )
                                         }
                                     }
@@ -357,7 +374,12 @@ fun ChatScreen(
                                 onValueChange = viewModel::updateMessageInput,
                                 onSend = viewModel::sendMessage,
                                 placeholder = "Message #${activeChannel.name}",
-                                isCompact = isCompact
+                                isCompact = isCompact,
+                                replyingTo = replyingTo,
+                                onCancelReply = viewModel::cancelReply,
+                                onAttachmentClick = {
+                                    imagePicker.launch("image/*")
+                                }
                             )
                         }
                     }
