@@ -140,6 +140,9 @@ dependencies {
     
     // LiveKit SDK for voice/video
     implementation("io.livekit:livekit-android:2.5.0")
+    
+    // UnifiedPush connector for push notifications
+    implementation("org.unifiedpush.android:connector:2.5.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

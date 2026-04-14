@@ -3,7 +3,7 @@ package com.fluxer.client.di
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
+import com.fluxer.client.data.local.dataStore
 import com.fluxer.client.service.LiveKitVoiceManager
 import dagger.Module
 import dagger.Provides
@@ -12,8 +12,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import timber.log.Timber
 import javax.inject.Singleton
-
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "fluxer_settings")
 
 @Module
 @InstallIn(SingletonComponent::class)

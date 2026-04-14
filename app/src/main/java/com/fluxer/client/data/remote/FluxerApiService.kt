@@ -189,8 +189,14 @@ interface FluxerApiService {
     @POST("/api/users/@me/notifications/token")
     suspend fun registerFcmToken(@Body request: FcmTokenRequest): Response<Unit>
     
+    @POST("/api/users/@me/notifications/push-token")
+    suspend fun registerPushToken(@Body request: PushTokenRequest): Response<Unit>
+    
     @DELETE("/api/users/@me/notifications/token")
     suspend fun unregisterFcmToken(): Response<Unit>
+    
+    @DELETE("/api/users/@me/notifications/push-token")
+    suspend fun unregisterPushToken(): Response<Unit>
     
     @GET("/api/users/@me/notifications/settings")
     suspend fun getNotificationSettings(): Response<NotificationSettings>

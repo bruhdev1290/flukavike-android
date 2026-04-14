@@ -34,6 +34,18 @@ class ChatRepository @Inject constructor(
     val channelCacheFlow: StateFlow<Map<String, List<Channel>>> =
         _channelCacheFlow.asStateFlow()
     
+    // Voice state cache per channel
+    private val voiceStateCache = mutableMapOf<String, MutableStateFlow<List<com.fluxer.client.data.model.VoiceStateUpdateEvent>>>()
+    private val _voiceServerUpdates = MutableSharedFlow<com.fluxer.client.data.model.VoiceServerUpdateEvent>(extraBufferCapacity = 1)
+    val voiceServerUpdates: Flow<com.fluxer.client.data.model.VoiceServerUpdateEvent> = _voiceServerUpdates.asSharedFlow()
+    
+    // Call state cache per channel
+    private val callStateCache = mutableMapOf<String, MutableStateFlow<com.fluxer.client.data.model.CallEvent?>>()
+    private val _callUpdates = MutableSharedFlow<com.fluxer.client.data.model.CallEvent>(extraBufferCapacity = 1)
+    val callUpdates: Flow<com.fluxer.client.data.model.CallEvent> = _callUpdates.asSharedFlow()
+    private val _callDeletes = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val callDeletes: Flow<String> = _callDeletes.asSharedFlow()
+    
     // Expose Gateway events as repository events
     val gatewayEvents: Flow<GatewayWebSocketManager.GatewayEvent> = gatewayManager.events
     
@@ -451,6 +463,24 @@ class ChatRepository @Inject constructor(
                 is GatewayWebSocketManager.GatewayEvent.ReactionRemove -> {
                     removeReactionFromCache(event.data)
                 }
+                is GatewayWebSocketManager.GatewayEvent.VoiceStateUpdate -> {
+                    updateVoiceStateCache(event.data)
+                }
+                is GatewayWebSocketManager.GatewayEvent.VoiceServerUpdate -> {
+                    _voiceServerUpdates.tryEmit(event.data)
+                }
+                is GatewayWebSocketManager.GatewayEvent.CallCreate -> {
+                    updateCallCache(event.data)
+                    _callUpdates.tryEmit(event.data)
+                }
+                is GatewayWebSocketManager.GatewayEvent.CallUpdate -> {
+                    updateCallCache(event.data)
+                    _callUpdates.tryEmit(event.data)
+                }
+                is GatewayWebSocketManager.GatewayEvent.CallDelete -> {
+                    callStateCache.remove(event.data.channelId)
+                    _callDeletes.tryEmit(event.data.channelId)
+                }
                 else -> { /* Handle other events */ }
             }
         }.launchIn(kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default))
@@ -544,5 +574,49 @@ class ChatRepository @Inject constructor(
                 message.copy(reactions = updatedReactions)
             } else message
         }
+    }
+
+    // ==================== VOICE STATE CACHE ====================
+
+    fun getVoiceStatesFlow(channelId: String): StateFlow<List<com.fluxer.client.data.model.VoiceStateUpdateEvent>> {
+        return voiceStateCache.getOrPut(channelId) {
+            MutableStateFlow(emptyList())
+        }
+    }
+
+    private fun updateVoiceStateCache(voiceState: com.fluxer.client.data.model.VoiceStateUpdateEvent) {
+        val channelId = voiceState.channelId
+        
+        if (channelId == null) {
+            // User disconnected - search all cached channels and remove them
+            voiceStateCache.forEach { (_, flow) ->
+                flow.value = flow.value.filter { it.userId != voiceState.userId }
+            }
+            return
+        }
+        
+        val flow = voiceStateCache.getOrPut(channelId) { MutableStateFlow(emptyList()) }
+        val current = flow.value
+
+        // Update or add voice state
+        val existing = current.find { it.userId == voiceState.userId }
+        flow.value = if (existing != null) {
+            current.map { if (it.userId == voiceState.userId) voiceState else it }
+        } else {
+            current + voiceState
+        }
+    }
+
+    // ==================== CALL CACHE ====================
+
+    fun getCallStateFlow(channelId: String): StateFlow<com.fluxer.client.data.model.CallEvent?> {
+        return callStateCache.getOrPut(channelId) {
+            MutableStateFlow(null)
+        }
+    }
+
+    private fun updateCallCache(call: com.fluxer.client.data.model.CallEvent) {
+        val flow = callStateCache.getOrPut(call.channelId) { MutableStateFlow(null) }
+        flow.value = call
     }
 }

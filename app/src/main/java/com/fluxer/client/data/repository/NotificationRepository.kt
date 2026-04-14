@@ -2,6 +2,7 @@ package com.fluxer.client.data.repository
 
 import com.fluxer.client.data.model.FcmTokenRequest
 import com.fluxer.client.data.model.NotificationSettings
+import com.fluxer.client.data.model.PushTokenRequest
 import com.fluxer.client.data.remote.FluxerApiService
 import com.fluxer.client.util.Result
 import kotlinx.coroutines.flow.Flow
@@ -33,6 +34,35 @@ class NotificationRepository @Inject constructor(
         }
     }
 
+    /**
+     * Register a push token with the backend.
+     * Supports both FCM and UnifiedPush providers.
+     */
+    suspend fun registerPushToken(
+        token: String,
+        provider: String,
+        instance: String? = null
+    ): Result<Unit> {
+        return try {
+            val request = PushTokenRequest(
+                token = token,
+                provider = provider,
+                deviceType = "android",
+                deviceName = android.os.Build.MODEL,
+                instance = instance
+            )
+            val response = apiService.registerPushToken(request)
+            if (response.isSuccessful) {
+                Result.Success(Unit)
+            } else {
+                Result.Error("Failed to register $provider token: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to register $provider token")
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
     suspend fun unregisterFcmToken(): Result<Unit> {
         return try {
             val response = apiService.unregisterFcmToken()
@@ -43,6 +73,20 @@ class NotificationRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, "Failed to unregister FCM token")
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
+    suspend fun unregisterPushToken(): Result<Unit> {
+        return try {
+            val response = apiService.unregisterPushToken()
+            if (response.isSuccessful) {
+                Result.Success(Unit)
+            } else {
+                Result.Error("Failed to unregister push token: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to unregister push token")
             Result.Error("Network error: ${e.message}")
         }
     }

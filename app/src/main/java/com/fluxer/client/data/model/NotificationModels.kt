@@ -58,6 +58,18 @@ data class FcmTokenRequest(
 )
 
 @Serializable
+data class PushTokenRequest(
+    val token: String,
+    val provider: String = "fcm",
+    @SerialName("device_type")
+    val deviceType: String = "android",
+    @SerialName("device_name")
+    val deviceName: String? = android.os.Build.MODEL,
+    @SerialName("instance")
+    val instance: String? = null
+)
+
+@Serializable
 data class NotificationSettings(
     @SerialName("global_enabled")
     val globalEnabled: Boolean = true,

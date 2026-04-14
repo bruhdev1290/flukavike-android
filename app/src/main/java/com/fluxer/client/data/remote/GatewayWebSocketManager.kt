@@ -236,6 +236,26 @@ class GatewayWebSocketManager @Inject constructor(
                 val reaction = json.decodeFromJsonElement<ReactionEvent>(eventData)
                 _events.trySend(GatewayEvent.ReactionRemove(reaction))
             }
+            GatewayEventTypes.VOICE_STATE_UPDATE -> {
+                val voiceState = json.decodeFromJsonElement<VoiceStateUpdateEvent>(eventData)
+                _events.trySend(GatewayEvent.VoiceStateUpdate(voiceState))
+            }
+            GatewayEventTypes.VOICE_SERVER_UPDATE -> {
+                val voiceServer = json.decodeFromJsonElement<VoiceServerUpdateEvent>(eventData)
+                _events.trySend(GatewayEvent.VoiceServerUpdate(voiceServer))
+            }
+            GatewayEventTypes.CALL_CREATE -> {
+                val call = json.decodeFromJsonElement<CallEvent>(eventData)
+                _events.trySend(GatewayEvent.CallCreate(call))
+            }
+            GatewayEventTypes.CALL_UPDATE -> {
+                val call = json.decodeFromJsonElement<CallEvent>(eventData)
+                _events.trySend(GatewayEvent.CallUpdate(call))
+            }
+            GatewayEventTypes.CALL_DELETE -> {
+                val callDelete = json.decodeFromJsonElement<CallDeleteEvent>(eventData)
+                _events.trySend(GatewayEvent.CallDelete(callDelete))
+            }
             else -> {
                 Timber.d("Unhandled event type: $eventType")
             }
@@ -357,6 +377,11 @@ class GatewayWebSocketManager @Inject constructor(
         data class TypingStart(val data: TypingEvent) : GatewayEvent()
         data class ReactionAdd(val data: ReactionEvent) : GatewayEvent()
         data class ReactionRemove(val data: ReactionEvent) : GatewayEvent()
+        data class VoiceStateUpdate(val data: com.fluxer.client.data.model.VoiceStateUpdateEvent) : GatewayEvent()
+        data class VoiceServerUpdate(val data: com.fluxer.client.data.model.VoiceServerUpdateEvent) : GatewayEvent()
+        data class CallCreate(val data: com.fluxer.client.data.model.CallEvent) : GatewayEvent()
+        data class CallUpdate(val data: com.fluxer.client.data.model.CallEvent) : GatewayEvent()
+        data class CallDelete(val data: com.fluxer.client.data.model.CallDeleteEvent) : GatewayEvent()
     }
 
     @kotlinx.serialization.Serializable

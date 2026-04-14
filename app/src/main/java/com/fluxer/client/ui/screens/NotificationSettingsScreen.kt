@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fluxer.client.ui.theme.*
 import com.fluxer.client.ui.viewmodel.NotificationSettingsViewModel
+import com.fluxer.client.util.UnifiedPushManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,11 +29,14 @@ fun NotificationSettingsScreen(
 ) {
     val settings by viewModel.settings.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    
+    val selectedProvider by viewModel.selectedProvider.collectAsState()
+    val availableDistributors by viewModel.availableDistributors.collectAsState()
+    var showDistributorDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         viewModel.loadSettings()
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -76,7 +80,7 @@ fun NotificationSettingsScreen(
                     checked = settings.globalEnabled,
                     onCheckedChange = { viewModel.updateGlobalEnabled(it) }
                 )
-                
+
                 // View Notification Center
                 Surface(
                     modifier = Modifier
@@ -94,9 +98,9 @@ fun NotificationSettingsScreen(
                             tint = TextSecondary,
                             modifier = Modifier.size(24.dp)
                         )
-                        
+
                         Spacer(modifier = Modifier.width(16.dp))
-                        
+
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Notification History",
@@ -110,7 +114,7 @@ fun NotificationSettingsScreen(
                                 color = TextMuted
                             )
                         }
-                        
+
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
@@ -119,12 +123,50 @@ fun NotificationSettingsScreen(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
+                // Push Provider Selection
+                Text(
+                    text = "PUSH PROVIDER",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextMuted,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+
+                PushProviderOption(
+                    title = "Firebase Cloud Messaging",
+                    subtitle = "Google push notifications",
+                    selected = selectedProvider == UnifiedPushManager.PushProvider.FCM,
+                    onClick = { viewModel.selectPushProvider(UnifiedPushManager.PushProvider.FCM) }
+                )
+
+                PushProviderOption(
+                    title = "UnifiedPush",
+                    subtitle = "Open-source, decentralized push",
+                    selected = selectedProvider == UnifiedPushManager.PushProvider.UNIFIEDPUSH,
+                    onClick = {
+                        viewModel.selectPushProvider(UnifiedPushManager.PushProvider.UNIFIEDPUSH)
+                        if (availableDistributors.size > 1) {
+                            showDistributorDialog = true
+                        }
+                    }
+                )
+
+                if (selectedProvider == UnifiedPushManager.PushProvider.UNIFIEDPUSH && availableDistributors.isEmpty()) {
+                    Text(
+                        text = "No UnifiedPush distributors found. Install an app like ntfy or UP-FCM distributor.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextMuted,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 if (settings.globalEnabled) {
                     Divider(color = BorderSubtle, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-                    
+
                     // Direct Messages
                     NotificationToggle(
                         icon = Icons.Default.Message,
@@ -133,9 +175,9 @@ fun NotificationSettingsScreen(
                         checked = settings.dmNotifications,
                         onCheckedChange = { viewModel.updateDMNotifications(it) }
                     )
-                    
+
                     Divider(color = BorderSubtle, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-                    
+
                     // Mentions
                     NotificationToggle(
                         icon = Icons.Default.AlternateEmail,
@@ -144,9 +186,9 @@ fun NotificationSettingsScreen(
                         checked = settings.mentionNotifications,
                         onCheckedChange = { viewModel.updateMentionNotifications(it) }
                     )
-                    
+
                     Divider(color = BorderSubtle, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-                    
+
                     // Calls
                     NotificationToggle(
                         icon = Icons.Default.Call,
@@ -155,9 +197,9 @@ fun NotificationSettingsScreen(
                         checked = settings.callNotifications,
                         onCheckedChange = { viewModel.updateCallNotifications(it) }
                     )
-                    
+
                     Divider(color = BorderSubtle, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-                    
+
                     // Friend Requests
                     NotificationToggle(
                         icon = Icons.Default.PersonAdd,
@@ -166,9 +208,9 @@ fun NotificationSettingsScreen(
                         checked = settings.friendRequestNotifications,
                         onCheckedChange = { viewModel.updateFriendRequestNotifications(it) }
                     )
-                    
+
                     Divider(color = BorderSubtle, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-                    
+
                     // Sound
                     NotificationToggle(
                         icon = Icons.Default.VolumeUp,
@@ -177,9 +219,9 @@ fun NotificationSettingsScreen(
                         checked = settings.soundEnabled,
                         onCheckedChange = { viewModel.updateSoundEnabled(it) }
                     )
-                    
+
                     Divider(color = BorderSubtle, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-                    
+
                     // Vibration
                     NotificationToggle(
                         icon = Icons.Default.Vibration,
@@ -188,9 +230,9 @@ fun NotificationSettingsScreen(
                         checked = settings.vibrationEnabled,
                         onCheckedChange = { viewModel.updateVibrationEnabled(it) }
                     )
-                    
+
                     Divider(color = BorderSubtle, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-                    
+
                     // Show Preview
                     NotificationToggle(
                         icon = Icons.Default.Visibility,
@@ -200,9 +242,41 @@ fun NotificationSettingsScreen(
                         onCheckedChange = { viewModel.updateShowPreview(it) }
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(32.dp))
             }
+        }
+
+        // Distributor selection dialog
+        if (showDistributorDialog && availableDistributors.size > 1) {
+            AlertDialog(
+                onDismissRequest = { showDistributorDialog = false },
+                title = { Text("Select UnifiedPush Distributor", color = TextPrimary) },
+                text = {
+                    Column {
+                        availableDistributors.forEach { distributor ->
+                            Text(
+                                text = distributor,
+                                color = TextPrimary,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        viewModel.selectDistributor(distributor)
+                                        showDistributorDialog = false
+                                    }
+                                    .padding(vertical = 12.dp)
+                            )
+                        }
+                    }
+                },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(onClick = { showDistributorDialog = false }) {
+                        Text("Cancel", color = PhantomRed)
+                    }
+                },
+                containerColor = VelvetDark
+            )
         }
     }
 }
@@ -227,9 +301,9 @@ private fun NotificationToggle(
             tint = PhantomRed,
             modifier = Modifier.size(24.dp)
         )
-        
+
         Spacer(modifier = Modifier.width(16.dp))
-        
+
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -243,7 +317,7 @@ private fun NotificationToggle(
                 color = TextMuted
             )
         }
-        
+
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
@@ -254,5 +328,46 @@ private fun NotificationToggle(
                 uncheckedTrackColor = VelvetLight
             )
         )
+    }
+}
+
+@Composable
+private fun PushProviderOption(
+    title: String,
+    subtitle: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = onClick,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = PhantomRed,
+                unselectedColor = TextSecondary
+            )
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = TextPrimary,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextMuted
+            )
+        }
     }
 }

@@ -84,6 +84,11 @@ object GatewayEventTypes {
     const val USER_UPDATE = "USER_UPDATE"
     const val MESSAGE_REACTION_ADD = "MESSAGE_REACTION_ADD"
     const val MESSAGE_REACTION_REMOVE = "MESSAGE_REACTION_REMOVE"
+    const val VOICE_STATE_UPDATE = "VOICE_STATE_UPDATE"
+    const val VOICE_SERVER_UPDATE = "VOICE_SERVER_UPDATE"
+    const val CALL_CREATE = "CALL_CREATE"
+    const val CALL_UPDATE = "CALL_UPDATE"
+    const val CALL_DELETE = "CALL_DELETE"
 }
 
 @Serializable
@@ -128,4 +133,75 @@ data class ReactionEvent(
     val userId: String? = null,
     @SerialName("burst")
     val isBurst: Boolean = false
+)
+
+@Serializable
+data class GuildMember(
+    val user: User? = null,
+    val nick: String? = null,
+    val roles: List<String> = emptyList(),
+    @SerialName("joined_at")
+    val joinedAt: String? = null,
+    @SerialName("avatar_url")
+    val avatarUrl: String? = null
+)
+
+@Serializable
+data class VoiceStateUpdateEvent(
+    @SerialName("guild_id")
+    val guildId: String? = null,
+    @SerialName("channel_id")
+    val channelId: String? = null,
+    @SerialName("user_id")
+    val userId: String,
+    @SerialName("connection_id")
+    val connectionId: String? = null,
+    @SerialName("session_id")
+    val sessionId: String? = null,
+    val member: GuildMember? = null,
+    val deaf: Boolean = false,
+    val mute: Boolean = false,
+    @SerialName("self_mute")
+    val selfMute: Boolean = false,
+    @SerialName("self_deaf")
+    val selfDeaf: Boolean = false,
+    @SerialName("self_video")
+    val selfVideo: Boolean = false,
+    @SerialName("self_stream")
+    val selfStream: Boolean = false,
+    @SerialName("is_mobile")
+    val isMobile: Boolean = false,
+    @SerialName("viewer_stream_keys")
+    val viewerStreamKeys: List<String> = emptyList(),
+    val version: Int = 0
+)
+
+@Serializable
+data class VoiceServerUpdateEvent(
+    val token: String,
+    val endpoint: String,
+    @SerialName("connection_id")
+    val connectionId: String,
+    @SerialName("guild_id")
+    val guildId: String? = null,
+    @SerialName("channel_id")
+    val channelId: String? = null
+)
+
+@Serializable
+data class CallEvent(
+    @SerialName("channel_id")
+    val channelId: String,
+    @SerialName("message_id")
+    val messageId: String,
+    val region: String? = null,
+    val ringing: List<String> = emptyList(),
+    @SerialName("voice_states")
+    val voiceStates: List<VoiceStateUpdateEvent> = emptyList()
+)
+
+@Serializable
+data class CallDeleteEvent(
+    @SerialName("channel_id")
+    val channelId: String
 )
