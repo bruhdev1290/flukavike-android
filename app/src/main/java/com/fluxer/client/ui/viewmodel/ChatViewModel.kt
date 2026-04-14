@@ -328,6 +328,38 @@ class ChatViewModel @Inject constructor(
                     is GatewayWebSocketManager.GatewayEvent.MessageDelete -> {
                         // Message handled by repository cache
                     }
+                    is GatewayWebSocketManager.GatewayEvent.GuildCreate -> {
+                        val current = _guilds.value.toMutableList()
+                        val existingIndex = current.indexOfFirst { it.id == event.guild.id }
+                        if (existingIndex >= 0) {
+                            current[existingIndex] = event.guild
+                        } else {
+                            current.add(event.guild)
+                        }
+                        _guilds.value = current
+                    }
+                    is GatewayWebSocketManager.GatewayEvent.GuildUpdate -> {
+                        val current = _guilds.value.toMutableList()
+                        val index = current.indexOfFirst { it.id == event.guild.id }
+                        if (index >= 0) {
+                            // Preserve channels if the update doesn't include them
+                            val updatedGuild = if (event.guild.channels.isEmpty()) {
+                                event.guild.copy(channels = current[index].channels)
+                            } else {
+                                event.guild
+                            }
+                            current[index] = updatedGuild
+                            _guilds.value = current
+                        }
+                    }
+                    is GatewayWebSocketManager.GatewayEvent.GuildDelete -> {
+                        _guilds.value = _guilds.value.filter { it.id != event.guildId }
+                        if (_selectedServer.value?.id == event.guildId) {
+                            _selectedServer.value = null
+                            _selectedChannel.value = null
+                            _channels.value = emptyList()
+                        }
+                    }
                     else -> { /* Handle other events if needed */ }
                 }
             }

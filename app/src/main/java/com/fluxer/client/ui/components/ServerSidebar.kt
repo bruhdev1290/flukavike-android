@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
@@ -39,6 +40,7 @@ fun ServerSidebar(
 ) {
     val iconSize = if (isCompact) 22.dp else 28.dp
     val serverIconSize = if (isCompact) 40.dp else 48.dp
+    val addButtonSize = if (isCompact) 40.dp else 48.dp
     
     Column(
         modifier = modifier
@@ -232,12 +234,14 @@ fun ChannelList(
     channels: List<com.fluxer.client.data.model.Channel>,
     selectedChannelId: String?,
     onChannelSelected: (com.fluxer.client.data.model.Channel) -> Unit,
+    onNavigateToVoiceChannel: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     ChannelListContent(
         channels = channels,
         selectedChannelId = selectedChannelId,
         onChannelSelected = onChannelSelected,
+        onNavigateToVoiceChannel = onNavigateToVoiceChannel,
         modifier = modifier.width(240.dp)
     )
 }
@@ -250,31 +254,57 @@ fun ChannelListContent(
     channels: List<com.fluxer.client.data.model.Channel>,
     selectedChannelId: String?,
     onChannelSelected: (com.fluxer.client.data.model.Channel) -> Unit,
+    onNavigateToVoiceChannel: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val textChannels = channels.filter { it.type == com.fluxer.client.data.model.ChannelType.TEXT }
+    val voiceChannels = channels.filter { it.type == com.fluxer.client.data.model.ChannelType.VOICE }
+
     Column(
         modifier = modifier
             .fillMaxHeight()
             .background(VelvetMid)
             .padding(vertical = 16.dp)
     ) {
-        // Server header
-        Text(
-            text = "TEXT CHANNELS",
-            style = MaterialTheme.typography.labelSmall,
-            color = TextMuted,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-        
-        // Channel items
-        channels.filter { it.type == com.fluxer.client.data.model.ChannelType.TEXT }
-            .forEach { channel ->
+        // Text Channels Section
+        if (textChannels.isNotEmpty()) {
+            Text(
+                text = "TEXT CHANNELS",
+                style = MaterialTheme.typography.labelSmall,
+                color = TextMuted,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            textChannels.forEach { channel ->
                 ChannelItem(
                     channel = channel,
                     isSelected = channel.id == selectedChannelId,
                     onClick = { onChannelSelected(channel) }
                 )
             }
+        }
+
+        // Voice Channels Section
+        if (voiceChannels.isNotEmpty()) {
+            if (textChannels.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            Text(
+                text = "VOICE CHANNELS",
+                style = MaterialTheme.typography.labelSmall,
+                color = TextMuted,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            voiceChannels.forEach { channel ->
+                ChannelItem(
+                    channel = channel,
+                    isSelected = false,
+                    onClick = { onNavigateToVoiceChannel(channel.id) }
+                )
+            }
+        }
     }
 }
 
@@ -288,7 +318,9 @@ private fun ChannelItem(
         isSelected -> SelectedItem
         else -> Color.Transparent
     }
-    
+
+    val isVoice = channel.type == com.fluxer.client.data.model.ChannelType.VOICE
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -298,12 +330,21 @@ private fun ChannelItem(
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "#",
-            style = FluxerTextStyles.channelName,
-            color = if (isSelected) PhantomRed else TextMuted,
-            modifier = Modifier.padding(end = 8.dp)
-        )
+        if (isVoice) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                contentDescription = null,
+                tint = if (isSelected) PhantomRed else TextMuted,
+                modifier = Modifier.padding(end = 8.dp).size(18.dp)
+            )
+        } else {
+            Text(
+                text = "#",
+                style = FluxerTextStyles.channelName,
+                color = if (isSelected) PhantomRed else TextMuted,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        }
         Text(
             text = channel.name,
             style = FluxerTextStyles.channelName,

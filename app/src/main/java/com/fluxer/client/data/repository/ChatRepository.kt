@@ -463,6 +463,32 @@ class ChatRepository @Inject constructor(
                 is GatewayWebSocketManager.GatewayEvent.ReactionRemove -> {
                     removeReactionFromCache(event.data)
                 }
+                is GatewayWebSocketManager.GatewayEvent.ChannelCreate -> {
+                    addChannelToCache(event.channel)
+                }
+                is GatewayWebSocketManager.GatewayEvent.ChannelUpdate -> {
+                    updateChannelInCache(event.channel)
+                }
+                is GatewayWebSocketManager.GatewayEvent.ChannelDelete -> {
+                    removeChannelFromCache(event.channel)
+                }
+                is GatewayWebSocketManager.GatewayEvent.GuildCreate -> {
+                    if (event.guild.channels.isNotEmpty()) {
+                        channelCache[event.guild.id] = event.guild.channels
+                        _channelCacheFlow.value = channelCache.toMap()
+                    }
+                }
+                is GatewayWebSocketManager.GatewayEvent.GuildUpdate -> {
+                    // Channels may not be present in guild update, only update if they are
+                    if (event.guild.channels.isNotEmpty()) {
+                        channelCache[event.guild.id] = event.guild.channels
+                        _channelCacheFlow.value = channelCache.toMap()
+                    }
+                }
+                is GatewayWebSocketManager.GatewayEvent.GuildDelete -> {
+                    channelCache.remove(event.guildId)
+                    _channelCacheFlow.value = channelCache.toMap()
+                }
                 is GatewayWebSocketManager.GatewayEvent.VoiceStateUpdate -> {
                     updateVoiceStateCache(event.data)
                 }
@@ -496,6 +522,32 @@ class ChatRepository @Inject constructor(
         }
         _channelCacheFlow.value = channelCache.toMap()
         Timber.i("Cached channels for ${channelCache.size} guilds from READY")
+    }
+
+    private fun addChannelToCache(channel: Channel) {
+        val guildId = channel.serverId ?: return
+        val current = channelCache[guildId].orEmpty()
+        if (current.none { it.id == channel.id }) {
+            channelCache[guildId] = current + channel
+            _channelCacheFlow.value = channelCache.toMap()
+            Timber.d("Added channel ${channel.name} to cache for guild $guildId")
+        }
+    }
+
+    private fun updateChannelInCache(channel: Channel) {
+        val guildId = channel.serverId ?: return
+        val current = channelCache[guildId].orEmpty()
+        channelCache[guildId] = current.map { if (it.id == channel.id) channel else it }
+        _channelCacheFlow.value = channelCache.toMap()
+        Timber.d("Updated channel ${channel.name} in cache for guild $guildId")
+    }
+
+    private fun removeChannelFromCache(channel: Channel) {
+        val guildId = channel.serverId ?: return
+        val current = channelCache[guildId].orEmpty()
+        channelCache[guildId] = current.filter { it.id != channel.id }
+        _channelCacheFlow.value = channelCache.toMap()
+        Timber.d("Removed channel ${channel.name} from cache for guild $guildId")
     }
 
     private fun updateMessageCache(channelId: String, messages: List<Message>, replace: Boolean) {

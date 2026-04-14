@@ -42,6 +42,7 @@ fun ChatScreen(
     onNavigateToStarred: () -> Unit = {},
     onNavigateToMessages: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
+    onNavigateToVoiceChannel: (String) -> Unit = {},
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
@@ -130,6 +131,7 @@ fun ChatScreen(
                         channels = channels,
                         selectedChannelId = activeChannel?.id,
                         onChannelSelected = { viewModel.selectChannel(it) },
+                        onNavigateToVoiceChannel = onNavigateToVoiceChannel,
                         modifier = Modifier.width(if (isMedium) 200.dp else 240.dp)
                     )
                 }
@@ -437,9 +439,13 @@ fun ChatScreen(
                             ChannelListContent(
                                 channels = channels,
                                 selectedChannelId = activeChannel?.id,
-                                onChannelSelected = { 
+                                onChannelSelected = {
                                     viewModel.selectChannel(it)
                                     channelDrawerOpen = false
+                                },
+                                onNavigateToVoiceChannel = {
+                                    channelDrawerOpen = false
+                                    onNavigateToVoiceChannel(it)
                                 },
                                 modifier = Modifier.fillMaxSize()
                             )

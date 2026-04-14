@@ -236,6 +236,30 @@ class GatewayWebSocketManager @Inject constructor(
                 val reaction = json.decodeFromJsonElement<ReactionEvent>(eventData)
                 _events.trySend(GatewayEvent.ReactionRemove(reaction))
             }
+            GatewayEventTypes.CHANNEL_CREATE -> {
+                val channel = json.decodeFromJsonElement<com.fluxer.client.data.model.Channel>(eventData)
+                _events.trySend(GatewayEvent.ChannelCreate(channel))
+            }
+            GatewayEventTypes.CHANNEL_UPDATE -> {
+                val channel = json.decodeFromJsonElement<com.fluxer.client.data.model.Channel>(eventData)
+                _events.trySend(GatewayEvent.ChannelUpdate(channel))
+            }
+            GatewayEventTypes.CHANNEL_DELETE -> {
+                val channel = json.decodeFromJsonElement<com.fluxer.client.data.model.Channel>(eventData)
+                _events.trySend(GatewayEvent.ChannelDelete(channel))
+            }
+            GatewayEventTypes.GUILD_CREATE -> {
+                val guild = json.decodeFromJsonElement<com.fluxer.client.data.model.Server>(eventData)
+                _events.trySend(GatewayEvent.GuildCreate(guild))
+            }
+            GatewayEventTypes.GUILD_UPDATE -> {
+                val guild = json.decodeFromJsonElement<com.fluxer.client.data.model.Server>(eventData)
+                _events.trySend(GatewayEvent.GuildUpdate(guild))
+            }
+            GatewayEventTypes.GUILD_DELETE -> {
+                val data = json.decodeFromJsonElement<GuildDeleteData>(eventData)
+                _events.trySend(GatewayEvent.GuildDelete(data.id))
+            }
             GatewayEventTypes.VOICE_STATE_UPDATE -> {
                 val voiceState = json.decodeFromJsonElement<VoiceStateUpdateEvent>(eventData)
                 _events.trySend(GatewayEvent.VoiceStateUpdate(voiceState))
@@ -377,6 +401,12 @@ class GatewayWebSocketManager @Inject constructor(
         data class TypingStart(val data: TypingEvent) : GatewayEvent()
         data class ReactionAdd(val data: ReactionEvent) : GatewayEvent()
         data class ReactionRemove(val data: ReactionEvent) : GatewayEvent()
+        data class ChannelCreate(val channel: com.fluxer.client.data.model.Channel) : GatewayEvent()
+        data class ChannelUpdate(val channel: com.fluxer.client.data.model.Channel) : GatewayEvent()
+        data class ChannelDelete(val channel: com.fluxer.client.data.model.Channel) : GatewayEvent()
+        data class GuildCreate(val guild: com.fluxer.client.data.model.Server) : GatewayEvent()
+        data class GuildUpdate(val guild: com.fluxer.client.data.model.Server) : GatewayEvent()
+        data class GuildDelete(val guildId: String) : GatewayEvent()
         data class VoiceStateUpdate(val data: com.fluxer.client.data.model.VoiceStateUpdateEvent) : GatewayEvent()
         data class VoiceServerUpdate(val data: com.fluxer.client.data.model.VoiceServerUpdateEvent) : GatewayEvent()
         data class CallCreate(val data: com.fluxer.client.data.model.CallEvent) : GatewayEvent()
@@ -389,6 +419,12 @@ class GatewayWebSocketManager @Inject constructor(
         val id: String,
         @SerialName("channel_id")
         val channelId: String
+    )
+
+    @kotlinx.serialization.Serializable
+    private data class GuildDeleteData(
+        val id: String,
+        val unavailable: Boolean? = null
     )
 
 }

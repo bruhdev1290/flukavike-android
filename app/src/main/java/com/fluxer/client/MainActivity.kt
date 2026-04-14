@@ -143,6 +143,9 @@ fun FluxerApp() {
                 },
                 onNavigateToProfile = {
                     navController.navigate("profile")
+                },
+                onNavigateToVoiceChannel = { channelId ->
+                    navController.navigate("voice_channel/$channelId")
                 }
             )
         }
