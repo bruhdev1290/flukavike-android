@@ -12,6 +12,7 @@ import dagger.hilt.android.EntryPointAccessors
 import com.fluxer.client.MainActivity
 import com.fluxer.client.R
 import com.fluxer.client.data.model.NotificationData
+import com.fluxer.client.util.NotificationPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,8 +31,18 @@ object FluxerNotificationHandler {
 
     fun showNotification(context: Context, data: Map<String, String>) {
         val notificationType = data["type"] ?: "message"
+        val settings = NotificationPreferences.get(context)
+        val enabled = settings.globalEnabled && when (notificationType) {
+            "direct_message" -> settings.dmNotifications
+            "mention" -> settings.mentionNotifications
+            "call", "call_missed" -> settings.callNotifications
+            "friend_request" -> settings.friendRequestNotifications
+            else -> true
+        }
+        if (!enabled) return
+
         val title = data["title"] ?: "New Message"
-        val body = data["body"] ?: ""
+        val body = if (settings.showPreview) data["body"].orEmpty() else "Open Fluxer to view"
         val channelId = data["channel_id"]
         val guildId = data["guild_id"]
         val senderId = data["sender_id"]

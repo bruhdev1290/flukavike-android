@@ -6,10 +6,15 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,8 +24,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.fluxer.client.data.model.ChannelType
 import com.fluxer.client.data.model.displayName
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
@@ -37,6 +44,7 @@ fun ServerSidebar(
     onServerSelected: (Server) -> Unit,
     onHomeSelected: () -> Unit,
     unreadCountsByGuild: Map<String, Int> = emptyMap(),
+    onJoinServer: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     isCompact: Boolean = false
 ) {
@@ -87,6 +95,28 @@ fun ServerSidebar(
                 modifier = Modifier.padding(vertical = if (isCompact) 3.dp else 4.dp),
                 size = serverIconSize
             )
+        }
+
+        // Join server "+" button
+        if (onJoinServer != null) {
+            Spacer(modifier = Modifier.height(if (isCompact) 4.dp else 6.dp))
+            Box(
+                modifier = Modifier
+                    .size(serverIconSize)
+                    .background(
+                        Color(0xFF2D6A4F).copy(alpha = 0.25f),
+                        RoundedCornerShape(16.dp)
+                    )
+                    .clickable(onClick = onJoinServer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Join a server",
+                    tint = Color(0xFF52B788),
+                    modifier = Modifier.size(iconSize)
+                )
+            }
         }
     }
 }
@@ -214,58 +244,105 @@ fun ChannelListContent(
     favoriteChannelIds: Set<String> = emptySet(),
     modifier: Modifier = Modifier
 ) {
-    val textChannels = channels.filter { it.type == com.fluxer.client.data.model.ChannelType.TEXT }
-    val voiceChannels = channels.filter { it.type == com.fluxer.client.data.model.ChannelType.VOICE }
+    val categories = remember(channels) {
+        channels.filter { it.type == ChannelType.CATEGORY }.sortedBy { it.position }
+    }
+    val channelsByParent = remember(channels) {
+        channels.filter { it.type != ChannelType.CATEGORY }.groupBy { it.parentId }
+    }
+    val collapsedCategories = remember { mutableStateMapOf<String, Boolean>() }
 
     Column(
         modifier = modifier
             .fillMaxHeight()
             .background(VelvetDark)
             .border(1.dp, BorderSubtle.copy(alpha = 0.45f))
-            .padding(vertical = 16.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = 8.dp)
     ) {
-        // Text Channels Section
-        if (textChannels.isNotEmpty()) {
-            Text(
-                text = "Text channels",
-                style = MaterialTheme.typography.labelSmall,
-                color = TextMuted,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        // Uncategorized channels (no parentId)
+        val uncategorized = (channelsByParent[null] ?: emptyList()).sortedBy { it.position }
+        uncategorized.forEach { channel ->
+            ChannelItem(
+                channel = channel,
+                isSelected = channel.id == selectedChannelId,
+                unreadCount = unreadCountsByChannel[channel.id] ?: 0,
+                isFavorite = favoriteChannelIds.contains(channel.id),
+                onClick = {
+                    if (channel.type == ChannelType.VOICE) onNavigateToVoiceChannel(channel.id)
+                    else onChannelSelected(channel)
+                }
+            )
+        }
+
+        // Categories with their children
+        categories.forEach { category ->
+            val isCollapsed = collapsedCategories[category.id] ?: false
+            val children = (channelsByParent[category.id] ?: emptyList()).sortedBy { it.position }
+
+            Spacer(modifier = Modifier.height(4.dp))
+            CategoryHeader(
+                name = category.name,
+                isCollapsed = isCollapsed,
+                hasUnread = children.any { (unreadCountsByChannel[it.id] ?: 0) > 0 },
+                onClick = { collapsedCategories[category.id] = !isCollapsed }
             )
 
-            textChannels.forEach { channel ->
-                ChannelItem(
-                    channel = channel,
-                    isSelected = channel.id == selectedChannelId,
-                    unreadCount = unreadCountsByChannel[channel.id] ?: 0,
-                    isFavorite = favoriteChannelIds.contains(channel.id),
-                    onClick = { onChannelSelected(channel) }
-                )
+            if (!isCollapsed) {
+                children.forEach { channel ->
+                    ChannelItem(
+                        channel = channel,
+                        isSelected = channel.id == selectedChannelId,
+                        unreadCount = unreadCountsByChannel[channel.id] ?: 0,
+                        isFavorite = favoriteChannelIds.contains(channel.id),
+                        onClick = {
+                            if (channel.type == ChannelType.VOICE) onNavigateToVoiceChannel(channel.id)
+                            else onChannelSelected(channel)
+                        }
+                    )
+                }
             }
         }
 
-        // Voice Channels Section
-        if (voiceChannels.isNotEmpty()) {
-            if (textChannels.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(12.dp))
-            }
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+}
 
-            Text(
-                text = "Voice channels",
-                style = MaterialTheme.typography.labelSmall,
-                color = TextMuted,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+@Composable
+private fun CategoryHeader(
+    name: String,
+    isCollapsed: Boolean,
+    hasUnread: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = if (isCollapsed) Icons.Default.KeyboardArrowRight else Icons.Default.KeyboardArrowDown,
+            contentDescription = null,
+            tint = if (hasUnread && isCollapsed) TextSecondary else TextMuted,
+            modifier = Modifier.size(14.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = name.uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = if (hasUnread && isCollapsed) TextSecondary else TextMuted,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+        if (hasUnread && isCollapsed) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(PhantomRed, RoundedCornerShape(50))
             )
-
-            voiceChannels.forEach { channel ->
-                ChannelItem(
-                    channel = channel,
-                    isSelected = false,
-                    unreadCount = unreadCountsByChannel[channel.id] ?: 0,
-                    isFavorite = favoriteChannelIds.contains(channel.id),
-                    onClick = { onNavigateToVoiceChannel(channel.id) }
-                )
-            }
         }
     }
 }

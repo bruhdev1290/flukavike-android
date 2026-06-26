@@ -1,5 +1,6 @@
 package com.fluxer.client.ui.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -8,11 +9,14 @@ import com.fluxer.client.data.model.*
 import com.fluxer.client.data.remote.GatewayWebSocketManager
 import com.fluxer.client.data.repository.ChatRepository
 import com.fluxer.client.data.repository.AuthRepository
+import com.fluxer.client.data.repository.GuildManagementRepository
 import com.fluxer.client.data.repository.HomeStateRepository
 import com.fluxer.client.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -23,7 +27,8 @@ import javax.inject.Inject
 class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val authRepository: AuthRepository,
-    private val homeStateRepository: HomeStateRepository
+    private val homeStateRepository: HomeStateRepository,
+    private val guildManagementRepository: GuildManagementRepository
 ) : ViewModel() {
 
     // Current user
@@ -105,6 +110,36 @@ class ChatViewModel @Inject constructor(
     // Reply state
     private val _replyingTo = MutableStateFlow<Message?>(null)
     val replyingTo: StateFlow<Message?> = _replyingTo.asStateFlow()
+
+    // Pending file attachment
+    private val _pendingAttachmentUri = MutableStateFlow<Uri?>(null)
+    val pendingAttachmentUri: StateFlow<Uri?> = _pendingAttachmentUri.asStateFlow()
+
+    private val _pendingAttachmentMetadata = MutableStateFlow<AttachmentMetadata?>(null)
+    val pendingAttachmentMetadata: StateFlow<AttachmentMetadata?> = _pendingAttachmentMetadata.asStateFlow()
+
+    private val _isSendingMessage = MutableStateFlow(false)
+    val isSendingMessage: StateFlow<Boolean> = _isSendingMessage.asStateFlow()
+
+    private val _uploadProgress = MutableStateFlow<Float?>(null)
+    val uploadProgress: StateFlow<Float?> = _uploadProgress.asStateFlow()
+
+    // Typing indicators: channelId → (userId → display name)
+    private val _typingUsers = MutableStateFlow<Map<String, Map<String, String>>>(emptyMap())
+    private val _typingClearJobs = mutableMapOf<String, Job>()
+
+    val typingUsersInChannel: StateFlow<List<String>> = combine(
+        _typingUsers,
+        _selectedChannel,
+        currentUser
+    ) { typingMap, channel, me ->
+        val channelId = channel?.id ?: return@combine emptyList()
+        typingMap[channelId]
+            ?.filter { (userId, _) -> userId != me?.id }
+            ?.values
+            ?.toList()
+            .orEmpty()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     init {
         // Connect to Gateway when ViewModel is created
@@ -201,6 +236,9 @@ class ChatViewModel @Inject constructor(
 
     fun selectChannel(channel: Channel) {
         _selectedChannel.value = channel
+        viewModelScope.launch {
+            homeStateRepository.ackChannelLatest(channel.id, channel.lastMessageId)
+        }
     }
 
     fun toggleFavoriteForSelectedChannel() {
@@ -232,26 +270,46 @@ class ChatViewModel @Inject constructor(
     fun sendMessage() {
         val content = _messageInput.value.trim()
         val channelId = _selectedChannel.value?.id ?: return
-        
-        if (content.isEmpty()) return
+        val attachment = _pendingAttachmentUri.value
+
+        if (content.isEmpty() && attachment == null) return
 
         viewModelScope.launch {
-            // Clear input immediately for better UX
             _messageInput.value = ""
             val replyToId = _replyingTo.value?.id
             _replyingTo.value = null
-            
-            chatRepository.sendMessage(channelId, content, replyToId)
+            _pendingAttachmentUri.value = null
+            _pendingAttachmentMetadata.value = null
+            _isSendingMessage.value = true
+            _uploadProgress.value = if (attachment != null) 0.1f else null
+
+            val result = if (attachment != null) {
+                _uploadProgress.value = 0.35f
+                chatRepository.sendMessageWithAttachment(channelId, content, replyToId, attachment)
+            } else {
+                chatRepository.sendMessage(channelId, content, replyToId)
+            }
+            if (attachment != null) _uploadProgress.value = 0.9f
+
+            result
                 .onSuccess {
-                    // Trigger refresh to show new message
+                    _uploadProgress.value = 1f
                     _refreshTrigger.value += 1
                 }
                 .onError { error ->
                     _error.value = error
-                    // Restore input on error
                     _messageInput.value = content
+                    _pendingAttachmentUri.value = attachment
+                    _pendingAttachmentMetadata.value = attachment?.let { chatRepository.getAttachmentMetadata(it) }
                 }
+            _isSendingMessage.value = false
+            _uploadProgress.value = null
         }
+    }
+
+    fun setPendingAttachment(uri: Uri?) {
+        _pendingAttachmentUri.value = uri
+        _pendingAttachmentMetadata.value = uri?.let { chatRepository.getAttachmentMetadata(it) }
     }
     
     fun sendReply(replyToMessageId: String) {
@@ -286,13 +344,142 @@ class ChatViewModel @Inject constructor(
     }
     
     fun addReaction(messageId: String, emoji: String) {
+        if (emoji.isBlank()) return
         val channelId = _selectedChannel.value?.id ?: return
-        
         viewModelScope.launch {
             chatRepository.addReaction(channelId, messageId, emoji)
-                .onError { error ->
-                    _error.value = error
+                .onError { error -> _error.value = error }
+        }
+    }
+
+    // ==================== MESSAGE EDITING ====================
+
+    private val _editingMessage = MutableStateFlow<Message?>(null)
+    val editingMessage: StateFlow<Message?> = _editingMessage.asStateFlow()
+
+    fun startEditMessage(message: Message) {
+        _editingMessage.value = message
+        _messageInput.value = message.content
+    }
+
+    fun cancelEdit() {
+        _editingMessage.value = null
+        _messageInput.value = ""
+    }
+
+    fun submitEdit() {
+        val msg = _editingMessage.value ?: return
+        val channelId = _selectedChannel.value?.id ?: return
+        val newContent = _messageInput.value.trim()
+        if (newContent.isBlank() || newContent == msg.content) { cancelEdit(); return }
+        viewModelScope.launch {
+            chatRepository.editMessage(channelId, msg.id, newContent)
+                .onSuccess { _refreshTrigger.value += 1 }
+                .onError { error -> _error.value = error }
+            cancelEdit()
+        }
+    }
+
+    // ==================== PINS ====================
+
+    private val _pinnedMessages = MutableStateFlow<List<Message>>(emptyList())
+    val pinnedMessages: StateFlow<List<Message>> = _pinnedMessages.asStateFlow()
+
+    private val _showPinnedMessages = MutableStateFlow(false)
+    val showPinnedMessages: StateFlow<Boolean> = _showPinnedMessages.asStateFlow()
+
+    fun togglePinnedMessages() { _showPinnedMessages.value = !_showPinnedMessages.value }
+
+    fun loadPinnedMessages() {
+        val channelId = _selectedChannel.value?.id ?: return
+        viewModelScope.launch {
+            chatRepository.getPinnedMessages(channelId)
+                .onSuccess { _pinnedMessages.value = it }
+                .onError { _error.value = it }
+        }
+    }
+
+    fun pinMessage(messageId: String) {
+        val channelId = _selectedChannel.value?.id ?: return
+        viewModelScope.launch {
+            chatRepository.pinMessage(channelId, messageId)
+                .onError { _error.value = it }
+        }
+    }
+
+    fun unpinMessage(messageId: String) {
+        val channelId = _selectedChannel.value?.id ?: return
+        viewModelScope.launch {
+            chatRepository.unpinMessage(channelId, messageId)
+                .onSuccess { _pinnedMessages.value = _pinnedMessages.value.filter { it.id != messageId } }
+                .onError { _error.value = it }
+        }
+    }
+
+    // ==================== GUILD MEMBERS ====================
+
+    private val _guildMembers = MutableStateFlow<List<com.fluxer.client.data.model.GuildMember>>(emptyList())
+    val guildMembers: StateFlow<List<com.fluxer.client.data.model.GuildMember>> = _guildMembers.asStateFlow()
+
+    private val _showMemberList = MutableStateFlow(false)
+    val showMemberList: StateFlow<Boolean> = _showMemberList.asStateFlow()
+
+    fun toggleMemberList() {
+        _showMemberList.value = !_showMemberList.value
+        if (_showMemberList.value) loadGuildMembers()
+    }
+
+    private fun loadGuildMembers() {
+        val guildId = _selectedServer.value?.id ?: return
+        viewModelScope.launch {
+            chatRepository.getGuildMembers(guildId)
+                .onSuccess { _guildMembers.value = it }
+                .onError { _error.value = it }
+        }
+    }
+
+    // ==================== CUSTOM STATUS ====================
+
+    fun setCustomStatus(status: String?) {
+        viewModelScope.launch {
+            chatRepository.setCustomStatus(status)
+                .onError { _error.value = it }
+        }
+    }
+
+    // ==================== INVITE / JOIN ====================
+
+    private val _invitePreview = MutableStateFlow<com.fluxer.client.data.model.InviteInfo?>(null)
+    val invitePreview: StateFlow<com.fluxer.client.data.model.InviteInfo?> = _invitePreview.asStateFlow()
+
+    fun previewInvite(code: String) {
+        viewModelScope.launch {
+            chatRepository.previewInvite(code.trim())
+                .onSuccess { _invitePreview.value = it }
+                .onError { _error.value = it }
+        }
+    }
+
+    fun joinViaInvite(code: String, onJoined: () -> Unit = {}) {
+        viewModelScope.launch {
+            chatRepository.joinViaInvite(code.trim())
+                .onSuccess {
+                    _invitePreview.value = null
+                    loadGuilds()
+                    onJoined()
                 }
+                .onError { _error.value = it }
+        }
+    }
+
+    fun clearInvitePreview() { _invitePreview.value = null }
+
+    fun removeReaction(messageId: String, emoji: String) {
+        if (emoji.isBlank()) return
+        val channelId = _selectedChannel.value?.id ?: return
+        viewModelScope.launch {
+            chatRepository.removeReaction(channelId, messageId, emoji)
+                .onError { error -> _error.value = error }
         }
     }
 
@@ -396,6 +583,28 @@ class ChatViewModel @Inject constructor(
                             _channels.value = emptyList()
                         }
                     }
+                    is GatewayWebSocketManager.GatewayEvent.TypingStart -> {
+                        val typing = event.data
+                        val displayName = typing.member?.nick
+                            ?: typing.member?.user?.username
+                            ?: typing.userId
+                        val jobKey = "${typing.channelId}:${typing.userId}"
+                        _typingClearJobs[jobKey]?.cancel()
+                        _typingUsers.update { map ->
+                            val channel = map[typing.channelId]?.toMutableMap() ?: mutableMapOf()
+                            channel[typing.userId] = displayName
+                            map + (typing.channelId to channel)
+                        }
+                        _typingClearJobs[jobKey] = viewModelScope.launch {
+                            delay(10_000)
+                            _typingUsers.update { map ->
+                                val channel = map[typing.channelId]?.toMutableMap() ?: return@update map
+                                channel.remove(typing.userId)
+                                if (channel.isEmpty()) map - typing.channelId
+                                else map + (typing.channelId to channel)
+                            }
+                        }
+                    }
                     else -> { /* Handle other events if needed */ }
                 }
             }
@@ -438,5 +647,28 @@ class ChatViewModel @Inject constructor(
             }
         }
         return merged.values.toList()
+    }
+
+    fun createServer(name: String, onCreated: ((Server) -> Unit)? = null) {
+        viewModelScope.launch {
+            guildManagementRepository.createServer(name)
+                .onSuccess { server ->
+                    _guilds.value = (_guilds.value + server).distinctBy { it.id }
+                    onCreated?.invoke(server)
+                }
+                .onError { error -> _error.value = error }
+        }
+    }
+
+    fun createChannel(name: String, isVoice: Boolean, onCreated: ((Channel) -> Unit)? = null) {
+        val guildId = _selectedServer.value?.id ?: return
+        viewModelScope.launch {
+            guildManagementRepository.createChannel(guildId, name, isVoice)
+                .onSuccess { channel ->
+                    _channels.value = (_channels.value + channel).distinctBy { it.id }
+                    onCreated?.invoke(channel)
+                }
+                .onError { error -> _error.value = error }
+        }
     }
 }

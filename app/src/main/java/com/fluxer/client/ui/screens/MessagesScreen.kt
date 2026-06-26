@@ -13,7 +13,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -56,16 +55,36 @@ fun MessagesScreen(
     val dmChannels by viewModel.dmChannels.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val unreadCountsByChannel by viewModel.unreadCountsByChannel.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
     
     // State for context menu
     var selectedChannel by remember { mutableStateOf<Channel?>(null) }
     var showContextMenu by remember { mutableStateOf(false) }
     var showMuteOptions by remember { mutableStateOf(false) }
-    
+    var showFriends by remember { mutableStateOf(false) }
+    var showSearch by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         viewModel.loadDMChannels()
     }
-    
+
+    if (showFriends) {
+        androidx.compose.ui.window.Dialog(
+            onDismissRequest = { showFriends = false },
+            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            FriendsScreen(
+                onDismiss = { showFriends = false },
+                onStartDm = { userId ->
+                    showFriends = false
+                    viewModel.createDMChannel(userId, onCreated = { channel ->
+                        onChannelSelected(channel)
+                    })
+                }
+            )
+        }
+    }
+
     FluxerPageScaffold(
         title = "Messages",
         subtitle = "${dmChannels.size} conversations",
@@ -74,29 +93,13 @@ fun MessagesScreen(
             FluxerIconButton(
                 icon = Icons.Default.Search,
                 contentDescription = "Search",
-                onClick = { }
+                onClick = { showSearch = !showSearch }
             )
             FluxerIconButton(
                 icon = Icons.Default.PersonAdd,
-                contentDescription = "Add friends",
-                onClick = { }
+                contentDescription = "New direct message",
+                onClick = { showFriends = true }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { /* TODO: New DM */ },
-                containerColor = PhantomRed,
-                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 2.dp),
-                shape = CircleShape,
-                modifier = Modifier.size(56.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "New Message",
-                    tint = TextPrimary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
         }
     ) { padding ->
         Column(
@@ -106,28 +109,70 @@ fun MessagesScreen(
         ) {
             if (isLoading) {
                 FluxerLoadingState("Loading conversations")
-            } else if (dmChannels.isEmpty()) {
-                FluxerEmptyState(
-                    title = "No direct messages yet",
-                    body = "When you start a conversation, it will show up here.",
-                    icon = Icons.AutoMirrored.Filled.Send
-                )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                 ) {
                     item {
+                        if (showSearch) {
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = viewModel::onSearchQueryChanged,
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                leadingIcon = {
+                                    Icon(Icons.Default.Search, contentDescription = null, tint = TextMuted)
+                                },
+                                trailingIcon = {
+                                    if (searchQuery.isNotBlank()) {
+                                        IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
+                                            Icon(Icons.Default.Close, contentDescription = "Clear", tint = TextMuted)
+                                        }
+                                    }
+                                },
+                                placeholder = { Text("Search direct messages", color = TextMuted) },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = TextPrimary,
+                                    unfocusedTextColor = TextPrimary,
+                                    focusedBorderColor = PhantomRed,
+                                    unfocusedBorderColor = BorderSubtle,
+                                    cursorColor = PhantomRed
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
                         FluxerSectionTitle(title = "Quick access")
-                        PersonalNotesItem(onClick = { /* TODO */ })
+                        PersonalNotesItem(
+                            onClick = {
+                                viewModel.openPersonalNotes { channel ->
+                                    onChannelSelected(channel)
+                                }
+                            }
+                        )
                         Spacer(modifier = Modifier.height(12.dp))
-                        FluxerSectionTitle(title = "Recent conversations")
+                        FluxerSectionTitle(title = "Direct messages")
                     }
-                    
-                    items(dmChannels) { dmChannel ->
+
+                    if (dmChannels.isEmpty()) {
+                        item {
+                            FluxerEmptyState(
+                                title = if (searchQuery.isBlank()) "No direct messages yet" else "No matches",
+                                body = if (searchQuery.isBlank()) {
+                                    "Start a DM from friends or keep private notes here."
+                                } else {
+                                    "Try a different name or clear the search."
+                                },
+                                icon = Icons.Default.Forum
+                            )
+                        }
+                    }
+
+                    items(dmChannels, key = { it.id }) { dmChannel ->
                         DMChannelItemDiscord(
                             channel = dmChannel,
                             unreadCount = unreadCountsByChannel[dmChannel.id] ?: 0,
+                            isPinned = viewModel.isPinned(dmChannel.id),
                             onClick = { onChannelSelected(dmChannel) },
                             onLongClick = {
                                 selectedChannel = dmChannel
@@ -157,6 +202,11 @@ fun MessagesScreen(
                 showContextMenu = false
             },
             onAddNote = { showContextMenu = false },
+            onTogglePin = {
+                viewModel.togglePinnedDM(selectedChannel!!.id)
+                showContextMenu = false
+            },
+            isPinned = viewModel.isPinned(selectedChannel!!.id),
             onCloseDM = { 
                 viewModel.closeDM(selectedChannel!!.id)
                 showContextMenu = false
@@ -236,6 +286,7 @@ private fun PersonalNotesItem(onClick: () -> Unit) {
 private fun DMChannelItemDiscord(
     channel: Channel,
     unreadCount: Int,
+    isPinned: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
@@ -331,6 +382,13 @@ private fun DMChannelItemDiscord(
                         style = MaterialTheme.typography.labelSmall,
                         color = TextSecondary
                     )
+                } else if (isPinned) {
+                    Icon(
+                        imageVector = Icons.Default.PushPin,
+                        contentDescription = "Pinned",
+                        tint = AlertYellow,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
             
@@ -390,6 +448,8 @@ private fun DMContextMenu(
     onViewProfile: () -> Unit,
     onStartCall: () -> Unit,
     onAddNote: () -> Unit,
+    onTogglePin: () -> Unit,
+    isPinned: Boolean,
     onCloseDM: () -> Unit,
     onInviteToCommunity: () -> Unit,
     onAddFriend: () -> Unit,
@@ -474,8 +534,8 @@ private fun DMContextMenu(
             ) {
                 ContextMenuItem(
                     icon = Icons.Default.PushPin,
-                    text = "Pin DM",
-                    onClick = { /* TODO */ }
+                    text = if (isPinned) "Unpin DM" else "Pin DM",
+                    onClick = onTogglePin
                 )
             }
             

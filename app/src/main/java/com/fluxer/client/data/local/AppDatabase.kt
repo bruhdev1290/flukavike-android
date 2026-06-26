@@ -13,6 +13,7 @@ import com.fluxer.client.data.local.dao.NavigationStateDao
 import com.fluxer.client.data.local.dao.NotificationFeedDao
 import com.fluxer.client.data.local.dao.PendingMessageDao
 import com.fluxer.client.data.local.dao.ReadStateDao
+import com.fluxer.client.data.local.dao.UserPreferenceDao
 import com.fluxer.client.data.local.model.AuthSessionEntity
 import com.fluxer.client.data.local.model.ChannelEntity
 import com.fluxer.client.data.local.model.DmChannelEntity
@@ -49,7 +50,7 @@ import com.fluxer.client.data.local.model.VoiceSessionEntity
         VoiceSessionEntity::class,
         NavigationStateEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -64,4 +65,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun favoriteChannelDao(): FavoriteChannelDao
     abstract fun readStateDao(): ReadStateDao
     abstract fun notificationFeedDao(): NotificationFeedDao
+    abstract fun userPreferenceDao(): UserPreferenceDao
 }

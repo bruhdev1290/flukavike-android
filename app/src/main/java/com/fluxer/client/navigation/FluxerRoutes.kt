@@ -25,12 +25,15 @@ sealed class FluxerRoute(open val path: String) {
     )
     data object Notifications : FluxerRoute("/notifications")
     data object You : FluxerRoute("/you")
+    data object Settings : FluxerRoute("/settings")
     data class GuildSettings(val guildId: String, val tab: String? = null) : FluxerRoute(
         if (tab == null) "/settings/guild/$guildId" else "/settings/guild/$guildId?tab=$tab"
     )
     data class Invite(val code: String) : FluxerRoute("/invite/$code")
     data class Gift(val code: String) : FluxerRoute("/gift/$code")
     data class ThemePreview(val themeId: String) : FluxerRoute("/theme/$themeId")
+    data class UserProfile(val userId: String) : FluxerRoute("/users/$userId")
+    data class GuildVoice(val guildId: String, val channelId: String) : FluxerRoute("/voice/$guildId/$channelId")
 }
 
 enum class ShellBranch {
@@ -60,6 +63,7 @@ object RoutePaths {
     const val Favorites = "/channels/@favorites"
     const val Notifications = "/notifications"
     const val You = "/you"
+    const val Settings = "/settings"
 
     fun dmChannel(channelId: String) = "/channels/@me/$channelId"
     fun dmCall(channelId: String) = "/channels/@me/$channelId/call"
@@ -95,7 +99,7 @@ fun classifyRoute(path: String): RouteKind {
 
 fun branchForPath(path: String): ShellBranch = when {
     path.startsWith(RoutePaths.Notifications) -> ShellBranch.Notifications
-    path.startsWith(RoutePaths.You) -> ShellBranch.You
+    path.startsWith(RoutePaths.You) || path.startsWith(RoutePaths.Settings) -> ShellBranch.You
     else -> ShellBranch.Home
 }
 
@@ -111,6 +115,7 @@ fun routeFromPath(rawPath: String): FluxerRoute {
         path == RoutePaths.Favorites -> FluxerRoute.Favorites
         path == RoutePaths.Notifications -> FluxerRoute.Notifications
         path == RoutePaths.You -> FluxerRoute.You
+        path == RoutePaths.Settings -> FluxerRoute.Settings
         segments.size == 3 && segments[0] == "channels" && segments[1] == "@me" ->
             FluxerRoute.DmChannel(segments[2])
         segments.size == 4 && segments[0] == "channels" && segments[1] == "@me" && segments[3] == "call" ->

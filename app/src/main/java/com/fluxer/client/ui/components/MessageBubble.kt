@@ -46,6 +46,10 @@ fun MessageBubble(
     onDelete: () -> Unit,
     onReply: () -> Unit,
     onAddReaction: (String) -> Unit,
+    onPin: (() -> Unit)? = null,
+    onEdit: (() -> Unit)? = null,
+    onAvatarClick: ((String) -> Unit)? = null,
+    onViewAttachment: ((com.fluxer.client.data.model.Attachment) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -68,7 +72,9 @@ fun MessageBubble(
                 UserAvatar(
                     user = message.author,
                     size = 40.dp,
-                    modifier = Modifier.padding(end = 12.dp)
+                    modifier = Modifier.padding(end = 12.dp),
+                    onClick = if (onAvatarClick != null && message.author?.id != null)
+                        { { onAvatarClick(message.author.id) } } else null
                 )
             } else if (!isOwnMessage) {
                 // Spacer for alignment when avatar is hidden
@@ -147,7 +153,10 @@ fun MessageBubble(
                         if (message.attachments.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(8.dp))
                             message.attachments.forEach { attachment ->
-                                ChatAttachment(attachment = attachment)
+                                ChatAttachment(
+                                    attachment = attachment,
+                                    onViewAttachment = onViewAttachment
+                                )
                             }
                         }
                     }
@@ -157,7 +166,8 @@ fun MessageBubble(
                 if (message.reactions.isNotEmpty()) {
                     ReactionsRow(
                         reactions = message.reactions,
-                        onAddReaction = onAddReaction,
+                        onToggleReaction = onAddReaction,
+                        onOpenPicker = { showEmojiPicker = true },
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
@@ -213,6 +223,13 @@ fun MessageBubble(
             )
             
             if (isOwnMessage) {
+                onEdit?.let { editFn ->
+                    DropdownMenuItem(
+                        text = { Text("Edit", color = TextPrimary) },
+                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = TextSecondary) },
+                        onClick = { editFn(); showMenu = false }
+                    )
+                }
                 DropdownMenuItem(
                     text = { Text("Delete", color = DndRed) },
                     leadingIcon = {
@@ -229,6 +246,20 @@ fun MessageBubble(
                 )
             }
             
+            onPin?.let { pinFn ->
+                DropdownMenuItem(
+                    text = { Text("Pin Message", color = TextPrimary) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.PushPin,
+                            contentDescription = null,
+                            tint = TextPrimary
+                        )
+                    },
+                    onClick = { pinFn(); showMenu = false }
+                )
+            }
+
             DropdownMenuItem(
                 text = { Text("Copy", color = TextPrimary) },
                 leadingIcon = {
@@ -238,10 +269,7 @@ fun MessageBubble(
                         tint = TextPrimary
                     )
                 },
-                onClick = { 
-                    // TODO: Copy to clipboard
-                    showMenu = false 
-                }
+                onClick = { showMenu = false }
             )
         }
         
@@ -359,7 +387,8 @@ private fun ReplyPreview(
 @Composable
 private fun ReactionsRow(
     reactions: List<Reaction>,
-    onAddReaction: (String) -> Unit,
+    onToggleReaction: (String) -> Unit,
+    onOpenPicker: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -367,25 +396,16 @@ private fun ReactionsRow(
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         reactions.forEach { reaction ->
-            ReactionChip(reaction = reaction)
+            ReactionChip(reaction = reaction, onToggle = { onToggleReaction(reaction.emoji.name) })
         }
-        
-        // Add reaction button
         Surface(
-            modifier = Modifier
-                .size(28.dp)
-                .clickable { onAddReaction("") },
+            modifier = Modifier.size(28.dp).clickable { onOpenPicker() },
             shape = RoundedCornerShape(12.dp),
             color = VelvetSurface,
             border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtle)
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Default.AddReaction,
-                    contentDescription = "Add reaction",
-                    tint = TextMuted,
-                    modifier = Modifier.size(14.dp)
-                )
+                Icon(Icons.Default.AddReaction, contentDescription = "Add reaction", tint = TextMuted, modifier = Modifier.size(14.dp))
             }
         }
     }
@@ -395,21 +415,12 @@ private fun ReactionsRow(
  * Individual reaction chip
  */
 @Composable
-private fun ReactionChip(reaction: Reaction) {
-    val backgroundColor = if (reaction.userReacted) {
-        PhantomRed.copy(alpha = 0.3f)
-    } else {
-        VelvetSurface
-    }
-    
-    val borderColor = if (reaction.userReacted) {
-        PhantomRed
-    } else {
-        BorderSubtle
-    }
-    
+private fun ReactionChip(reaction: Reaction, onToggle: () -> Unit = {}) {
+    val backgroundColor = if (reaction.userReacted) PhantomRed.copy(alpha = 0.3f) else VelvetSurface
+    val borderColor = if (reaction.userReacted) PhantomRed else BorderSubtle
+
     Surface(
-        modifier = Modifier.height(28.dp),
+        modifier = Modifier.height(28.dp).clickable { onToggle() },
         shape = RoundedCornerShape(12.dp),
         color = backgroundColor,
         border = androidx.compose.foundation.BorderStroke(1.dp, borderColor)
@@ -499,12 +510,16 @@ fun UserAvatar(
     size: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier,
     showStatus: Boolean = true,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null
 ) {
-    val clickableModifier = if (onClick != null) {
-        modifier.size(size).clickable(onClick = onClick)
-    } else {
-        modifier.size(size)
+    val clickableModifier = when {
+        onClick != null && onLongClick != null ->
+            modifier.size(size).pointerInput(Unit) {
+                detectTapGestures(onTap = { onClick() }, onLongPress = { onLongClick() })
+            }
+        onClick != null -> modifier.size(size).clickable(onClick = onClick)
+        else -> modifier.size(size)
     }
     Box(modifier = clickableModifier) {
         // Avatar image or placeholder

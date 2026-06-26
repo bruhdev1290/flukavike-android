@@ -79,12 +79,13 @@ import java.util.Locale
 fun NotificationCenterScreen(
     onBack: () -> Unit,
     onNotificationClick: (NotificationItem) -> Unit = {},
+    initialFilter: NotificationFilter = NotificationFilter.ALL,
     viewModel: NotificationCenterViewModel = hiltViewModel()
 ) {
     val notifications by viewModel.notifications.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
-    var selectedFilter by remember { mutableStateOf(NotificationFilter.ALL) }
+    var selectedFilter by remember { mutableStateOf(initialFilter) }
 
     LaunchedEffect(Unit) {
         viewModel.loadNotifications()

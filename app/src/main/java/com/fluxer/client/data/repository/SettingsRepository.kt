@@ -40,27 +40,10 @@ class SettingsRepository @Inject constructor(
 
     suspend fun saveSettings(settings: UserSettings): Result<Unit> {
         return try {
-            // Save locally first
             dataStore.edit { preferences ->
                 preferences[USER_SETTINGS_KEY] = json.encodeToString(settings)
             }
-            
-            // Sync with server
-            val request = UpdateSettingsRequest(
-                theme = settings.theme,
-                messageDisplay = settings.messageDisplay,
-                fontSize = settings.fontSize,
-                compactMode = settings.compactMode,
-                showAnimations = settings.showAnimations,
-                notificationsEnabled = settings.notificationsEnabled
-            )
-            
-            val response = apiService.updateUserSettings(request)
-            if (response.isSuccessful) {
-                Result.Success(Unit)
-            } else {
-                Result.Error("Failed to sync settings: ${response.code()}")
-            }
+            Result.Success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to save settings")
             Result.Error("Failed to save settings: ${e.message}")

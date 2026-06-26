@@ -61,6 +61,12 @@ data class DmChannelEntity(
     @PrimaryKey val id: String,
     val name: String,
     val lastMessageId: String?,
+    val type: Int,
+    val serverId: String?,
+    val recipientId: String?,
+    val recipientUsername: String?,
+    val recipientDisplayName: String?,
+    val recipientAvatarUrl: String?,
     val updatedAt: Long
 )
 

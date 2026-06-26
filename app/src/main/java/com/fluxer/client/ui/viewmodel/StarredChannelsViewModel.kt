@@ -39,10 +39,16 @@ class StarredChannelsViewModel @Inject constructor(
         val guildMap = guilds.associateBy { it.id }
         val guildChannels = channelCache.values.flatten().associateBy { it.id }
         val dmMap = dmChannels.associateBy { it.id }
+        val directMessagesServer = Server(
+            id = "@me",
+            name = "Direct Messages"
+        )
 
         favorites.mapNotNull { favorite ->
             val channel = guildChannels[favorite.channelId] ?: dmMap[favorite.channelId]
-            val server = favorite.guildId?.let(guildMap::get) ?: channel?.serverId?.let(guildMap::get)
+            val server = favorite.guildId?.let(guildMap::get)
+                ?: channel?.serverId?.let(guildMap::get)
+                ?: if (channel != null && channel.id in dmMap) directMessagesServer else null
             if (channel == null || server == null) {
                 return@mapNotNull null
             }

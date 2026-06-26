@@ -129,10 +129,10 @@ interface FluxerApiService {
     // ==================== PROFILE & SETTINGS ====================
     
     @GET("/api/users/{userId}/profile")
-    suspend fun getUserProfile(@Path("userId") userId: String): Response<UserProfile>
+    suspend fun getUserProfile(@Path("userId") userId: String): Response<UserProfileResponse>
     
     @GET("/api/users/@me/profile")
-    suspend fun getCurrentUserProfile(): Response<UserProfile>
+    suspend fun getCurrentUserProfile(): Response<UserProfileResponse>
     
     @PATCH("/api/users/@me/profile")
     suspend fun updateProfile(@Body request: UpdateProfileRequest): Response<UserProfile>

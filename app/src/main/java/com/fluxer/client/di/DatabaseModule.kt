@@ -16,6 +16,7 @@ import com.fluxer.client.data.local.dao.NavigationStateDao
 import com.fluxer.client.data.local.dao.NotificationFeedDao
 import com.fluxer.client.data.local.dao.PendingMessageDao
 import com.fluxer.client.data.local.dao.ReadStateDao
+import com.fluxer.client.data.local.dao.UserPreferenceDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,6 +44,17 @@ object DatabaseModule {
         }
     }
 
+    private val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE dm_channels ADD COLUMN type INTEGER NOT NULL DEFAULT -1")
+            db.execSQL("ALTER TABLE dm_channels ADD COLUMN serverId TEXT")
+            db.execSQL("ALTER TABLE dm_channels ADD COLUMN recipientId TEXT")
+            db.execSQL("ALTER TABLE dm_channels ADD COLUMN recipientUsername TEXT")
+            db.execSQL("ALTER TABLE dm_channels ADD COLUMN recipientDisplayName TEXT")
+            db.execSQL("ALTER TABLE dm_channels ADD COLUMN recipientAvatarUrl TEXT")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -50,7 +62,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "fluxer_database"
-        ).addMigrations(MIGRATION_1_2).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
     }
 
     @Provides
@@ -100,4 +112,8 @@ object DatabaseModule {
     @Provides
     fun provideNotificationFeedDao(appDatabase: AppDatabase): NotificationFeedDao =
         appDatabase.notificationFeedDao()
+
+    @Provides
+    fun provideUserPreferenceDao(appDatabase: AppDatabase): UserPreferenceDao =
+        appDatabase.userPreferenceDao()
 }

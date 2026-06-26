@@ -94,6 +94,12 @@ data class Attachment(
     val height: Int? = null
 )
 
+data class AttachmentMetadata(
+    val displayName: String,
+    val mimeType: String,
+    val sizeBytes: Long?
+)
+
 @Serializable
 data class Reaction(
     val emoji: Emoji,

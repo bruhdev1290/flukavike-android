@@ -19,6 +19,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fluxer.client.data.model.FontSize as SettingsFontSize
+import com.fluxer.client.data.model.MessageDisplayMode as SettingsMessageDisplayMode
+import com.fluxer.client.data.model.ThemeMode as SettingsThemeMode
 import com.fluxer.client.ui.components.FluxerDivider
 import com.fluxer.client.ui.components.FluxerLoadingState
 import com.fluxer.client.ui.components.FluxerPageScaffold
@@ -33,127 +36,103 @@ fun SettingsScreen(
     onNavigateToNotifications: () -> Unit,
     onNavigateToSupport: () -> Unit,
     onNavigateToAccount: () -> Unit,
-    onNavigateToAppearance: () -> Unit,
     onNavigateToStorage: () -> Unit,
-    onNavigateToLanguage: () -> Unit,
     onNavigateToAbout: () -> Unit,
     onLogout: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val isLoading by viewModel.isLoading.collectAsState()
+    val notice by viewModel.notice.collectAsState()
     
     FluxerPageScaffold(
         title = "Settings",
-        subtitle = "Preferences and account controls",
+        subtitle = "Account, privacy, app preferences, and support",
         onBack = onBack
     ) { padding ->
-        if (isLoading) {
-            FluxerLoadingState("Loading settings")
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Account Section
-                SettingsSection("Account") {
-                    SettingsMenuItem(
-                        icon = Icons.Default.Person,
-                        title = "My Account",
-                        subtitle = "Manage your account settings",
-                        onClick = onNavigateToAccount
-                    )
-                    SettingsDivider()
-                    SettingsMenuItem(
-                        icon = Icons.Default.Notifications,
-                        title = "Notifications",
-                        subtitle = "Message and call notifications",
-                        onClick = onNavigateToNotifications
-                    )
-                    SettingsDivider()
-                    SettingsMenuItem(
-                        icon = Icons.Default.Palette,
-                        title = "Appearance",
-                        subtitle = "Theme and display options",
-                        onClick = onNavigateToAppearance
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // App Section
-                SettingsSection("App") {
-                    SettingsMenuItem(
-                        icon = Icons.Default.Storage,
-                        title = "Storage & Data",
-                        subtitle = "Manage cache and downloads",
-                        onClick = onNavigateToStorage
-                    )
-                    SettingsDivider()
-                    SettingsMenuItem(
-                        icon = Icons.Default.Language,
-                        title = "Language",
-                        subtitle = "English (US)",
-                        onClick = onNavigateToLanguage
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Support Section
-                SettingsSection("Support") {
-                    SettingsMenuItem(
-                        icon = Icons.AutoMirrored.Filled.Help,
-                        title = "Help & Support",
-                        subtitle = "Get help with Fluxer",
-                        onClick = onNavigateToSupport
-                    )
-                    SettingsDivider()
-                    SettingsMenuItem(
-                        icon = Icons.Default.Info,
-                        title = "About",
-                        subtitle = "Version 1.0.0",
-                        onClick = onNavigateToAbout
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                // Logout Button
-                Surface(
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (isLoading) {
+                FluxerLoadingState("Loading settings")
+            } else {
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .clickable(onClick = onLogout),
-                    color = VelvetSurface,
-                    shape = RoundedCornerShape(12.dp)
+                        .fillMaxSize()
+                        .padding(padding)
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = null,
-                            tint = DndRed,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        
-                        Spacer(modifier = Modifier.width(16.dp))
-                        
-                        Text(
-                            text = "Log Out",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = DndRed,
-                            fontWeight = FontWeight.Medium
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    SettingsSection("Your Account") {
+                        SettingsMenuItem(
+                            icon = Icons.Default.Person,
+                            title = "Profile",
+                            subtitle = "Display name, bio, avatar, and status",
+                            onClick = onNavigateToAccount
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    SettingsSection("Notifications") {
+                        SettingsMenuItem(
+                            icon = Icons.Default.Tune,
+                            title = "UnifiedPush & Alerts",
+                            subtitle = "Distributor, alert types, and previews",
+                            onClick = onNavigateToNotifications
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    SettingsSection("App") {
+                        SettingsMenuItem(
+                            icon = Icons.Default.Storage,
+                            title = "Storage & Data",
+                            subtitle = "Cache, downloads, and media storage",
+                            onClick = onNavigateToStorage
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    SettingsSection("Developer & Support") {
+                        SettingsMenuItem(
+                            icon = Icons.AutoMirrored.Filled.Help,
+                            title = "Help & Support",
+                            subtitle = "Get help with Fluxer",
+                            onClick = onNavigateToSupport
+                        )
+                        SettingsDivider()
+                        SettingsMenuItem(
+                            icon = Icons.Default.Info,
+                            title = "About",
+                            subtitle = "Version 1.0.0",
+                            onClick = onNavigateToAbout
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    LogoutRow(onLogout = onLogout)
+
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
-                
-                Spacer(modifier = Modifier.height(32.dp))
+            }
+
+            notice?.let { message ->
+                Snackbar(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp),
+                    containerColor = VelvetSurface,
+                    contentColor = TextPrimary,
+                    action = {
+                        TextButton(onClick = viewModel::clearNotice) {
+                            Text("Dismiss", color = PhantomRed)
+                        }
+                    }
+                ) {
+                    Text(message)
+                }
             }
         }
     }
@@ -244,4 +223,148 @@ fun SettingsMenuItem(
 @Composable
 fun SettingsDivider() {
     FluxerDivider()
+}
+
+@Composable
+private fun SettingsSwitchItem(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SettingsIcon(icon)
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.Medium)
+            Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = TextMuted)
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(checkedThumbColor = TextPrimary, checkedTrackColor = PhantomRed)
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettingsChoiceRow(
+    icon: ImageVector,
+    title: String,
+    selected: String,
+    options: List<String>,
+    onSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        Row(
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+                .clickable { expanded = true }
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SettingsIcon(icon)
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.Medium)
+                Text(selected, style = MaterialTheme.typography.bodyMedium, color = TextMuted)
+            }
+            Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextMuted)
+        }
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(VelvetSurface)
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option, color = TextPrimary) },
+                    onClick = {
+                        onSelected(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LogoutRow(onLogout: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clickable(onClick = onLogout),
+        color = VelvetSurface,
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.Logout,
+                contentDescription = null,
+                tint = DndRed,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = "Log Out",
+                style = MaterialTheme.typography.bodyLarge,
+                color = DndRed,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsIcon(icon: ImageVector) {
+    Surface(
+        modifier = Modifier.size(40.dp),
+        shape = RoundedCornerShape(10.dp),
+        color = VelvetMid
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = TextSecondary,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+    }
+}
+
+private fun themeLabel(theme: SettingsThemeMode): String = when (theme) {
+    SettingsThemeMode.LIGHT -> "Light"
+    SettingsThemeMode.DARK -> "Dark"
+    SettingsThemeMode.SYSTEM -> "System"
+    SettingsThemeMode.AMOLED -> "AMOLED"
+}
+
+private fun messageDisplayLabel(mode: SettingsMessageDisplayMode): String = when (mode) {
+    SettingsMessageDisplayMode.COMFORTABLE -> "Comfortable"
+    SettingsMessageDisplayMode.COMPACT -> "Compact"
+}
+
+private fun fontSizeLabel(size: SettingsFontSize): String = when (size) {
+    SettingsFontSize.SMALL -> "Small"
+    SettingsFontSize.MEDIUM -> "Medium"
+    SettingsFontSize.LARGE -> "Large"
 }

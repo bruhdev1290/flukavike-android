@@ -1,5 +1,7 @@
 package com.fluxer.client.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,6 +41,7 @@ import com.fluxer.client.ui.viewmodel.ProfileViewModel
 fun ProfileScreen(
     userId: String? = null,
     onBack: () -> Unit,
+    onSettings: (() -> Unit)? = null,
     onLogout: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
@@ -46,6 +49,8 @@ fun ProfileScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val isCurrentUser by viewModel.isCurrentUser.collectAsState()
     val showEditDialog by viewModel.showEditDialog.collectAsState()
+    val error by viewModel.error.collectAsState()
+    val relationshipType by viewModel.relationshipType.collectAsState()
     
     LaunchedEffect(userId) {
         viewModel.loadProfile(userId)
@@ -57,7 +62,18 @@ fun ProfileScreen(
     FluxerPageScaffold(
         title = "You",
         subtitle = currentUser?.username?.let { "@$it" } ?: "Account",
-        onBack = onBack
+        onBack = onBack,
+        headerActions = {
+            if (isCurrentUser && onSettings != null) {
+                IconButton(onClick = onSettings) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        tint = TextPrimary
+                    )
+                }
+            }
+        }
     ) { padding ->
         Box(
             modifier = Modifier
@@ -72,7 +88,12 @@ fun ProfileScreen(
                     ProfileContent(
                         profile = currentUser,
                         isCurrentUser = isCurrentUser,
+                        relationshipType = relationshipType,
                         onEditClick = { viewModel.showEditDialog() },
+                        onAddFriend = { viewModel.addFriendByUsername(currentUser.username) },
+                        onAcceptFriend = { viewModel.acceptFriendRequest(currentUser.id) },
+                        onRemoveRelationship = { viewModel.removeRelationship(currentUser.id) },
+                        onBlock = { viewModel.blockUser(currentUser.id) },
                         onLogout = onLogout
                     )
                 }
@@ -94,15 +115,39 @@ fun ProfileScreen(
             }
         )
     }
+
+    error?.let { message ->
+        Snackbar(
+            modifier = Modifier.padding(16.dp),
+            containerColor = DndRed,
+            contentColor = TextPrimary,
+            action = {
+                TextButton(onClick = viewModel::clearError) {
+                    Text("Dismiss", color = TextPrimary)
+                }
+            }
+        ) {
+            Text(message)
+        }
+    }
 }
 
 @Composable
 private fun ProfileContent(
     profile: UserProfile,
     isCurrentUser: Boolean,
+    relationshipType: Int?,
     onEditClick: () -> Unit,
-    onLogout: () -> Unit
+    onAddFriend: () -> Unit,
+    onAcceptFriend: () -> Unit,
+    onRemoveRelationship: () -> Unit,
+    onBlock: () -> Unit,
+    onLogout: () -> Unit,
+    viewModel: ProfileViewModel = hiltViewModel()
 ) {
+    val avatarPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { viewModel.updateAvatar(it) }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -120,7 +165,8 @@ private fun ProfileContent(
                     modifier = Modifier
                         .size(88.dp)
                         .background(VelvetSurface, CircleShape)
-                        .border(2.dp, BorderSubtle, CircleShape),
+                        .border(2.dp, if (isCurrentUser) PhantomRed.copy(alpha = 0.6f) else BorderSubtle, CircleShape)
+                        .then(if (isCurrentUser) Modifier.clickable { avatarPicker.launch("image/*") } else Modifier),
                     contentAlignment = Alignment.Center
                 ) {
                     if (profile.avatarUrl != null) {
@@ -139,6 +185,22 @@ private fun ProfileContent(
                             color = TextPrimary,
                             fontWeight = FontWeight.Bold
                         )
+                    }
+                    if (isCurrentUser) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .align(Alignment.BottomEnd)
+                                .background(PhantomRed, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.CameraAlt,
+                                contentDescription = "Change avatar",
+                                tint = TextPrimary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
                     }
                 }
 
@@ -250,26 +312,52 @@ private fun ProfileContent(
                 )
             }
         } else {
-            // Message Button for other users
-            Button(
-                onClick = { /* TODO */ },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PhantomRed
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Message,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Send Message",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
-                )
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                val primaryLabel = when (relationshipType) {
+                    1 -> "Remove Friend"
+                    2 -> "Unblock"
+                    3 -> "Accept"
+                    4 -> "Requested"
+                    else -> "Add Friend"
+                }
+                val primaryIcon = when (relationshipType) {
+                    1 -> Icons.Default.PersonRemove
+                    2 -> Icons.Default.Block
+                    3 -> Icons.Default.Check
+                    4 -> Icons.Default.Schedule
+                    else -> Icons.Default.PersonAdd
+                }
+                val primaryAction = when (relationshipType) {
+                    1, 2 -> onRemoveRelationship
+                    3 -> onAcceptFriend
+                    4 -> ({})
+                    else -> onAddFriend
+                }
+                Button(
+                    onClick = primaryAction,
+                    enabled = relationshipType != 4,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = PhantomRed),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(primaryIcon, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(primaryLabel, fontWeight = FontWeight.Medium)
+                }
+                OutlinedButton(
+                    onClick = onBlock,
+                    enabled = relationshipType != 2,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DndRed),
+                    border = ButtonDefaults.outlinedButtonBorder.copy(
+                        brush = androidx.compose.ui.graphics.SolidColor(DndRed)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Block, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Block", fontWeight = FontWeight.Medium)
+                }
             }
         }
         

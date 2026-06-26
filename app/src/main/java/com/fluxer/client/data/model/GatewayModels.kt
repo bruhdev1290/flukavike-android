@@ -111,7 +111,8 @@ data class TypingEvent(
     val channelId: String,
     @SerialName("user_id")
     val userId: String,
-    val timestamp: Long
+    val timestamp: Long,
+    val member: GuildMember? = null
 )
 
 @Serializable

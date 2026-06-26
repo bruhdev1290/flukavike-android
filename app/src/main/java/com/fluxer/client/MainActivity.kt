@@ -68,9 +68,11 @@ import com.fluxer.client.ui.screens.MessagesScreen
 import com.fluxer.client.ui.screens.NotificationCenterScreen
 import com.fluxer.client.ui.screens.NotificationSettingsScreen
 import com.fluxer.client.ui.screens.ProfileScreen
+import com.fluxer.client.ui.screens.SettingsScreen
 import com.fluxer.client.ui.screens.StarredChannelsScreen
 import com.fluxer.client.ui.screens.StorageScreen
 import com.fluxer.client.ui.screens.SupportScreen
+import com.fluxer.client.ui.screens.VoiceChannelScreen
 import com.fluxer.client.ui.components.FluxerIconButton
 import com.fluxer.client.ui.theme.BorderSubtle
 import com.fluxer.client.ui.theme.FluxerTheme
@@ -266,6 +268,8 @@ private fun ShellContent(
             onNavigateToMessages = { shellViewModel.navigate(FluxerRoute.Me) },
             onNavigateToProfile = { shellViewModel.navigate(FluxerRoute.You) },
             onNavigateToVoiceChannel = { shellViewModel.navigate(FluxerRoute.DmCall(it)) },
+            onNavigateToNotifications = { shellViewModel.navigate(FluxerRoute.Notifications) },
+            onNavigateToUserProfile = { userId -> shellViewModel.navigate(FluxerRoute.UserProfile(userId)) },
             initialChannelId = path.trim('/').split('/').getOrNull(2),
             targetMessageId = path.trim('/').split('/').getOrNull(3)
         )
@@ -288,6 +292,24 @@ private fun ShellContent(
         )
         path == RoutePaths.You -> ProfileScreen(
             onBack = { shellViewModel.navigate(FluxerRoute.Me) },
+            onSettings = { shellViewModel.navigate(FluxerRoute.Settings) },
+            onLogout = authViewModel::logout
+        )
+        path.startsWith("/users/") -> {
+            val userId = path.removePrefix("/users/").takeIf { it.isNotBlank() }
+            ProfileScreen(
+                userId = userId,
+                onBack = { shellViewModel.navigate(FluxerRoute.Me) },
+                onLogout = authViewModel::logout
+            )
+        }
+        path == RoutePaths.Settings -> SettingsScreen(
+            onBack = { shellViewModel.navigate(FluxerRoute.You) },
+            onNavigateToNotifications = { shellViewModel.navigateToPath("/settings/notifications") },
+            onNavigateToSupport = { shellViewModel.navigateToPath("/settings/support") },
+            onNavigateToAccount = { shellViewModel.navigateToPath("/settings/account") },
+            onNavigateToStorage = { shellViewModel.navigateToPath("/settings/storage") },
+            onNavigateToAbout = { shellViewModel.navigateToPath("/settings/about") },
             onLogout = authViewModel::logout
         )
         path.startsWith("/settings/guild/") -> PlaceholderScreen(
@@ -309,6 +331,15 @@ private fun ShellContent(
         )
         path.startsWith("/settings/support") -> SupportScreen(onBack = { shellViewModel.navigate(FluxerRoute.You) })
         path.startsWith("/settings/about") -> AboutScreen(onBack = { shellViewModel.navigate(FluxerRoute.You) })
+        path.startsWith("/voice/") -> {
+            val voiceParts = path.trim('/').split('/')
+            val vGuildId = voiceParts.getOrNull(1).orEmpty()
+            val vChannelId = voiceParts.getOrNull(2).orEmpty()
+            VoiceChannelScreen(
+                channelId = vChannelId,
+                onBack = { shellViewModel.navigateBackFromVoice(vGuildId) }
+            )
+        }
         else -> PlaceholderScreen(
             title = "Fluxer",
             subtitle = "This canary route currently redirects into the native shell.",
@@ -344,7 +375,9 @@ private fun GuildOrChannelContent(
         onNavigateToStarred = { shellViewModel.navigate(FluxerRoute.Favorites) },
         onNavigateToMessages = { shellViewModel.navigate(FluxerRoute.Me) },
         onNavigateToProfile = { shellViewModel.navigate(FluxerRoute.You) },
-        onNavigateToVoiceChannel = { shellViewModel.navigate(FluxerRoute.DmCall(it)) },
+        onNavigateToVoiceChannel = { channelId -> shellViewModel.navigate(FluxerRoute.GuildVoice(guildId ?: "", channelId)) },
+        onNavigateToNotifications = { shellViewModel.navigate(FluxerRoute.Notifications) },
+        onNavigateToUserProfile = { userId -> shellViewModel.navigate(FluxerRoute.UserProfile(userId)) },
         initialGuildId = guildId,
         initialChannelId = channelId,
         targetMessageId = parts.getOrNull(3)

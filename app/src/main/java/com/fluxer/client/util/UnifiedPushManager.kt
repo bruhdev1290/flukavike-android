@@ -24,7 +24,7 @@ object UnifiedPushManager {
 
     fun getSelectedProvider(context: Context): Flow<PushProvider> {
         return context.dataStore.data.map { prefs ->
-            val value = prefs[PUSH_PROVIDER_KEY] ?: PushProvider.FCM.value
+            val value = prefs[PUSH_PROVIDER_KEY] ?: PushProvider.UNIFIEDPUSH.value
             PushProvider.entries.find { it.value == value } ?: PushProvider.FCM
         }
     }
@@ -38,11 +38,20 @@ object UnifiedPushManager {
     /**
      * Register for push notifications using the selected provider.
      */
-    fun register(context: Context) {
+    fun register(context: Context, vapid: String? = null) {
         val distributor = UnifiedPush.getSavedDistributor(context)
         if (!distributor.isNullOrEmpty()) {
             Timber.d("Registering UnifiedPush with saved distributor: $distributor")
-            UnifiedPush.registerApp(context, UNIFIED_PUSH_INSTANCE)
+            if (vapid.isNullOrBlank()) {
+                UnifiedPush.registerApp(context, UNIFIED_PUSH_INSTANCE)
+            } else {
+                UnifiedPush.registerApp(
+                    context,
+                    UNIFIED_PUSH_INSTANCE,
+                    UnifiedPush.DEFAULT_FEATURES,
+                    vapid
+                )
+            }
         } else {
             Timber.d("No saved UnifiedPush distributor, showing registration dialog")
         }
@@ -65,8 +74,8 @@ object UnifiedPushManager {
     /**
      * Save a distributor preference and register.
      */
-    fun saveDistributor(context: Context, distributor: String) {
+    fun saveDistributor(context: Context, distributor: String, vapid: String? = null) {
         UnifiedPush.saveDistributor(context, distributor)
-        UnifiedPush.registerApp(context, UNIFIED_PUSH_INSTANCE)
+        register(context, vapid)
     }
 }

@@ -64,6 +64,8 @@ class NavigationRepository @Inject constructor(
         )
     }
 
+    suspend fun getLastChannelForGuild(guildId: String): String? = guildLastChannelDao.getLastChannel(guildId)
+
     suspend fun resolveGuildRoot(guildId: String, channels: List<Channel>): FluxerRoute {
         val saved = guildLastChannelDao.getLastChannel(guildId)
         if (saved != null && channels.any { it.id == saved }) {

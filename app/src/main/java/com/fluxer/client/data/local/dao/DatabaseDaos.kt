@@ -16,6 +16,7 @@ import com.fluxer.client.data.local.model.ChannelUnreadCount
 import com.fluxer.client.data.local.model.ReadStateEntity
 import com.fluxer.client.data.local.model.MessageEntity
 import com.fluxer.client.data.local.model.PendingMessageEntity
+import com.fluxer.client.data.local.model.UserPreferenceEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -154,6 +155,24 @@ interface NotificationFeedDao {
     @Query("UPDATE notification_feed SET read = 1")
     suspend fun markAllRead()
 
+    @Query("UPDATE notification_feed SET read = 1 WHERE channelId = :channelId")
+    suspend fun markChannelRead(channelId: String)
+
     @Query("DELETE FROM notification_feed")
     suspend fun clearAll()
+}
+
+@Dao
+interface UserPreferenceDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(preference: UserPreferenceEntity)
+
+    @Query("DELETE FROM user_preferences WHERE `key` = :key")
+    suspend fun delete(key: String)
+
+    @Query("SELECT * FROM user_preferences WHERE `key` = :key")
+    suspend fun get(key: String): UserPreferenceEntity?
+
+    @Query("SELECT * FROM user_preferences")
+    fun observeAll(): Flow<List<UserPreferenceEntity>>
 }

@@ -4,8 +4,9 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fluxer.client.data.model.NotificationSettings
-import com.fluxer.client.data.repository.NotificationRepository
 import com.fluxer.client.util.UnifiedPushManager
+import com.fluxer.client.util.NotificationPreferences
+import com.fluxer.client.data.local.InstanceConfigStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
@@ -15,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NotificationSettingsViewModel @Inject constructor(
-    private val notificationRepository: NotificationRepository,
+    private val instanceConfigStore: InstanceConfigStore,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -25,29 +26,21 @@ class NotificationSettingsViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _selectedProvider = MutableStateFlow(UnifiedPushManager.PushProvider.FCM)
-    val selectedProvider: StateFlow<UnifiedPushManager.PushProvider> = _selectedProvider.asStateFlow()
-
     private val _availableDistributors = MutableStateFlow<List<String>>(emptyList())
     val availableDistributors: StateFlow<List<String>> = _availableDistributors.asStateFlow()
 
     init {
         viewModelScope.launch {
-            UnifiedPushManager.getSelectedProvider(context).collect { provider ->
-                _selectedProvider.value = provider
-            }
+            UnifiedPushManager.setSelectedProvider(context, UnifiedPushManager.PushProvider.UNIFIEDPUSH)
         }
     }
 
     fun loadSettings() {
         viewModelScope.launch {
             _isLoading.value = true
-            val result = notificationRepository.getNotificationSettings()
-            result.onSuccess { settings ->
-                _settings.value = settings
-            }.onError { error ->
-                Timber.e("Failed to load notification settings: $error")
-            }
+            _settings.value = NotificationPreferences.get(context)
+            loadDistributors()
+            UnifiedPushManager.register(context, instanceConfigStore.getPublicVapidKey())
             _isLoading.value = false
         }
     }
@@ -86,23 +79,16 @@ class NotificationSettingsViewModel @Inject constructor(
 
     fun selectPushProvider(provider: UnifiedPushManager.PushProvider) {
         viewModelScope.launch {
-            UnifiedPushManager.setSelectedProvider(context, provider)
-            _selectedProvider.value = provider
-
-            when (provider) {
-                UnifiedPushManager.PushProvider.FCM -> {
-                    UnifiedPushManager.unregister(context)
-                    // FCM token registration is handled automatically by FirebaseMessagingService
-                }
-                UnifiedPushManager.PushProvider.UNIFIEDPUSH -> {
-                    val distributors = UnifiedPushManager.getDistributors(context)
-                    if (distributors.size == 1) {
-                        UnifiedPushManager.saveDistributor(context, distributors.first())
-                    } else if (distributors.isEmpty()) {
-                        Timber.w("No UnifiedPush distributors available")
-                    } else {
-                        _availableDistributors.value = distributors
-                    }
+            if (provider == UnifiedPushManager.PushProvider.UNIFIEDPUSH) {
+                val distributors = UnifiedPushManager.getDistributors(context)
+                if (distributors.size == 1) {
+                    UnifiedPushManager.saveDistributor(
+                        context,
+                        distributors.first(),
+                        instanceConfigStore.getPublicVapidKey()
+                    )
+                } else {
+                    _availableDistributors.value = distributors
                 }
             }
         }
@@ -110,7 +96,11 @@ class NotificationSettingsViewModel @Inject constructor(
 
     fun selectDistributor(distributor: String) {
         viewModelScope.launch {
-            UnifiedPushManager.saveDistributor(context, distributor)
+            UnifiedPushManager.saveDistributor(
+                context,
+                distributor,
+                instanceConfigStore.getPublicVapidKey()
+            )
             _availableDistributors.value = emptyList()
         }
     }
@@ -124,10 +114,7 @@ class NotificationSettingsViewModel @Inject constructor(
             val newSettings = update(_settings.value)
             _settings.value = newSettings
 
-            val result = notificationRepository.updateNotificationSettings(newSettings)
-            result.onError { error ->
-                Timber.e("Failed to update notification settings: $error")
-            }
+            NotificationPreferences.save(context, newSettings)
         }
     }
 }

@@ -1,5 +1,9 @@
 package com.fluxer.client.ui.screens
 
+import android.app.Activity
+import android.media.projection.MediaProjectionManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -7,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -16,14 +21,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.fluxer.client.data.model.VoiceParticipant
 import com.fluxer.client.ui.theme.*
 import com.fluxer.client.ui.viewmodel.VoiceChannelViewModel
+import io.livekit.android.renderer.SurfaceViewRenderer
 import io.livekit.android.room.participant.RemoteParticipant
+import io.livekit.android.room.track.VideoTrack
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,17 +49,29 @@ fun VoiceChannelScreen(
     val isConnected by viewModel.isConnected.collectAsState()
     val isMuted by viewModel.isMuted.collectAsState()
     val isDeafened by viewModel.isDeafened.collectAsState()
-    
+    val isCameraEnabled by viewModel.isCameraEnabled.collectAsState()
+    val isScreenSharing by viewModel.isScreenSharing.collectAsState()
+    val localVideoTrack by viewModel.localVideoTrack.collectAsState()
+
+    val context = LocalContext.current
+
+    // Screen share permission launcher
+    val screenShareLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.let { viewModel.startScreenShare(it) }
+        }
+    }
+
     LaunchedEffect(channelId) {
         viewModel.joinChannel(channelId)
     }
-    
+
     DisposableEffect(Unit) {
-        onDispose {
-            viewModel.leaveChannel()
-        }
+        onDispose { viewModel.leaveChannel() }
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -61,7 +82,6 @@ fun VoiceChannelScreen(
                             style = MaterialTheme.typography.titleLarge
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            // Connection status dot
                             Box(
                                 modifier = Modifier
                                     .size(8.dp)
@@ -72,12 +92,10 @@ fun VoiceChannelScreen(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (isConnected) {
-                                    "${livekitParticipants.size + 1} participants • Live"
-                                } else if (isConnecting) {
-                                    "Connecting..."
-                                } else {
-                                    "Disconnected"
+                                text = when {
+                                    isConnected -> "${livekitParticipants.size + 1} participants • Live"
+                                    isConnecting -> "Connecting..."
+                                    else -> "Disconnected"
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextMuted
@@ -112,62 +130,88 @@ fun VoiceChannelScreen(
                 .padding(16.dp)
         ) {
             if (isConnecting) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(color = PhantomRed)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Connecting to voice...",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = TextSecondary
-                        )
+                        Text("Connecting to voice...", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
                     }
                 }
             } else {
-                // Participants Grid - Combine LiveKit and server participants
-                val allParticipants = combineParticipants(
-                    livekitParticipants = livekitParticipants,
-                    serverParticipants = participants,
-                    speakingParticipants = speakingParticipants
-                )
-                
+                // Local camera preview strip (shown when camera is on)
+                if (isCameraEnabled && localVideoTrack != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(VelvetDark)
+                    ) {
+                        VideoTrackView(
+                            videoTrack = localVideoTrack!!,
+                            mirror = true,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        Text(
+                            "You (Camera)",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextPrimary,
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(bottomStart = 12.dp))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                // Participants grid
+                val allParticipants = combineParticipants(livekitParticipants, participants, speakingParticipants)
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 100.dp),
+                    columns = GridCells.Adaptive(minSize = 110.dp),
                     modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(allParticipants, key = { it.id }) { participant ->
                         when (participant) {
-                            is ParticipantItem.Local -> {
-                                LocalParticipantCard(
-                                    isMuted = isMuted,
-                                    isDeafened = isDeafened,
-                                    isSpeaking = speakingParticipants.isEmpty()
-                                )
-                            }
+                            is ParticipantItem.Local -> LocalParticipantCard(
+                                isMuted = isMuted,
+                                isDeafened = isDeafened,
+                                isSpeaking = speakingParticipants.isEmpty(),
+                                isCameraOn = isCameraEnabled
+                            )
                             is ParticipantItem.Remote -> {
+                                val remoteVideo = viewModel.getRemoteVideoTrack(participant.remoteParticipant)
                                 RemoteParticipantCard(
                                     participant = participant.remoteParticipant,
                                     serverInfo = participant.serverInfo,
-                                    isSpeaking = speakingParticipants.contains(participant.remoteParticipant.sid.value)
+                                    isSpeaking = speakingParticipants.contains(participant.remoteParticipant.sid.value),
+                                    videoTrack = remoteVideo
                                 )
                             }
                         }
                     }
                 }
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                // Voice Controls
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 VoiceChannelControls(
                     isMuted = isMuted,
                     isDeafened = isDeafened,
+                    isCameraEnabled = isCameraEnabled,
+                    isScreenSharing = isScreenSharing,
                     onMuteToggle = { viewModel.toggleMute() },
                     onDeafenToggle = { viewModel.toggleDeafen() },
+                    onCameraToggle = { viewModel.toggleCamera() },
+                    onScreenShareToggle = {
+                        if (isScreenSharing) {
+                            viewModel.stopScreenShare()
+                        } else {
+                            val mgr = context.getSystemService(android.content.Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+                            screenShareLauncher.launch(mgr.createScreenCaptureIntent())
+                        }
+                    },
                     onDisconnect = {
                         viewModel.leaveChannel()
                         onBack()
@@ -178,7 +222,43 @@ fun VoiceChannelScreen(
     }
 }
 
-// Sealed class to represent different participant types
+// ── Video renderer ──────────────────────────────────────────────────────────
+
+@Composable
+fun VideoTrackView(
+    videoTrack: VideoTrack,
+    mirror: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    var renderer by remember { mutableStateOf<SurfaceViewRenderer?>(null) }
+    AndroidView(
+        factory = { ctx ->
+            SurfaceViewRenderer(ctx).apply {
+                try {
+                    init(livekit.org.webrtc.EglBase.create().eglBaseContext, null)
+                    setEnableHardwareScaler(true)
+                    setMirror(mirror)
+                } catch (e: Exception) {
+                    // EGL init failure — frames won't render but won't crash
+                }
+                videoTrack.addRenderer(this)
+                renderer = this
+            }
+        },
+        modifier = modifier
+    )
+    DisposableEffect(videoTrack) {
+        onDispose {
+            renderer?.let {
+                videoTrack.removeRenderer(it)
+                try { it.release() } catch (_: Exception) {}
+            }
+        }
+    }
+}
+
+// ── Participant data model ───────────────────────────────────────────────────
+
 private sealed class ParticipantItem(val id: String) {
     class Local : ParticipantItem("local")
     class Remote(
@@ -192,34 +272,25 @@ private fun combineParticipants(
     serverParticipants: List<VoiceParticipant>,
     speakingParticipants: Set<String>
 ): List<ParticipantItem> {
-    val items = mutableListOf<ParticipantItem>()
-    
-    // Add local participant first
-    items.add(ParticipantItem.Local())
-    
-    // Add remote participants
-    livekitParticipants.forEach { livekitParticipant ->
-        val serverInfo = serverParticipants.find { 
-            it.user.id == livekitParticipant.identity?.value 
-        }
-        items.add(ParticipantItem.Remote(livekitParticipant, serverInfo))
+    val items = mutableListOf<ParticipantItem>(ParticipantItem.Local())
+    livekitParticipants.forEach { lk ->
+        val serverInfo = serverParticipants.find { it.user.id == lk.identity?.value }
+        items.add(ParticipantItem.Remote(lk, serverInfo))
     }
-    
     return items
 }
+
+// ── Participant cards ────────────────────────────────────────────────────────
 
 @Composable
 private fun LocalParticipantCard(
     isMuted: Boolean,
     isDeafened: Boolean,
-    isSpeaking: Boolean
+    isSpeaking: Boolean,
+    isCameraOn: Boolean
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(8.dp)
-    ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(4.dp)) {
         Box {
-            // Avatar
             Surface(
                 modifier = Modifier
                     .size(80.dp)
@@ -232,58 +303,26 @@ private fun LocalParticipantCard(
                 color = PhantomRed.copy(alpha = 0.2f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "You",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = PhantomRed
-                    )
+                    Text("You", style = MaterialTheme.typography.headlineMedium, color = PhantomRed)
                 }
             }
-            
-            // Status indicators
-            when {
-                isMuted || isDeafened -> {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .align(Alignment.BottomEnd)
-                            .background(DndRed, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = if (isDeafened) Icons.Default.HeadsetOff else Icons.Default.MicOff,
-                            contentDescription = if (isDeafened) "Deafened" else "Muted",
-                            tint = TextPrimary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-                }
-                isSpeaking -> {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .align(Alignment.BottomEnd)
-                            .background(VelvetBlack, CircleShape)
-                            .padding(3.dp)
-                            .background(OnlineGreen, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Mic,
-                            contentDescription = "Speaking",
-                            tint = VelvetBlack,
-                            modifier = Modifier.size(12.dp)
-                        )
-                    }
+            StatusBadge(isMuted = isMuted || isDeafened, isDeafened = isDeafened, isSpeaking = isSpeaking)
+            if (isCameraOn) {
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .align(Alignment.TopEnd)
+                        .background(OnlineGreen, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Videocam, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
                 }
             }
         }
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = "You",
-            style = MaterialTheme.typography.bodyMedium,
+            "You",
+            style = MaterialTheme.typography.bodySmall,
             color = if (isSpeaking) OnlineGreen else TextPrimary,
             fontWeight = if (isSpeaking) FontWeight.Bold else FontWeight.Normal,
             maxLines = 1
@@ -295,93 +334,61 @@ private fun LocalParticipantCard(
 private fun RemoteParticipantCard(
     participant: RemoteParticipant,
     serverInfo: VoiceParticipant?,
-    isSpeaking: Boolean
+    isSpeaking: Boolean,
+    videoTrack: VideoTrack?
 ) {
-    val userName = serverInfo?.user?.displayName 
-        ?: serverInfo?.user?.username 
+    val userName = serverInfo?.user?.displayName
+        ?: serverInfo?.user?.username
         ?: participant.identity?.value
         ?: "Unknown"
     val avatarUrl = serverInfo?.user?.avatarUrl
     val isMuted = !participant.isMicrophoneEnabled()
-    
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(8.dp)
-    ) {
+    val hasCam = participant.isCameraEnabled()
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(4.dp)) {
         Box {
-            // Avatar
-            Surface(
-                modifier = Modifier
-                    .size(80.dp)
-                    .border(
-                        width = if (isSpeaking) 3.dp else 0.dp,
-                        color = if (isSpeaking) OnlineGreen else Color.Transparent,
-                        shape = CircleShape
-                    ),
-                shape = CircleShape,
-                color = VelvetSurface
-            ) {
-                if (avatarUrl != null) {
-                    AsyncImage(
-                        model = avatarUrl,
-                        contentDescription = userName,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = userName.take(1).uppercase(),
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = PhantomRed
+            if (hasCam && videoTrack != null) {
+                // Show live video feed
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .border(
+                            width = if (isSpeaking) 3.dp else 0.dp,
+                            color = if (isSpeaking) OnlineGreen else Color.Transparent,
+                            shape = CircleShape
                         )
+                        .background(VelvetDark)
+                ) {
+                    VideoTrackView(videoTrack = videoTrack, modifier = Modifier.fillMaxSize())
+                }
+            } else {
+                Surface(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .border(
+                            width = if (isSpeaking) 3.dp else 0.dp,
+                            color = if (isSpeaking) OnlineGreen else Color.Transparent,
+                            shape = CircleShape
+                        ),
+                    shape = CircleShape,
+                    color = VelvetSurface
+                ) {
+                    if (avatarUrl != null) {
+                        AsyncImage(model = avatarUrl, contentDescription = userName, modifier = Modifier.fillMaxSize())
+                    } else {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(userName.take(1).uppercase(), style = MaterialTheme.typography.headlineMedium, color = PhantomRed)
+                        }
                     }
                 }
             }
-            
-            // Status indicators
-            when {
-                isMuted -> {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .align(Alignment.BottomEnd)
-                            .background(DndRed, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.MicOff,
-                            contentDescription = "Muted",
-                            tint = TextPrimary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-                }
-                isSpeaking -> {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .align(Alignment.BottomEnd)
-                            .background(VelvetBlack, CircleShape)
-                            .padding(3.dp)
-                            .background(OnlineGreen, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Mic,
-                            contentDescription = "Speaking",
-                            tint = VelvetBlack,
-                            modifier = Modifier.size(12.dp)
-                        )
-                    }
-                }
-            }
+            StatusBadge(isMuted = isMuted, isDeafened = false, isSpeaking = isSpeaking)
         }
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = userName,
-            style = MaterialTheme.typography.bodyMedium,
+            userName,
+            style = MaterialTheme.typography.bodySmall,
             color = if (isSpeaking) OnlineGreen else TextPrimary,
             fontWeight = if (isSpeaking) FontWeight.Bold else FontWeight.Normal,
             maxLines = 1
@@ -390,21 +397,57 @@ private fun RemoteParticipantCard(
 }
 
 @Composable
+private fun BoxScope.StatusBadge(isMuted: Boolean, isDeafened: Boolean, isSpeaking: Boolean) {
+    when {
+        isMuted || isDeafened -> Box(
+            modifier = Modifier
+                .size(24.dp)
+                .align(Alignment.BottomEnd)
+                .background(DndRed, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (isDeafened) Icons.Default.HeadsetOff else Icons.Default.MicOff,
+                contentDescription = null,
+                tint = TextPrimary,
+                modifier = Modifier.size(14.dp)
+            )
+        }
+        isSpeaking -> Box(
+            modifier = Modifier
+                .size(24.dp)
+                .align(Alignment.BottomEnd)
+                .background(VelvetBlack, CircleShape)
+                .padding(3.dp)
+                .background(OnlineGreen, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Default.Mic, contentDescription = null, tint = VelvetBlack, modifier = Modifier.size(12.dp))
+        }
+    }
+}
+
+// ── Controls bar ─────────────────────────────────────────────────────────────
+
+@Composable
 private fun VoiceChannelControls(
     isMuted: Boolean,
     isDeafened: Boolean,
+    isCameraEnabled: Boolean,
+    isScreenSharing: Boolean,
     onMuteToggle: () -> Unit,
     onDeafenToggle: () -> Unit,
+    onCameraToggle: () -> Unit,
+    onScreenShareToggle: () -> Unit,
     onDisconnect: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Mute Button
         VoiceControlButton(
             icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
             label = if (isMuted) "Unmute" else "Mute",
@@ -412,25 +455,35 @@ private fun VoiceChannelControls(
             activeColor = PhantomRed,
             onClick = onMuteToggle
         )
-        
-        // Disconnect Button
+
+        VoiceControlButton(
+            icon = if (isCameraEnabled) Icons.Default.Videocam else Icons.Default.VideocamOff,
+            label = if (isCameraEnabled) "Cam On" else "Camera",
+            isActive = isCameraEnabled,
+            activeColor = OnlineGreen,
+            onClick = onCameraToggle
+        )
+
+        // End call button
         Surface(
             onClick = onDisconnect,
-            modifier = Modifier.size(72.dp),
+            modifier = Modifier.size(64.dp),
             shape = CircleShape,
             color = DndRed
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Default.CallEnd,
-                    contentDescription = "Disconnect",
-                    tint = TextPrimary,
-                    modifier = Modifier.size(32.dp)
-                )
+                Icon(Icons.Default.CallEnd, contentDescription = "Disconnect", tint = TextPrimary, modifier = Modifier.size(30.dp))
             }
         }
-        
-        // Deafen Button
+
+        VoiceControlButton(
+            icon = if (isScreenSharing) Icons.Default.StopScreenShare else Icons.Default.ScreenShare,
+            label = if (isScreenSharing) "Stop Share" else "Share",
+            isActive = isScreenSharing,
+            activeColor = OnlineGreen,
+            onClick = onScreenShareToggle
+        )
+
         VoiceControlButton(
             icon = if (isDeafened) Icons.Default.HeadsetOff else Icons.Default.Headset,
             label = if (isDeafened) "Undeafen" else "Deafen",
@@ -452,26 +505,20 @@ private fun VoiceControlButton(
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Surface(
             onClick = onClick,
-            modifier = Modifier.size(56.dp),
+            modifier = Modifier.size(52.dp),
             shape = CircleShape,
-            color = if (isActive) VelvetSurface else activeColor.copy(alpha = 0.2f)
+            color = if (isActive) activeColor.copy(alpha = 0.2f) else VelvetSurface
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    tint = if (isActive) TextPrimary else activeColor,
-                    modifier = Modifier.size(28.dp)
+                    tint = if (isActive) activeColor else TextMuted,
+                    modifier = Modifier.size(26.dp)
                 )
             }
         }
-        
         Spacer(modifier = Modifier.height(4.dp))
-        
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = TextMuted
-        )
+        Text(label, style = MaterialTheme.typography.labelSmall, color = TextMuted)
     }
 }

@@ -90,6 +90,17 @@ class ShellViewModel @Inject constructor(
         }
     }
 
+    fun navigateBackFromVoice(guildId: String) {
+        viewModelScope.launch {
+            val lastChannelId = navigationRepository.getLastChannelForGuild(guildId)
+            if (lastChannelId != null) {
+                navigate(com.fluxer.client.navigation.FluxerRoute.GuildChannel(guildId, lastChannelId))
+            } else {
+                navigate(com.fluxer.client.navigation.FluxerRoute.Guild(guildId))
+            }
+        }
+    }
+
     fun consumeIntentRoute(route: FluxerRoute?) {
         if (route == null) return
         if (_uiState.value.authenticated) {

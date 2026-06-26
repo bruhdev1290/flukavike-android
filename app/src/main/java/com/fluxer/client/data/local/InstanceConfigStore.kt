@@ -56,6 +56,13 @@ class InstanceConfigStore @Inject constructor(
             ?: BuildConfig.FLUXER_WS_URL
     }
 
+    fun getPublicVapidKey(): String? {
+        val snapshot = prefs.getString(KEY_INSTANCE_SNAPSHOT, null) ?: return null
+        return runCatching {
+            Json.decodeFromString<InstanceConfig>(snapshot).push?.publicVapidKey
+        }.getOrNull()
+    }
+
     fun saveCustomBaseUrl(rawInput: String): String? {
         val trimmed = rawInput.trim()
         if (trimmed.isEmpty()) {

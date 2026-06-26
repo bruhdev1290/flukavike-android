@@ -1,5 +1,6 @@
 package com.fluxer.client.ui.viewmodel
 
+import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fluxer.client.data.model.Channel
@@ -7,6 +8,7 @@ import com.fluxer.client.data.model.User
 import com.fluxer.client.data.model.VoiceParticipant
 import com.fluxer.client.data.model.VoiceState
 import com.fluxer.client.data.model.VoiceStateUpdateEvent
+import com.fluxer.client.data.repository.AuthRepository
 import com.fluxer.client.data.repository.ChatRepository
 import com.fluxer.client.service.LiveKitVoiceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,6 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class VoiceChannelViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
+    private val authRepository: AuthRepository,
     private val liveKitVoiceManager: LiveKitVoiceManager
 ) : ViewModel() {
 
@@ -41,6 +44,9 @@ class VoiceChannelViewModel @Inject constructor(
     val isConnected = liveKitVoiceManager.isConnected
     val isMuted = liveKitVoiceManager.isMuted
     val isDeafened = liveKitVoiceManager.isDeafened
+    val isCameraEnabled = liveKitVoiceManager.isCameraEnabled
+    val isScreenSharing = liveKitVoiceManager.isScreenSharing
+    val localVideoTrack = liveKitVoiceManager.localVideoTrack
     val livekitParticipants = liveKitVoiceManager.participants
     val speakingParticipants = liveKitVoiceManager.speakingParticipants
 
@@ -154,9 +160,22 @@ class VoiceChannelViewModel @Inject constructor(
         }
     }
 
-    fun isParticipantSpeaking(participantSid: String): Boolean {
-        return liveKitVoiceManager.isParticipantSpeaking(participantSid)
+    fun isParticipantSpeaking(participantSid: String): Boolean = liveKitVoiceManager.isParticipantSpeaking(participantSid)
+
+    fun toggleCamera() {
+        liveKitVoiceManager.toggleCamera()
     }
+
+    fun startScreenShare(intent: Intent) {
+        liveKitVoiceManager.startScreenShare(intent)
+    }
+
+    fun stopScreenShare() {
+        liveKitVoiceManager.stopScreenShare()
+    }
+
+    fun getRemoteVideoTrack(participant: io.livekit.android.room.participant.RemoteParticipant) =
+        liveKitVoiceManager.getRemoteVideoTrack(participant)
 
     private fun loadParticipants(channelId: String) {
         viewModelScope.launch {
@@ -201,8 +220,13 @@ class VoiceChannelViewModel @Inject constructor(
             }
         }
 
-        // Update local voice state if it's our own
-        // TODO: Get current user ID and compare
+        val currentUser = (authRepository.authState.value as? AuthRepository.AuthState.Authenticated)?.user
+        if (voiceState.userId == currentUser?.id) {
+            _voiceState.value = _voiceState.value?.copy(
+                selfMute = voiceState.selfMute,
+                selfDeaf = voiceState.selfDeaf
+            )
+        }
     }
 
     private fun handleGatewayVoiceServerUpdate(voiceServer: com.fluxer.client.data.model.VoiceServerUpdateEvent) {

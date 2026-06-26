@@ -34,8 +34,6 @@ fun AccountScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     
     var showEditProfile by remember { mutableStateOf(false) }
-    var showChangePassword by remember { mutableStateOf(false) }
-    var showDeleteAccount by remember { mutableStateOf(false) }
     
     LaunchedEffect(Unit) {
         viewModel.loadProfile(null)
@@ -152,68 +150,6 @@ fun AccountScreen(
                         subtitle = "Change your display name and bio",
                         onClick = { showEditProfile = true }
                     )
-                    SettingsDivider()
-                    SettingsMenuItem(
-                        icon = Icons.Default.Lock,
-                        title = "Change Password",
-                        subtitle = "Update your password",
-                        onClick = { showChangePassword = true }
-                    )
-                    SettingsDivider()
-                    SettingsMenuItem(
-                        icon = Icons.Default.Email,
-                        title = "Email",
-                        subtitle = profile?.email ?: "Not available",
-                        onClick = { /* Email is read-only for now */ }
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Danger Zone
-                SettingsSection(title = "Danger Zone") {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showDeleteAccount = true }
-                            .padding(16.dp),
-                        color = VelvetSurface,
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.DeleteForever,
-                                contentDescription = null,
-                                tint = DndRed,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            
-                            Spacer(modifier = Modifier.width(16.dp))
-                            
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Delete Account",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = DndRed,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                    text = "Permanently delete your account and data",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = TextMuted
-                                )
-                            }
-                            
-                            Icon(
-                                imageVector = Icons.Default.ChevronRight,
-                                contentDescription = null,
-                                tint = TextMuted,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -271,27 +207,6 @@ fun AccountScreen(
         )
     }
     
-    // Change Password Dialog
-    if (showChangePassword) {
-        ChangePasswordDialog(
-            onDismiss = { showChangePassword = false },
-            onChange = { currentPass, newPass ->
-                // TODO: Implement password change API
-                showChangePassword = false
-            }
-        )
-    }
-    
-    // Delete Account Dialog
-    if (showDeleteAccount) {
-        DeleteAccountDialog(
-            onDismiss = { showDeleteAccount = false },
-            onDelete = {
-                // TODO: Implement account deletion
-                onLogout()
-            }
-        )
-    }
 }
 
 @Composable

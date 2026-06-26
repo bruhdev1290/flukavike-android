@@ -168,7 +168,9 @@ fun MessageInputField(
     isCompact: Boolean = false,
     replyingTo: Message? = null,
     onCancelReply: () -> Unit = {},
-    onAttachmentClick: () -> Unit = {}
+    onAttachmentClick: () -> Unit = {},
+    hasAttachment: Boolean = false,
+    isSending: Boolean = false
 ) {
     var isFocused by remember { mutableStateOf(false) }
     
@@ -212,6 +214,7 @@ fun MessageInputField(
                 // Attachment button
                 IconButton(
                     onClick = onAttachmentClick,
+                    enabled = !isSending,
                     modifier = Modifier
                         .padding(end = if (isCompact) 4.dp else 8.dp)
                         .size(if (isCompact) 32.dp else 40.dp)
@@ -237,6 +240,7 @@ fun MessageInputField(
                         value = value,
                         onValueChange = onValueChange,
                         modifier = Modifier.fillMaxWidth(),
+                        enabled = !isSending,
                         textStyle = (if (isCompact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge).copy(
                             color = TextPrimary
                         ),
@@ -249,12 +253,13 @@ fun MessageInputField(
                 
                 // Send button
                 AnimatedVisibility(
-                    visible = value.isNotBlank(),
+                    visible = value.isNotBlank() || hasAttachment || isSending,
                     enter = fadeIn() + scaleIn(),
                     exit = fadeOut() + scaleOut()
                 ) {
                     IconButton(
                         onClick = onSend,
+                        enabled = !isSending,
                         modifier = Modifier
                             .padding(start = if (isCompact) 4.dp else 8.dp)
                             .size(if (isCompact) 32.dp else 40.dp)
@@ -265,12 +270,20 @@ fun MessageInputField(
                                 .background(PhantomRed, RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Send,
-                                contentDescription = "Send",
-                                tint = TextPrimary,
-                                modifier = Modifier.size(iconSize - 2.dp)
-                            )
+                            if (isSending) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(iconSize - 4.dp),
+                                    strokeWidth = 2.dp,
+                                    color = TextPrimary
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Send,
+                                    contentDescription = "Send",
+                                    tint = TextPrimary,
+                                    modifier = Modifier.size(iconSize - 2.dp)
+                                )
+                            }
                         }
                     }
                 }

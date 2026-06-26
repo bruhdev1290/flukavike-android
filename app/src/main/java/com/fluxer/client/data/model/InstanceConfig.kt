@@ -15,6 +15,7 @@ import kotlinx.serialization.Serializable
     val invite: String? = null,
     val captcha: CaptchaConfig? = null,
     val endpoints: EndpointsConfig? = null,
+    val push: PushConfig? = null,
     val name: String? = null,
     val description: String? = null,
     val icon: String? = null,
@@ -65,6 +66,12 @@ import kotlinx.serialization.Serializable
         val webapp: String? = null,
         val admin: String? = null,
         val invite: String? = null
+    )
+
+    @Serializable
+    data class PushConfig(
+        @SerialName("public_vapid_key")
+        val publicVapidKey: String? = null
     )
 
     @Serializable

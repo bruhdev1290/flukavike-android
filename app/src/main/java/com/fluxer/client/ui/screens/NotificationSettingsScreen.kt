@@ -29,7 +29,6 @@ fun NotificationSettingsScreen(
 ) {
     val settings by viewModel.settings.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val selectedProvider by viewModel.selectedProvider.collectAsState()
     val availableDistributors by viewModel.availableDistributors.collectAsState()
     var showDistributorDialog by remember { mutableStateOf(false) }
 
@@ -135,16 +134,13 @@ fun NotificationSettingsScreen(
                 )
 
                 PushProviderOption(
-                    title = "Firebase Cloud Messaging",
-                    subtitle = "Google push notifications",
-                    selected = selectedProvider == UnifiedPushManager.PushProvider.FCM,
-                    onClick = { viewModel.selectPushProvider(UnifiedPushManager.PushProvider.FCM) }
-                )
-
-                PushProviderOption(
                     title = "UnifiedPush",
-                    subtitle = "Open-source, decentralized push",
-                    selected = selectedProvider == UnifiedPushManager.PushProvider.UNIFIEDPUSH,
+                    subtitle = if (availableDistributors.isEmpty()) {
+                        "Install or enable a UnifiedPush distributor"
+                    } else {
+                        "Open-source, decentralized push"
+                    },
+                    selected = true,
                     onClick = {
                         viewModel.selectPushProvider(UnifiedPushManager.PushProvider.UNIFIEDPUSH)
                         if (availableDistributors.size > 1) {
@@ -153,7 +149,7 @@ fun NotificationSettingsScreen(
                     }
                 )
 
-                if (selectedProvider == UnifiedPushManager.PushProvider.UNIFIEDPUSH && availableDistributors.isEmpty()) {
+                if (availableDistributors.isEmpty()) {
                     Text(
                         text = "No UnifiedPush distributors found. Install an app like ntfy or UP-FCM distributor.",
                         style = MaterialTheme.typography.bodySmall,
@@ -207,28 +203,6 @@ fun NotificationSettingsScreen(
                         subtitle = "When someone adds you",
                         checked = settings.friendRequestNotifications,
                         onCheckedChange = { viewModel.updateFriendRequestNotifications(it) }
-                    )
-
-                    Divider(color = BorderSubtle, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-
-                    // Sound
-                    NotificationToggle(
-                        icon = Icons.Default.VolumeUp,
-                        title = "Sound",
-                        subtitle = "Play notification sounds",
-                        checked = settings.soundEnabled,
-                        onCheckedChange = { viewModel.updateSoundEnabled(it) }
-                    )
-
-                    Divider(color = BorderSubtle, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-
-                    // Vibration
-                    NotificationToggle(
-                        icon = Icons.Default.Vibration,
-                        title = "Vibration",
-                        subtitle = "Vibrate on notifications",
-                        checked = settings.vibrationEnabled,
-                        onCheckedChange = { viewModel.updateVibrationEnabled(it) }
                     )
 
                     Divider(color = BorderSubtle, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))

@@ -4,6 +4,37 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class UserProfileResponse(
+    val user: User,
+    @SerialName("user_profile")
+    val profile: UserProfileDetails = UserProfileDetails(),
+    @SerialName("premium_type")
+    val premiumType: Int = 0
+) {
+    fun toUserProfile(): UserProfile =
+        UserProfile(
+            id = user.id,
+            username = user.username,
+            discriminator = user.discriminator,
+            email = user.email.ifBlank { null },
+            displayName = user.displayName,
+            avatarUrl = user.avatarUrl,
+            bannerUrl = profile.banner,
+            bio = profile.bio,
+            status = user.status,
+            customStatus = null,
+            createdAt = user.createdAt,
+            isPremium = premiumType > 0
+        )
+}
+
+@Serializable
+data class UserProfileDetails(
+    val bio: String? = null,
+    val banner: String? = null
+)
+
+@Serializable
 data class UserProfile(
     val id: String,
     val username: String,
@@ -107,8 +138,18 @@ data class UpdateSettingsRequest(
     val compactMode: Boolean? = null,
     @SerialName("show_animations")
     val showAnimations: Boolean? = null,
+    @SerialName("reduced_motion")
+    val reducedMotion: Boolean? = null,
+    @SerialName("sound_enabled")
+    val soundEnabled: Boolean? = null,
     @SerialName("notifications_enabled")
-    val notificationsEnabled: Boolean? = null
+    val notificationsEnabled: Boolean? = null,
+    @SerialName("mention_notifications")
+    val mentionNotifications: Boolean? = null,
+    @SerialName("dm_notifications")
+    val dmNotifications: Boolean? = null,
+    @SerialName("call_notifications")
+    val callNotifications: Boolean? = null
 )
 
 fun User.toUserProfile(): UserProfile =

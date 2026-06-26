@@ -1,5 +1,8 @@
 package com.fluxer.client.data.repository
 
+import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -8,17 +11,25 @@ import com.fluxer.client.data.local.model.DmChannelEntity
 import com.fluxer.client.data.paging.MessagePagingSource
 import com.fluxer.client.data.model.*
 import com.fluxer.client.data.remote.*
+import com.fluxer.client.data.model.InviteInfo
+import com.fluxer.client.data.model.UpdateProfileRequest
+import com.fluxer.client.data.model.GuildMember
 import com.fluxer.client.util.Result
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 import java.net.URLEncoder
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val MESSAGE_PAGE_SIZE = 25
+private const val MAX_ATTACHMENT_BYTES = 25L * 1024L * 1024L
 
 /**
  * Repository for chat-related operations including messages and channels.
@@ -27,8 +38,14 @@ private const val MESSAGE_PAGE_SIZE = 25
 @Singleton
 class ChatRepository @Inject constructor(
     private val apiService: FluxerApiService,
+    private val uploadApiService: UploadApiService,
+    private val pinApiService: PinApiService,
+    private val guildMembersApiService: GuildMembersApiService,
+    private val inviteApiService: InviteApiService,
+    private val avatarApiService: AvatarApiService,
     private val gatewayManager: GatewayWebSocketManager,
-    private val dmChannelDao: DmChannelDao
+    private val dmChannelDao: DmChannelDao,
+    @ApplicationContext private val context: Context
 ) {
     private val scope = CoroutineScope(Dispatchers.IO)
 
@@ -225,9 +242,10 @@ class ChatRepository @Inject constructor(
         channelCache[guildId].orEmpty()
 
     fun getCachedChannel(channelId: String): Channel? =
-        channelCache.values.asSequence()
-            .flatMap { it.asSequence() }
-            .firstOrNull { it.id == channelId }
+        _dmChannelsFlow.value.firstOrNull { it.id == channelId }
+            ?: channelCache.values.asSequence()
+                .flatMap { it.asSequence() }
+                .firstOrNull { it.id == channelId }
 
     /**
      * Get a specific channel
@@ -307,6 +325,19 @@ class ChatRepository @Inject constructor(
         } catch (e: Exception) {
             Result.Error("Network error: ${e.message}")
         }
+    }
+
+    fun ensurePersonalNotesChannel(user: User): Channel {
+        val channel = Channel(
+            id = user.id,
+            name = "Personal Notes",
+            type = ChannelType.DM,
+            serverId = null,
+            recipients = listOf(user),
+            ownerId = user.id
+        )
+        cacheDmChannels(listOf(channel), replace = false)
+        return channel
     }
 
     // ==================== VOICE CHANNELS ====================
@@ -467,6 +498,164 @@ class ChatRepository @Inject constructor(
         }
     }
 
+    suspend fun removeReaction(
+        channelId: String,
+        messageId: String,
+        emoji: String
+    ): Result<Unit> {
+        return try {
+            val encodedEmoji = URLEncoder.encode(emoji, "UTF-8")
+            val response = apiService.removeReaction(channelId, messageId, encodedEmoji)
+            if (response.isSuccessful) {
+                Result.Success(Unit)
+            } else {
+                Result.Error("Failed to remove reaction: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
+    suspend fun sendMessageWithAttachment(
+        channelId: String,
+        content: String,
+        replyToId: String?,
+        fileUri: Uri
+    ): Result<Message> {
+        return try {
+            val contentResolver = context.contentResolver
+            val mimeType = contentResolver.getType(fileUri) ?: "application/octet-stream"
+            val fileName = getDisplayName(fileUri) ?: fileUri.lastPathSegment ?: "attachment"
+            val declaredSize = getFileSize(fileUri)
+            if (declaredSize != null && declaredSize > MAX_ATTACHMENT_BYTES) {
+                return Result.Error("Attachment is too large. Max size is 25 MB.")
+            }
+            val bytes = contentResolver.openInputStream(fileUri)?.readBytes()
+                ?: return Result.Error("Could not read file")
+            if (bytes.size > MAX_ATTACHMENT_BYTES) {
+                return Result.Error("Attachment is too large. Max size is 25 MB.")
+            }
+
+            val jsonPayload = buildString {
+                append("{\"content\":\"")
+                append(content.replace("\"", "\\\""))
+                append("\"")
+                if (!replyToId.isNullOrBlank()) {
+                    append(",\"reply_to_id\":\"$replyToId\"")
+                }
+                append("}")
+            }
+
+            val jsonBody = jsonPayload.toRequestBody("application/json".toMediaTypeOrNull())
+            val filePart = MultipartBody.Part.createFormData(
+                "files[0]", fileName,
+                bytes.toRequestBody(mimeType.toMediaTypeOrNull())
+            )
+
+            val response = uploadApiService.sendMessageWithAttachment(channelId, jsonBody, filePart)
+            if (response.isSuccessful) {
+                val message = response.body()
+                message?.let {
+                    addMessageToCache(channelId, it)
+                    Result.Success(it)
+                } ?: Result.Error("Empty response")
+            } else {
+                Result.Error("Upload failed: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("Upload error: ${e.message}")
+        }
+    }
+
+    fun getAttachmentMetadata(fileUri: Uri): AttachmentMetadata {
+        val contentResolver = context.contentResolver
+        return AttachmentMetadata(
+            displayName = getDisplayName(fileUri) ?: fileUri.lastPathSegment ?: "attachment",
+            mimeType = contentResolver.getType(fileUri) ?: "application/octet-stream",
+            sizeBytes = getFileSize(fileUri)
+        )
+    }
+
+    private fun getDisplayName(fileUri: Uri): String? {
+        return context.contentResolver.query(fileUri, null, null, null, null)?.use { cursor ->
+            val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (index >= 0 && cursor.moveToFirst()) cursor.getString(index) else null
+        }
+    }
+
+    private fun getFileSize(fileUri: Uri): Long? {
+        return context.contentResolver.query(fileUri, null, null, null, null)?.use { cursor ->
+            val index = cursor.getColumnIndex(OpenableColumns.SIZE)
+            if (index >= 0 && cursor.moveToFirst() && !cursor.isNull(index)) cursor.getLong(index) else null
+        }
+    }
+
+    // ==================== PINS ====================
+
+    suspend fun getPinnedMessages(channelId: String): Result<List<Message>> = try {
+        val r = pinApiService.getPinnedMessages(channelId)
+        if (r.isSuccessful) Result.Success(r.body() ?: emptyList())
+        else Result.Error("Failed: ${r.code()}")
+    } catch (e: Exception) { Result.Error(e.message ?: "Network error") }
+
+    suspend fun pinMessage(channelId: String, messageId: String): Result<Unit> = try {
+        val r = pinApiService.pinMessage(channelId, messageId)
+        if (r.isSuccessful) Result.Success(Unit) else Result.Error("Failed: ${r.code()}")
+    } catch (e: Exception) { Result.Error(e.message ?: "Network error") }
+
+    suspend fun unpinMessage(channelId: String, messageId: String): Result<Unit> = try {
+        val r = pinApiService.unpinMessage(channelId, messageId)
+        if (r.isSuccessful) Result.Success(Unit) else Result.Error("Failed: ${r.code()}")
+    } catch (e: Exception) { Result.Error(e.message ?: "Network error") }
+
+    // ==================== GUILD MEMBERS ====================
+
+    suspend fun getGuildMembers(guildId: String): Result<List<GuildMember>> = try {
+        val r = guildMembersApiService.getGuildMembers(guildId)
+        if (r.isSuccessful) Result.Success(r.body() ?: emptyList())
+        else Result.Error("Failed: ${r.code()}")
+    } catch (e: Exception) { Result.Error(e.message ?: "Network error") }
+
+    // ==================== INVITES ====================
+
+    suspend fun previewInvite(code: String): Result<InviteInfo> = try {
+        val r = inviteApiService.getInvite(code)
+        if (r.isSuccessful) r.body()?.let { Result.Success(it) } ?: Result.Error("Empty response")
+        else Result.Error("Invalid invite: ${r.code()}")
+    } catch (e: Exception) { Result.Error(e.message ?: "Network error") }
+
+    suspend fun joinViaInvite(code: String): Result<InviteInfo> = try {
+        val r = inviteApiService.joinViaInvite(code)
+        if (r.isSuccessful) r.body()?.let { Result.Success(it) } ?: Result.Error("Empty response")
+        else Result.Error("Could not join: ${r.code()}")
+    } catch (e: Exception) { Result.Error(e.message ?: "Network error") }
+
+    // ==================== AVATAR UPLOAD ====================
+
+    suspend fun updateAvatar(fileUri: Uri): Result<com.fluxer.client.data.model.User> {
+        val contentResolver = context.contentResolver
+        val mimeType = contentResolver.getType(fileUri) ?: "image/jpeg"
+        val bytes = contentResolver.openInputStream(fileUri)?.readBytes()
+            ?: return Result.Error("Could not read file")
+        return try {
+            val part = MultipartBody.Part.createFormData(
+                "avatar", "avatar.jpg",
+                bytes.toRequestBody(mimeType.toMediaTypeOrNull())
+            )
+            val r = avatarApiService.updateAvatar(part)
+            if (r.isSuccessful) r.body()?.let { Result.Success(it) } ?: Result.Error("Empty response")
+            else Result.Error("Upload failed: ${r.code()}")
+        } catch (e: Exception) { Result.Error(e.message ?: "Network error") }
+    }
+
+    // ==================== CUSTOM STATUS ====================
+
+    suspend fun setCustomStatus(status: String?): Result<com.fluxer.client.data.model.UserProfile> = try {
+        val r = apiService.updateProfile(UpdateProfileRequest(customStatus = status))
+        if (r.isSuccessful) r.body()?.let { Result.Success(it) } ?: Result.Error("Empty response")
+        else Result.Error("Failed: ${r.code()}")
+    } catch (e: Exception) { Result.Error(e.message ?: "Network error") }
+
     private fun collectGatewayEvents() {
         gatewayManager.events.onEach { event ->
             when (event) {
@@ -576,7 +765,9 @@ class ChatRepository @Inject constructor(
             }
             return
         }
-        val dmCandidates = channels.filter { it.serverId == null || it.type == ChannelType.DM }
+        val dmCandidates = channels.filter {
+            it.type == ChannelType.DM && it.serverId == null && it.recipients.isNotEmpty()
+        }
         if (dmCandidates.isEmpty()) return
 
         val merged = if (replace) {
@@ -748,14 +939,33 @@ class ChatRepository @Inject constructor(
             id = id,
             name = displayName(),
             lastMessageId = lastMessageId,
+            type = type.value,
+            serverId = serverId,
+            recipientId = recipients.firstOrNull()?.id,
+            recipientUsername = recipients.firstOrNull()?.username,
+            recipientDisplayName = recipients.firstOrNull()?.displayName,
+            recipientAvatarUrl = recipients.firstOrNull()?.avatarUrl,
             updatedAt = System.currentTimeMillis()
         )
 
-    private fun DmChannelEntity.toDomain(): Channel =
-        Channel(
+    private fun DmChannelEntity.toDomain(): Channel {
+        val recipient = if (recipientId != null && recipientUsername != null) {
+            User(
+                id = recipientId,
+                username = recipientUsername,
+                displayName = recipientDisplayName,
+                avatarUrl = recipientAvatarUrl
+            )
+        } else {
+            null
+        }
+        return Channel(
             id = id,
             name = name,
-            type = ChannelType.DM,
-            lastMessageId = lastMessageId
+            type = ChannelType.entries.firstOrNull { it.value == type } ?: ChannelType.UNKNOWN,
+            serverId = serverId,
+            lastMessageId = lastMessageId,
+            recipients = listOfNotNull(recipient)
         )
+    }
 }

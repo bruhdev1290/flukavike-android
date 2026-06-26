@@ -21,6 +21,9 @@ class SettingsViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _notice = MutableStateFlow<String?>(null)
+    val notice: StateFlow<String?> = _notice.asStateFlow()
+
     init {
         loadSettings()
     }
@@ -75,6 +78,14 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun updateReducedMotion(enabled: Boolean) {
+        viewModelScope.launch {
+            val current = _settings.value
+            _settings.value = current.copy(reducedMotion = enabled)
+            saveSettings()
+        }
+    }
+
     fun updateSoundEnabled(enabled: Boolean) {
         viewModelScope.launch {
             val current = _settings.value
@@ -120,7 +131,16 @@ class SettingsViewModel @Inject constructor(
             val result = settingsRepository.saveSettings(_settings.value)
             result.onError { error ->
                 Timber.e("Failed to save settings: $error")
+                _notice.value = error
             }
         }
+    }
+
+    fun showUnavailable(feature: String) {
+        _notice.value = "$feature is not available in this Android build yet."
+    }
+
+    fun clearNotice() {
+        _notice.value = null
     }
 }
