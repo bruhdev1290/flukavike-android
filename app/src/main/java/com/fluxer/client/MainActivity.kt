@@ -10,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Chat
@@ -69,6 +71,8 @@ import com.fluxer.client.ui.screens.ProfileScreen
 import com.fluxer.client.ui.screens.StarredChannelsScreen
 import com.fluxer.client.ui.screens.StorageScreen
 import com.fluxer.client.ui.screens.SupportScreen
+import com.fluxer.client.ui.components.FluxerIconButton
+import com.fluxer.client.ui.theme.BorderSubtle
 import com.fluxer.client.ui.theme.FluxerTheme
 import com.fluxer.client.ui.theme.PhantomRed
 import com.fluxer.client.ui.theme.TextMuted
@@ -211,7 +215,7 @@ private fun CanaryShell(
             },
             containerColor = VelvetBlack
         ) { padding ->
-            Box(modifier = Modifier.padding(padding)) {
+            Box(modifier = Modifier.padding(padding).background(VelvetBlack)) {
                 ShellContent(state.activePath, shellViewModel, authViewModel)
             }
         }
@@ -352,13 +356,23 @@ private fun ShellBottomBar(
     activeBranch: ShellBranch,
     onBranchSelected: (ShellBranch) -> Unit
 ) {
-    NavigationBar(containerColor = VelvetDark) {
+    NavigationBar(
+        containerColor = VelvetBlack,
+        tonalElevation = 0.dp
+    ) {
         shellItems().forEach { item ->
             NavigationBarItem(
                 selected = activeBranch == item.branch,
                 onClick = { onBranchSelected(item.branch) },
                 icon = { Icon(item.icon, contentDescription = item.label) },
-                label = { Text(item.label) }
+                label = { Text(item.label) },
+                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                    selectedIconColor = TextPrimary,
+                    selectedTextColor = TextPrimary,
+                    indicatorColor = VelvetDark,
+                    unselectedIconColor = TextMuted,
+                    unselectedTextColor = TextMuted
+                )
             )
         }
     }
@@ -371,24 +385,23 @@ private fun ShellRail(
 ) {
     Column(
         modifier = Modifier
-            .width(72.dp)
+            .width(84.dp)
             .fillMaxHeight()
-            .background(VelvetDark)
-            .padding(horizontal = 8.dp, vertical = 24.dp),
+            .background(VelvetBlack)
+            .border(1.dp, BorderSubtle.copy(alpha = 0.35f))
+            .padding(horizontal = 14.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         shellItems().forEach { item ->
-            androidx.compose.material3.FilledTonalIconButton(
+            FluxerIconButton(
+                icon = item.icon,
+                contentDescription = item.label,
                 onClick = { onBranchSelected(item.branch) },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    imageVector = item.icon,
-                    contentDescription = item.label,
-                    tint = if (activeBranch == item.branch) PhantomRed else TextPrimary
-                )
-            }
+                tint = if (activeBranch == item.branch) TextPrimary else TextMuted,
+                containerColor = if (activeBranch == item.branch) PhantomRed.copy(alpha = 0.24f) else VelvetDark,
+                modifier = Modifier.size(46.dp)
+            )
         }
     }
 }
@@ -413,10 +426,20 @@ private fun SplashScreen() {
             .background(VelvetBlack),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Surface(
+            color = VelvetDark,
+            shape = RoundedCornerShape(16.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtle)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(horizontal = 28.dp, vertical = 24.dp)
+            ) {
             CircularProgressIndicator(color = PhantomRed)
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Fluxer", color = TextPrimary, style = MaterialTheme.typography.headlineMedium)
+            Text("Fluxer", color = TextPrimary, style = MaterialTheme.typography.headlineSmall)
+            Text("Getting things ready", color = TextMuted, style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }

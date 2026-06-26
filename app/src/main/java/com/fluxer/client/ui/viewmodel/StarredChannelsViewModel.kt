@@ -4,165 +4,84 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fluxer.client.data.model.Channel
 import com.fluxer.client.data.model.Server
+import com.fluxer.client.data.model.displayName
+import com.fluxer.client.data.repository.ChatRepository
+import com.fluxer.client.data.repository.HomeStateRepository
 import com.fluxer.client.ui.screens.StarredChannel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 class StarredChannelsViewModel @Inject constructor(
-    // TODO: Inject repository for starred channels
+    private val chatRepository: ChatRepository,
+    private val homeStateRepository: HomeStateRepository
 ) : ViewModel() {
 
-    private val _starredChannels = MutableStateFlow<List<StarredChannel>>(emptyList())
-    val starredChannels: StateFlow<List<StarredChannel>> = _starredChannels.asStateFlow()
-
+    private val _guilds = MutableStateFlow<List<Server>>(emptyList())
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    // Local cache of starred channel IDs (should be persisted in DataStore/DB)
-    private val _starredChannelIds = MutableStateFlow<Set<String>>(emptySet())
+    val starredChannels: StateFlow<List<StarredChannel>> = combine(
+        homeStateRepository.favoriteChannels,
+        homeStateRepository.unreadCountsByChannel,
+        chatRepository.channelCacheFlow,
+        chatRepository.dmChannelsFlow,
+        _guilds
+    ) { favorites, unreadCounts, channelCache, dmChannels, guilds ->
+        val guildMap = guilds.associateBy { it.id }
+        val guildChannels = channelCache.values.flatten().associateBy { it.id }
+        val dmMap = dmChannels.associateBy { it.id }
+
+        favorites.mapNotNull { favorite ->
+            val channel = guildChannels[favorite.channelId] ?: dmMap[favorite.channelId]
+            val server = favorite.guildId?.let(guildMap::get) ?: channel?.serverId?.let(guildMap::get)
+            if (channel == null || server == null) {
+                return@mapNotNull null
+            }
+
+            StarredChannel(
+                channel = channel,
+                server = server,
+                lastMessage = channel.topic?.takeIf { it.isNotBlank() } ?: channel.displayName(),
+                unreadCount = unreadCounts[channel.id] ?: 0
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun loadStarredChannels() {
         viewModelScope.launch {
             _isLoading.value = true
-            
-            // TODO: Load from repository/database
-            // For now, generate mock data
-            val mockChannels = generateMockStarredChannels()
-            _starredChannels.value = mockChannels
-            _starredChannelIds.value = mockChannels.map { it.channel.id }.toSet()
-            
-            _isLoading.value = false
-        }
-    }
 
-    fun starChannel(channel: Channel, server: Server) {
-        viewModelScope.launch {
-            val current = _starredChannelIds.value.toMutableSet()
-            current.add(channel.id)
-            _starredChannelIds.value = current
-            
-            // Add to list if not present
-            val channels = _starredChannels.value.toMutableList()
-            if (channels.none { it.channel.id == channel.id }) {
-                channels.add(StarredChannel(channel, server))
-                _starredChannels.value = channels.sortedBy { it.server.name }
-            }
-            
-            // TODO: Persist to repository
-            Timber.d("Starred channel: ${channel.name}")
+            chatRepository.getUserGuilds()
+                .onSuccess { guilds -> _guilds.value = guilds }
+                .onError { error -> Timber.e("Failed to load guilds for favorites: $error") }
+
+            chatRepository.getDMChannels()
+                .onError { error -> Timber.e("Failed to load DMs for favorites: $error") }
+
+            _isLoading.value = false
         }
     }
 
     fun unstarChannel(channelId: String) {
         viewModelScope.launch {
-            val current = _starredChannelIds.value.toMutableSet()
-            current.remove(channelId)
-            _starredChannelIds.value = current
-            
-            // Remove from list
-            _starredChannels.value = _starredChannels.value.filter { it.channel.id != channelId }
-            
-            // TODO: Persist to repository
-            Timber.d("Unstarred channel: $channelId")
+            homeStateRepository.removeFavorite(channelId)
         }
     }
 
     fun isChannelStarred(channelId: String): Boolean {
-        return _starredChannelIds.value.contains(channelId)
+        return starredChannels.value.any { it.channel.id == channelId }
     }
 
     fun moveChannel(fromIndex: Int, toIndex: Int) {
-        viewModelScope.launch {
-            val current = _starredChannels.value.toMutableList()
-            if (fromIndex in current.indices && toIndex in current.indices) {
-                val item = current.removeAt(fromIndex)
-                current.add(toIndex, item)
-                _starredChannels.value = current
-                
-                // TODO: Persist new order
-            }
-        }
-    }
-
-    private fun generateMockStarredChannels(): List<StarredChannel> {
-        // Mock data for demonstration
-        return listOf(
-            StarredChannel(
-                channel = com.fluxer.client.data.model.Channel(
-                    id = "1",
-                    name = "general",
-                    type = com.fluxer.client.data.model.ChannelType.TEXT,
-                    serverId = "server1"
-                ),
-                server = Server(
-                    id = "server1",
-                    name = "Fluxer Developers",
-                    ownerId = "owner1",
-                    memberCount = 150,
-                    onlineCount = 45
-                ),
-                lastMessage = "Andrew: for small fixes i just use auto complete...",
-                lastMessageTime = System.currentTimeMillis() - 300000,
-                unreadCount = 3
-            ),
-            StarredChannel(
-                channel = com.fluxer.client.data.model.Channel(
-                    id = "2",
-                    name = "tech",
-                    type = com.fluxer.client.data.model.ChannelType.TEXT,
-                    serverId = "server1"
-                ),
-                server = Server(
-                    id = "server1",
-                    name = "Fluxer Developers",
-                    ownerId = "owner1",
-                    memberCount = 150,
-                    onlineCount = 45
-                ),
-                lastMessage = "Rakanishu: is there a website i can go on...",
-                lastMessageTime = System.currentTimeMillis() - 3600000,
-                unreadCount = 0
-            ),
-            StarredChannel(
-                channel = com.fluxer.client.data.model.Channel(
-                    id = "3",
-                    name = "random",
-                    type = com.fluxer.client.data.model.ChannelType.TEXT,
-                    serverId = "server2"
-                ),
-                server = Server(
-                    id = "server2",
-                    name = "Gaming Squad",
-                    ownerId = "owner2",
-                    memberCount = 42,
-                    onlineCount = 12
-                ),
-                lastMessage = "John: Anyone up for a game tonight?",
-                lastMessageTime = System.currentTimeMillis() - 7200000,
-                unreadCount = 5
-            ),
-            StarredChannel(
-                channel = com.fluxer.client.data.model.Channel(
-                    id = "4",
-                    name = "Voice Chat",
-                    type = com.fluxer.client.data.model.ChannelType.VOICE,
-                    serverId = "server2"
-                ),
-                server = Server(
-                    id = "server2",
-                    name = "Gaming Squad",
-                    ownerId = "owner2",
-                    memberCount = 42,
-                    onlineCount = 12
-                ),
-                lastMessage = null,
-                lastMessageTime = null,
-                unreadCount = 0
-            )
-        )
+        Timber.d("Reordering favorites is not wired yet: $fromIndex -> $toIndex")
     }
 }

@@ -31,6 +31,12 @@ import com.fluxer.client.data.model.Channel
 import com.fluxer.client.data.model.User
 import com.fluxer.client.data.model.UserStatus
 import com.fluxer.client.data.model.displayName
+import com.fluxer.client.ui.components.FluxerEmptyState
+import com.fluxer.client.ui.components.FluxerIconButton
+import com.fluxer.client.ui.components.FluxerLoadingState
+import com.fluxer.client.ui.components.FluxerPageScaffold
+import com.fluxer.client.ui.components.FluxerPanel
+import com.fluxer.client.ui.components.FluxerSectionTitle
 import com.fluxer.client.ui.theme.*
 import com.fluxer.client.ui.viewmodel.MessagesViewModel
 import java.time.Instant
@@ -49,7 +55,7 @@ fun MessagesScreen(
 ) {
     val dmChannels by viewModel.dmChannels.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
+    val unreadCountsByChannel by viewModel.unreadCountsByChannel.collectAsState()
     
     // State for context menu
     var selectedChannel by remember { mutableStateOf<Channel?>(null) }
@@ -60,70 +66,27 @@ fun MessagesScreen(
         viewModel.loadDMChannels()
     }
     
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        text = "Messages",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { /* TODO */ }) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
-                            tint = TextPrimary
-                        )
-                    }
-                    
-                    Surface(
-                        onClick = { /* TODO */ },
-                        shape = RoundedCornerShape(16.dp),
-                        color = VelvetSurface,
-                        modifier = Modifier.padding(end = 16.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PersonAdd,
-                                contentDescription = null,
-                                tint = TextPrimary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Add Friends",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = TextPrimary
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = VelvetDark,
-                    titleContentColor = TextPrimary
-                )
+    FluxerPageScaffold(
+        title = "Messages",
+        subtitle = "${dmChannels.size} conversations",
+        onBack = onBack,
+        headerActions = {
+            FluxerIconButton(
+                icon = Icons.Default.Search,
+                contentDescription = "Search",
+                onClick = { }
+            )
+            FluxerIconButton(
+                icon = Icons.Default.PersonAdd,
+                contentDescription = "Add friends",
+                onClick = { }
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { /* TODO: New DM */ },
                 containerColor = PhantomRed,
+                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 2.dp),
                 shape = CircleShape,
                 modifier = Modifier.size(56.dp)
             ) {
@@ -134,8 +97,7 @@ fun MessagesScreen(
                     modifier = Modifier.size(24.dp)
                 )
             }
-        },
-        containerColor = VelvetBlack
+        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -143,24 +105,29 @@ fun MessagesScreen(
                 .padding(padding)
         ) {
             if (isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = PhantomRed)
-                }
+                FluxerLoadingState("Loading conversations")
+            } else if (dmChannels.isEmpty()) {
+                FluxerEmptyState(
+                    title = "No direct messages yet",
+                    body = "When you start a conversation, it will show up here.",
+                    icon = Icons.AutoMirrored.Filled.Send
+                )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                 ) {
                     item {
+                        FluxerSectionTitle(title = "Quick access")
                         PersonalNotesItem(onClick = { /* TODO */ })
+                        Spacer(modifier = Modifier.height(12.dp))
+                        FluxerSectionTitle(title = "Recent conversations")
                     }
                     
                     items(dmChannels) { dmChannel ->
                         DMChannelItemDiscord(
                             channel = dmChannel,
+                            unreadCount = unreadCountsByChannel[dmChannel.id] ?: 0,
                             onClick = { onChannelSelected(dmChannel) },
                             onLongClick = {
                                 selectedChannel = dmChannel
@@ -222,66 +189,74 @@ fun MessagesScreen(
 
 @Composable
 private fun PersonalNotesItem(onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+    FluxerPanel(
+        modifier = Modifier.fillMaxWidth(),
+        tonal = true
     ) {
-        Surface(
-            modifier = Modifier.size(56.dp),
-            shape = CircleShape,
-            color = VelvetSurface
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = null,
-                    tint = TextSecondary,
-                    modifier = Modifier.size(28.dp)
+            Surface(
+                modifier = Modifier.size(46.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = VelvetMid
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        tint = TextSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Personal Notes",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Draft thoughts and save things for later",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextMuted
                 )
             }
         }
-        
-        Spacer(modifier = Modifier.width(16.dp))
-        
-        Text(
-            text = "Personal Notes",
-            style = MaterialTheme.typography.bodyLarge,
-            color = TextPrimary,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f)
-        )
     }
-    
-    Spacer(modifier = Modifier.height(8.dp))
 }
 
 @Composable
 private fun DMChannelItemDiscord(
     channel: Channel,
+    unreadCount: Int,
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
     val recipient = remember(channel.id, channel.recipients) {
         channel.recipients.firstOrNull() ?: generateMockRecipient(channel)
     }
-    val lastMessage = remember { generateMockLastMessage(channel) }
-    val isFromMe = remember { (0..1).random() == 0 }
-    val timestamp = remember { System.currentTimeMillis() - (0..2592000000).random() }
-    val unreadCount = remember { if ((0..5).random() == 0) (1..5).random() else 0 }
+    val lastMessage = remember(channel.id, channel.topic, unreadCount) {
+        generateMockLastMessage(channel, unreadCount)
+    }
     val isSystemUser = remember { recipient.username == "Fluxer" }
     
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (unreadCount > 0) VelvetDark else Color.Transparent, RoundedCornerShape(12.dp))
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box {
@@ -298,13 +273,13 @@ private fun DMChannelItemDiscord(
                     )
                 } else {
                     Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = recipient.username.take(1).uppercase(),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = PhantomRed
-                        )
-                    }
+                    Text(
+                        text = recipient.username.take(1).uppercase(),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = TextPrimary
+                    )
                 }
+            }
             }
             
             if (!isSystemUser) {
@@ -337,7 +312,7 @@ private fun DMChannelItemDiscord(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = recipient.displayName ?: recipient.username,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         color = TextPrimary,
                         fontWeight = if (unreadCount > 0) FontWeight.SemiBold else FontWeight.Normal,
                         maxLines = 1,
@@ -350,11 +325,13 @@ private fun DMChannelItemDiscord(
                     }
                 }
                 
-                Text(
-                    text = formatDiscordTimestamp(timestamp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (unreadCount > 0) PhantomRed else TextMuted
-                )
+                if (unreadCount > 0) {
+                    Text(
+                        text = "$unreadCount new",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSecondary
+                    )
+                }
             }
             
             Spacer(modifier = Modifier.height(2.dp))
@@ -363,11 +340,10 @@ private fun DMChannelItemDiscord(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                val messagePrefix = if (isFromMe) "You: " else ""
                 val messageColor = if (unreadCount > 0) TextSecondary else TextMuted
                 
                 Text(
-                    text = messagePrefix + lastMessage,
+                    text = lastMessage,
                     style = MaterialTheme.typography.bodyMedium,
                     color = messageColor,
                     maxLines = 1,
@@ -377,11 +353,11 @@ private fun DMChannelItemDiscord(
                 
                 if (unreadCount > 0) {
                     Spacer(modifier = Modifier.width(8.dp))
-                    Badge(containerColor = PhantomRed) {
+                    Badge(containerColor = PhantomRed.copy(alpha = 0.18f), contentColor = PhantomRed) {
                         Text(
                             text = if (unreadCount > 9) "9+" else unreadCount.toString(),
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextPrimary
+                            color = PhantomRed
                         )
                     }
                 }
@@ -749,45 +725,21 @@ enum class MuteDuration {
     ALWAYS
 }
 
-// Mock data generators
+// Fallbacks while richer DM metadata is still being hydrated from the native cache.
 private fun generateMockRecipient(channel: Channel): User {
-    val names = listOf(
-        "Elias" to "#3b82f6",
-        "MON7Y5" to "#22c55e", 
-        "Ashwood" to TextSecondary,
-        "Salim" to TextSecondary,
-        "Ferret" to TextSecondary,
-        "Fluxer" to "#a855f7",
-        "Hampus" to TextSecondary,
-        "meowergirl" to TextSecondary,
-        "Mr. Cake Slayer" to TextSecondary
-    )
-    val (name, _) = names.random()
+    val name = channel.name.ifBlank { "Unknown user" }
     return User(
         id = channel.id,
         username = channel.displayName().ifBlank { name }.lowercase().replace(" ", "_"),
         displayName = channel.displayName().ifBlank { name },
         avatarUrl = null,
-        status = UserStatus.entries.toTypedArray().random()
+        status = UserStatus.OFFLINE
     )
 }
 
-private fun generateMockLastMessage(channel: Channel): String {
-    val messages = listOf(
-        "ok gn",
-        "don't have it set to automatic yet",
-        "ah ok",
-        "Kinda want to enforce squash commits for pr's",
-        "why not, in dont see any issue here",
-        "that was a joke",
-        "how would something go wrong?",
-        "Ah haha",
-        "ok set",
-        "3 Members",
-        "<https://app.deel.com/people...>",
-        "👍"
-    )
-    return messages.random()
+private fun generateMockLastMessage(channel: Channel, unreadCount: Int): String {
+    return channel.topic?.takeIf { it.isNotBlank() }
+        ?: if (unreadCount > 0) "New activity in this conversation" else "Open conversation"
 }
 
 private fun formatDiscordTimestamp(timestamp: Long): String {
@@ -807,4 +759,3 @@ private fun formatDiscordTimestamp(timestamp: Long): String {
         else -> "${diffDays / 365}y"
     }
 }
-

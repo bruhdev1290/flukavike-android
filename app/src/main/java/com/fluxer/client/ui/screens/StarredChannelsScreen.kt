@@ -24,6 +24,10 @@ import coil.compose.AsyncImage
 import com.fluxer.client.data.model.Channel
 import com.fluxer.client.data.model.ChannelType
 import com.fluxer.client.data.model.Server
+import com.fluxer.client.ui.components.FluxerEmptyState
+import com.fluxer.client.ui.components.FluxerIconButton
+import com.fluxer.client.ui.components.FluxerLoadingState
+import com.fluxer.client.ui.components.FluxerPageScaffold
 import com.fluxer.client.ui.theme.*
 import com.fluxer.client.ui.viewmodel.StarredChannelsViewModel
 import java.time.Instant
@@ -45,43 +49,17 @@ fun StarredChannelsScreen(
         viewModel.loadStarredChannels()
     }
     
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        text = "Starred",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                actions = {
-                    // Edit button to reorder/remove
-                    IconButton(onClick = { /* TODO: Enter edit mode */ }) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = VelvetDark,
-                    titleContentColor = TextPrimary
-                )
+    FluxerPageScaffold(
+        title = "Starred",
+        subtitle = "${starredChannels.size} saved channels",
+        onBack = onBack,
+        headerActions = {
+            FluxerIconButton(
+                icon = Icons.Default.Edit,
+                contentDescription = "Edit",
+                onClick = { }
             )
-        },
-        containerColor = VelvetBlack
+        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -89,12 +67,7 @@ fun StarredChannelsScreen(
                 .padding(padding)
         ) {
             if (isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = PhantomRed)
-                }
+                FluxerLoadingState("Loading starred channels")
             } else if (starredChannels.isEmpty()) {
                 EmptyStarredState()
             } else {
@@ -134,38 +107,11 @@ fun StarredChannelsScreen(
 
 @Composable
 private fun EmptyStarredState() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = Icons.Default.Star,
-            contentDescription = null,
-            tint = TextMuted.copy(alpha = 0.5f),
-            modifier = Modifier.size(64.dp)
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Text(
-            text = "No Starred Channels",
-            style = MaterialTheme.typography.titleMedium,
-            color = TextMuted,
-            fontWeight = FontWeight.Medium
-        )
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        Text(
-            text = "Star channels you use frequently to access them quickly",
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextMuted.copy(alpha = 0.7f),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
-    }
+    FluxerEmptyState(
+        title = "Nothing starred yet",
+        body = "Save your most important channels here for faster access.",
+        icon = Icons.Default.Star
+    )
 }
 
 @Composable

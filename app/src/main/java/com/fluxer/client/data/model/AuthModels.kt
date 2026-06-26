@@ -11,6 +11,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNames
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
@@ -75,8 +76,10 @@ data class User(
     val email: String = "",
     val username: String,
     val discriminator: String = "0001",
+    @JsonNames("global_name")
     @SerialName("display_name")
     val displayName: String? = null,
+    @JsonNames("avatar")
     @SerialName("avatar_url")
     val avatarUrl: String? = null,
     val status: UserStatus = UserStatus.OFFLINE,

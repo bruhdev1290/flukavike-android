@@ -21,12 +21,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.fluxer.client.data.model.UserProfile
 import com.fluxer.client.data.model.UserStatus
+import com.fluxer.client.ui.components.FluxerEmptyState
+import com.fluxer.client.ui.components.FluxerLoadingState
+import com.fluxer.client.ui.components.FluxerPageScaffold
+import com.fluxer.client.ui.components.FluxerPanel
+import com.fluxer.client.ui.components.FluxerSectionTitle
 import com.fluxer.client.ui.theme.*
 import com.fluxer.client.ui.viewmodel.ProfileViewModel
 
@@ -50,33 +54,10 @@ fun ProfileScreen(
     // Get current user info for fallback
     val currentUser = profile
     
-    Scaffold(
-        containerColor = VelvetBlack,
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        text = "Profile",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = VelvetDark,
-                    titleContentColor = TextPrimary
-                )
-            )
-        }
+    FluxerPageScaffold(
+        title = "You",
+        subtitle = currentUser?.username?.let { "@$it" } ?: "Account",
+        onBack = onBack
     ) { padding ->
         Box(
             modifier = Modifier
@@ -85,12 +66,7 @@ fun ProfileScreen(
         ) {
             when {
                 isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = PhantomRed)
-                    }
+                    FluxerLoadingState("Loading profile")
                 }
                 currentUser != null -> {
                     ProfileContent(
@@ -101,9 +77,7 @@ fun ProfileScreen(
                     )
                 }
                 else -> {
-                    // Fallback when no profile data - show basic current user info
                     FallbackProfileContent(
-                        onBack = onBack,
                         onLogout = onLogout
                     )
                 }
@@ -133,137 +107,88 @@ private fun ProfileContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(16.dp)
     ) {
-        // Avatar
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .background(VelvetSurface, CircleShape)
-                .border(4.dp, PhantomRed.copy(alpha = 0.3f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            if (profile.avatarUrl != null) {
-                AsyncImage(
-                    model = profile.avatarUrl,
-                    contentDescription = profile.username,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Text(
-                    text = profile.username.take(1).uppercase(),
-                    style = MaterialTheme.typography.displayLarge,
-                    color = PhantomRed,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            
-            // Status indicator
-            val statusColor = when (profile.status) {
-                UserStatus.ONLINE -> OnlineGreen
-                UserStatus.AWAY -> AwayYellow
-                UserStatus.DND -> DndRed
-                else -> OfflineGray
-            }
-            
-            Box(
+        FluxerPanel(modifier = Modifier.fillMaxWidth()) {
+            Row(
                 modifier = Modifier
-                    .size(28.dp)
-                    .align(Alignment.BottomEnd)
-                    .offset(x = (-4).dp, y = (-4).dp)
-                    .background(VelvetBlack, CircleShape)
-                    .padding(3.dp)
-                    .background(statusColor, CircleShape)
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(88.dp)
+                        .background(VelvetSurface, CircleShape)
+                        .border(2.dp, BorderSubtle, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (profile.avatarUrl != null) {
+                        AsyncImage(
+                            model = profile.avatarUrl,
+                            contentDescription = profile.username,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Text(
+                            text = profile.username.take(1).uppercase(),
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = profile.displayName ?: profile.username,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = TextPrimary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "@${profile.username}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextMuted
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = profile.customStatus?.takeIf { it.isNotBlank() } ?: statusLabel(profile.status),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        FluxerSectionTitle(title = "About")
+        FluxerPanel(modifier = Modifier.fillMaxWidth(), tonal = true) {
+            Text(
+                text = profile.bio ?: "No bio yet.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (profile.bio.isNullOrBlank()) TextMuted else TextSecondary,
+                modifier = Modifier.padding(16.dp)
             )
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
-        // Display Name
-        Text(
-            text = profile.displayName ?: profile.username,
-            style = MaterialTheme.typography.headlineMedium,
-            color = TextPrimary,
-            fontWeight = FontWeight.Bold
-        )
-        
-        // Username
-        Text(
-            text = "@${profile.username}",
-            style = MaterialTheme.typography.bodyLarge,
-            color = TextMuted
-        )
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        // Custom Status
-        if (!profile.customStatus.isNullOrBlank()) {
-            Surface(
-                color = VelvetSurface,
-                shape = RoundedCornerShape(16.dp)
-            ) {
+
+        FluxerSectionTitle(title = "Account")
+        FluxerPanel(modifier = Modifier.fillMaxWidth(), tonal = true) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = profile.customStatus,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    text = "Member since",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextMuted
                 )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // About Me Section
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = VelvetSurface,
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "About Me",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Text(
-                    text = profile.bio ?: "No bio yet.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = if (profile.bio.isNullOrBlank()) TextMuted else TextSecondary
-                )
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Member Since
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = VelvetSurface,
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "Member Since",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold
-                )
-                
                 Spacer(modifier = Modifier.height(4.dp))
-                
                 Text(
                     text = formatMemberSince(profile.createdAt),
                     style = MaterialTheme.typography.bodyLarge,
@@ -354,87 +279,20 @@ private fun ProfileContent(
 
 @Composable
 private fun FallbackProfileContent(
-    onBack: () -> Unit,
     onLogout: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(16.dp)
     ) {
-        // Avatar placeholder
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .background(VelvetSurface, CircleShape)
-                .border(4.dp, PhantomRed.copy(alpha = 0.3f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "?",
-                style = MaterialTheme.typography.displayLarge,
-                color = PhantomRed,
-                fontWeight = FontWeight.Bold
-            )
-            
-            // Online status
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .align(Alignment.BottomEnd)
-                    .offset(x = (-4).dp, y = (-4).dp)
-                    .background(VelvetBlack, CircleShape)
-                    .padding(3.dp)
-                    .background(OnlineGreen, CircleShape)
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Text(
-            text = "My Profile",
-            style = MaterialTheme.typography.headlineMedium,
-            color = TextPrimary,
-            fontWeight = FontWeight.Bold
+        FluxerEmptyState(
+            title = "Profile unavailable",
+            body = "We couldn't load your account details right now.",
+            icon = Icons.Default.Person,
+            modifier = Modifier.weight(1f)
         )
-        
-        Text(
-            text = "@user",
-            style = MaterialTheme.typography.bodyLarge,
-            color = TextMuted
-        )
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // About placeholder
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = VelvetSurface,
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "About Me",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Text(
-                    text = "No bio yet.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextMuted
-                )
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(32.dp))
         
         // Logout Button
         OutlinedButton(
@@ -543,6 +401,13 @@ private fun EditProfileDialog(
             }
         }
     )
+}
+
+private fun statusLabel(status: UserStatus): String = when (status) {
+    UserStatus.ONLINE -> "Online"
+    UserStatus.AWAY -> "Away"
+    UserStatus.DND -> "Do not disturb"
+    UserStatus.OFFLINE -> "Offline"
 }
 
 private fun formatMemberSince(isoString: String?): String {

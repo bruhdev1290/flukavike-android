@@ -36,7 +36,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /**
- * Message bubble component with gaming aesthetic
+ * Message bubble component aligned with the premium Fluxer redesign.
  */
 @Composable
 fun MessageBubble(
@@ -87,7 +87,7 @@ fun MessageBubble(
                         Text(
                             text = message.author?.username ?: "Unknown",
                             style = FluxerTextStyles.gamerTag,
-                            color = PhantomRed
+                            color = TextSecondary
                         )
                         Text(
                             text = formatTimestamp(message.createdAt),
@@ -114,23 +114,15 @@ fun MessageBubble(
                     Column(
                         modifier = Modifier
                             .background(
-                                color = if (isOwnMessage) PhantomRed.copy(alpha = 0.9f) else VelvetSurface,
-                                shape = if (isOwnMessage) {
-                                    RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)
-                                } else {
-                                    RoundedCornerShape(4.dp, 16.dp, 16.dp, 16.dp)
-                                }
+                                color = if (isOwnMessage) PhantomRed.copy(alpha = 0.2f) else VelvetDark,
+                                shape = if (isOwnMessage) FluxerExtendedShapes.messageSent else FluxerExtendedShapes.messageReceived
                             )
                             .border(
                                 width = 1.dp,
-                                color = if (isOwnMessage) PhantomRed.copy(alpha = 0.5f) else BorderSubtle.copy(alpha = 0.5f),
-                                shape = if (isOwnMessage) {
-                                    RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)
-                                } else {
-                                    RoundedCornerShape(4.dp, 16.dp, 16.dp, 16.dp)
-                                }
+                                color = if (isOwnMessage) PhantomRed.copy(alpha = 0.35f) else BorderSubtle.copy(alpha = 0.8f),
+                                shape = if (isOwnMessage) FluxerExtendedShapes.messageSent else FluxerExtendedShapes.messageReceived
                             )
-                            .padding(12.dp)
+                            .padding(13.dp)
                     ) {
                         // Reply preview
                         message.replyTo?.let { replyMessage ->

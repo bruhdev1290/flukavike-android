@@ -3,11 +3,16 @@ package com.fluxer.client.data.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import com.fluxer.client.data.local.dao.DmChannelDao
+import com.fluxer.client.data.local.model.DmChannelEntity
 import com.fluxer.client.data.paging.MessagePagingSource
 import com.fluxer.client.data.model.*
 import com.fluxer.client.data.remote.*
 import com.fluxer.client.util.Result
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.net.URLEncoder
 import javax.inject.Inject
@@ -22,8 +27,11 @@ private const val MESSAGE_PAGE_SIZE = 25
 @Singleton
 class ChatRepository @Inject constructor(
     private val apiService: FluxerApiService,
-    private val gatewayManager: GatewayWebSocketManager
+    private val gatewayManager: GatewayWebSocketManager,
+    private val dmChannelDao: DmChannelDao
 ) {
+    private val scope = CoroutineScope(Dispatchers.IO)
+
     // Cache for messages per channel
     private val messageCache = mutableMapOf<String, MutableStateFlow<List<Message>>>()
     
@@ -33,6 +41,9 @@ class ChatRepository @Inject constructor(
         MutableStateFlow<Map<String, List<Channel>>>(emptyMap())
     val channelCacheFlow: StateFlow<Map<String, List<Channel>>> =
         _channelCacheFlow.asStateFlow()
+
+    private val _dmChannelsFlow = MutableStateFlow<List<Channel>>(emptyList())
+    val dmChannelsFlow: StateFlow<List<Channel>> = _dmChannelsFlow.asStateFlow()
     
     // Voice state cache per channel
     private val voiceStateCache = mutableMapOf<String, MutableStateFlow<List<com.fluxer.client.data.model.VoiceStateUpdateEvent>>>()
@@ -56,6 +67,7 @@ class ChatRepository @Inject constructor(
     init {
         // Subscribe to Gateway events to update local cache
         collectGatewayEvents()
+        restoreDmChannels()
     }
 
     /**
@@ -264,12 +276,19 @@ class ChatRepository @Inject constructor(
         return try {
             val response = apiService.getDMChannels()
             if (response.isSuccessful) {
-                Result.Success(response.body() ?: emptyList())
+                val channels = response.body() ?: emptyList()
+                cacheDmChannels(channels)
+                Result.Success(channels)
             } else {
                 Result.Error("Failed to load DM channels: ${response.code()}")
             }
         } catch (e: Exception) {
-            Result.Error("Network error: ${e.message}")
+            val cached = _dmChannelsFlow.value
+            if (cached.isNotEmpty()) {
+                Result.Success(cached)
+            } else {
+                Result.Error("Network error: ${e.message}")
+            }
         }
     }
 
@@ -279,6 +298,7 @@ class ChatRepository @Inject constructor(
             val response = apiService.createDMChannel(request)
             if (response.isSuccessful) {
                 response.body()?.let {
+                    cacheDmChannels(listOf(it), replace = false)
                     Result.Success(it)
                 } ?: Result.Error("Empty response")
             } else {
@@ -452,6 +472,7 @@ class ChatRepository @Inject constructor(
             when (event) {
                 is GatewayWebSocketManager.GatewayEvent.Ready -> {
                     cacheChannelsFromReady(event.data)
+                    cacheDmChannels(event.data.privateChannels)
                 }
                 is GatewayWebSocketManager.GatewayEvent.MessageCreate -> {
                     addMessageToCache(event.message.channelId, event.message)
@@ -469,13 +490,25 @@ class ChatRepository @Inject constructor(
                     removeReactionFromCache(event.data)
                 }
                 is GatewayWebSocketManager.GatewayEvent.ChannelCreate -> {
-                    addChannelToCache(event.channel)
+                    if (event.channel.serverId == null) {
+                        cacheDmChannels(listOf(event.channel), replace = false)
+                    } else {
+                        addChannelToCache(event.channel)
+                    }
                 }
                 is GatewayWebSocketManager.GatewayEvent.ChannelUpdate -> {
-                    updateChannelInCache(event.channel)
+                    if (event.channel.serverId == null) {
+                        cacheDmChannels(listOf(event.channel), replace = false)
+                    } else {
+                        updateChannelInCache(event.channel)
+                    }
                 }
                 is GatewayWebSocketManager.GatewayEvent.ChannelDelete -> {
-                    removeChannelFromCache(event.channel)
+                    if (event.channel.serverId == null) {
+                        removeDmChannelFromCache(event.channel.id)
+                    } else {
+                        removeChannelFromCache(event.channel)
+                    }
                 }
                 is GatewayWebSocketManager.GatewayEvent.GuildCreate -> {
                     if (event.guild.channels.isNotEmpty()) {
@@ -518,8 +551,6 @@ class ChatRepository @Inject constructor(
     }
 
     private fun cacheChannelsFromReady(ready: ReadyEvent) {
-        if (ready.guilds.isEmpty()) return
-
         ready.guilds.forEach { guild ->
             if (guild.channels.isNotEmpty()) {
                 channelCache[guild.id] = guild.channels
@@ -527,6 +558,41 @@ class ChatRepository @Inject constructor(
         }
         _channelCacheFlow.value = channelCache.toMap()
         Timber.i("Cached channels for ${channelCache.size} guilds from READY")
+    }
+
+    private fun restoreDmChannels() {
+        scope.launch {
+            val cached = dmChannelDao.getAll().map { it.toDomain() }
+            if (cached.isNotEmpty()) {
+                _dmChannelsFlow.value = cached
+            }
+        }
+    }
+
+    private fun cacheDmChannels(channels: List<Channel>, replace: Boolean = true) {
+        if (channels.isEmpty()) {
+            if (replace) {
+                _dmChannelsFlow.value = emptyList()
+            }
+            return
+        }
+        val dmCandidates = channels.filter { it.serverId == null || it.type == ChannelType.DM }
+        if (dmCandidates.isEmpty()) return
+
+        val merged = if (replace) {
+            dmCandidates
+        } else {
+            (_dmChannelsFlow.value + dmCandidates).associateBy { it.id }.values.toList()
+        }.sortedByDescending { it.lastMessageId ?: it.id }
+
+        _dmChannelsFlow.value = merged
+        scope.launch {
+            dmChannelDao.upsertAll(merged.map { it.toEntity() })
+        }
+    }
+
+    private fun removeDmChannelFromCache(channelId: String) {
+        _dmChannelsFlow.value = _dmChannelsFlow.value.filter { it.id != channelId }
     }
 
     private fun addChannelToCache(channel: Channel) {
@@ -676,4 +742,20 @@ class ChatRepository @Inject constructor(
         val flow = callStateCache.getOrPut(call.channelId) { MutableStateFlow(null) }
         flow.value = call
     }
+
+    private fun Channel.toEntity(): DmChannelEntity =
+        DmChannelEntity(
+            id = id,
+            name = displayName(),
+            lastMessageId = lastMessageId,
+            updatedAt = System.currentTimeMillis()
+        )
+
+    private fun DmChannelEntity.toDomain(): Channel =
+        Channel(
+            id = id,
+            name = name,
+            type = ChannelType.DM,
+            lastMessageId = lastMessageId
+        )
 }

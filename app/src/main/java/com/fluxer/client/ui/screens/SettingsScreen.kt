@@ -15,11 +15,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fluxer.client.ui.components.FluxerDivider
+import com.fluxer.client.ui.components.FluxerLoadingState
+import com.fluxer.client.ui.components.FluxerPageScaffold
+import com.fluxer.client.ui.components.FluxerPanel
 import com.fluxer.client.ui.theme.*
 import com.fluxer.client.ui.viewmodel.SettingsViewModel
 
@@ -39,41 +42,13 @@ fun SettingsScreen(
 ) {
     val isLoading by viewModel.isLoading.collectAsState()
     
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        text = "Settings",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = VelvetDark,
-                    titleContentColor = TextPrimary
-                )
-            )
-        },
-        containerColor = VelvetBlack
+    FluxerPageScaffold(
+        title = "Settings",
+        subtitle = "Preferences and account controls",
+        onBack = onBack
     ) { padding ->
         if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = PhantomRed)
-            }
+            FluxerLoadingState("Loading settings")
         } else {
             Column(
                 modifier = Modifier
@@ -193,19 +168,17 @@ fun SettingsSection(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = title.uppercase(),
-            style = MaterialTheme.typography.labelMedium,
-            color = PhantomRed,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = TextSecondary,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
         )
         
-        Surface(
+        FluxerPanel(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            color = VelvetSurface,
-            shape = RoundedCornerShape(16.dp)
         ) {
             Column {
                 content()
@@ -231,7 +204,7 @@ fun SettingsMenuItem(
         Surface(
             modifier = Modifier.size(40.dp),
             shape = RoundedCornerShape(10.dp),
-            color = VelvetDark
+            color = VelvetMid
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
@@ -248,7 +221,7 @@ fun SettingsMenuItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.titleMedium,
                 color = TextPrimary,
                 fontWeight = FontWeight.Medium
             )
@@ -270,9 +243,5 @@ fun SettingsMenuItem(
 
 @Composable
 fun SettingsDivider() {
-    Divider(
-        color = BorderSubtle.copy(alpha = 0.3f),
-        thickness = 0.5.dp,
-        modifier = Modifier.padding(start = 72.dp)
-    )
+    FluxerDivider()
 }

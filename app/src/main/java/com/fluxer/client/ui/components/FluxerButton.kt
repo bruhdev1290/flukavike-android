@@ -11,21 +11,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.Shadow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fluxer.client.ui.theme.*
 
 /**
- * Sharp, angular button with Persona 5-inspired styling
+ * Premium button styling shared across the redesigned app.
  */
 @Composable
 fun FluxerButton(
@@ -45,15 +41,11 @@ fun FluxerButton(
     )
     
     val colors = when (variant) {
-        ButtonVariant.Primary -> ButtonColors(
-            container = PhantomRed,
-            content = TextPrimary,
-            border = PhantomRed
-        )
+        ButtonVariant.Primary -> ButtonColors(PhantomRed, TextPrimary, PhantomRed)
         ButtonVariant.Secondary -> ButtonColors(
-            container = Color.Transparent,
-            content = PhantomRed,
-            border = PhantomRed
+            container = VelvetMid,
+            content = TextPrimary,
+            border = BorderSubtle
         )
         ButtonVariant.Ghost -> ButtonColors(
             container = Color.Transparent,
@@ -78,14 +70,11 @@ fun FluxerButton(
     Surface(
         modifier = modifier
             .height(height)
-            .scale(scale)
-            .clip(RectangleShape),
+            .scale(scale),
         color = colors.container.copy(alpha = alpha),
-        border = if (variant != ButtonVariant.Ghost) {
-            BorderStroke(2.dp, colors.border.copy(alpha = alpha))
-        } else null,
-        shadowElevation = if (isPressed) 0.dp else 8.dp,
-        shape = RectangleShape
+        border = if (variant != ButtonVariant.Ghost) BorderStroke(1.dp, colors.border.copy(alpha = alpha)) else null,
+        shadowElevation = if (variant == ButtonVariant.Primary && !isPressed) 4.dp else 0.dp,
+        shape = RoundedCornerShape(12.dp)
     ) {
         Box(
             modifier = Modifier
@@ -100,10 +89,9 @@ fun FluxerButton(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = text.uppercase(),
+                text = text,
                 style = fontSize.copy(
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    letterSpacing = 1.sp
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                 ),
                 color = colors.content.copy(alpha = alpha),
                 textAlign = TextAlign.Center
@@ -113,7 +101,7 @@ fun FluxerButton(
 }
 
 /**
- * Button with diagonal slash edges for extra flair
+ * Legacy decorative button preserved for places that still opt into it.
  */
 @Composable
 fun SlashButton(
@@ -176,7 +164,7 @@ fun SlashButton(
 }
 
 /**
- * Loading button with animated effect
+ * Loading button aligned with the calmer premium system.
  */
 @Composable
 fun LoadingButton(
@@ -194,8 +182,7 @@ fun LoadingButton(
     Box(
         modifier = modifier
             .height(48.dp)
-            .clip(RectangleShape)
-            .background(PhantomRed.copy(alpha = alpha))
+            .background(PhantomRed.copy(alpha = alpha), RoundedCornerShape(12.dp))
             .clickable(enabled = enabled && !isLoading, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -207,9 +194,9 @@ fun LoadingButton(
             )
         } else {
             Text(
-                text = text.uppercase(),
+                text = text,
                 style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                 ),
                 color = TextPrimary.copy(alpha = alpha)
             )

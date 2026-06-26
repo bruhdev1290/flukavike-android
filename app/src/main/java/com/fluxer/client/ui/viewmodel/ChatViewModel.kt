@@ -8,6 +8,7 @@ import com.fluxer.client.data.model.*
 import com.fluxer.client.data.remote.GatewayWebSocketManager
 import com.fluxer.client.data.repository.ChatRepository
 import com.fluxer.client.data.repository.AuthRepository
+import com.fluxer.client.data.repository.HomeStateRepository
 import com.fluxer.client.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val homeStateRepository: HomeStateRepository
 ) : ViewModel() {
 
     // Current user
@@ -80,6 +82,12 @@ class ChatViewModel @Inject constructor(
     private val _channels = MutableStateFlow<List<Channel>>(emptyList())
     val channels: StateFlow<List<Channel>> = _channels.asStateFlow()
 
+    val favoriteChannelIds: StateFlow<Set<String>> = homeStateRepository.favoriteChannelIds
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+
+    val unreadCountsByChannel: StateFlow<Map<String, Int>> = homeStateRepository.unreadCountsByChannel
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
     // Loading states
     private val _isLoadingMessages = MutableStateFlow(false)
     val isLoadingMessages: StateFlow<Boolean> = _isLoadingMessages.asStateFlow()
@@ -127,7 +135,6 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.authState
                 .filter { it is AuthRepository.AuthState.Authenticated }
-                .take(1) // Only act on first authentication
                 .collect {
                     Timber.d("🔐 Auth state is Authenticated, ensuring Gateway connection")
                     if (connectionState.value == GatewayWebSocketManager.ConnectionState.Disconnected) {
@@ -174,8 +181,8 @@ class ChatViewModel @Inject constructor(
             Timber.i("✅ Using ${server.channels.size} channels from Gateway READY for ${server.name}")
             _channels.value = server.channels
             if (_selectedChannel.value == null || _selectedChannel.value?.serverId != server.id) {
-                _selectedChannel.value = server.channels.firstOrNull { it.type == ChannelType.TEXT }
-                Timber.d("🎯 Auto-selected channel: ${_selectedChannel.value?.name}")
+                _selectedChannel.value = preferredGuildChannel(server.channels)
+                Timber.d("🎯 Auto-selected channel: ${_selectedChannel.value?.displayName()}")
             }
         } else {
             val cached = chatRepository.getCachedGuildChannels(server.id)
@@ -183,7 +190,7 @@ class ChatViewModel @Inject constructor(
                 Timber.i("✅ Using ${cached.size} cached channels for ${server.name}")
                 _channels.value = cached
                 if (_selectedChannel.value == null || _selectedChannel.value?.serverId != server.id) {
-                    _selectedChannel.value = cached.firstOrNull { it.type == ChannelType.TEXT }
+                    _selectedChannel.value = preferredGuildChannel(cached)
                 }
             } else {
                 Timber.d("📡 No cached channels yet for ${server.name} (waiting for READY)")
@@ -194,6 +201,13 @@ class ChatViewModel @Inject constructor(
 
     fun selectChannel(channel: Channel) {
         _selectedChannel.value = channel
+    }
+
+    fun toggleFavoriteForSelectedChannel() {
+        val channel = _selectedChannel.value ?: return
+        viewModelScope.launch {
+            homeStateRepository.toggleFavorite(channel.id, channel.serverId)
+        }
     }
 
     fun selectServerById(guildId: String) {
@@ -332,10 +346,10 @@ class ChatViewModel @Inject constructor(
             .onEach { event ->
                 when (event) {
                     is GatewayWebSocketManager.GatewayEvent.Ready -> {
-                        _guilds.value = event.data.guilds
+                        _guilds.value = mergeGuilds(_guilds.value, event.data.guilds)
                         Timber.i("Gateway ready with ${event.data.guilds.size} guilds")
-                        if (event.data.guilds.isNotEmpty() && _selectedServer.value == null) {
-                            selectServer(event.data.guilds.first())
+                        if (_guilds.value.isNotEmpty() && _selectedServer.value == null) {
+                            selectServer(_guilds.value.first())
                         }
                     }
                     is GatewayWebSocketManager.GatewayEvent.MessageCreate -> {
@@ -369,6 +383,9 @@ class ChatViewModel @Inject constructor(
                             }
                             current[index] = updatedGuild
                             _guilds.value = current
+                            if (_selectedServer.value?.id == updatedGuild.id) {
+                                _selectedServer.value = updatedGuild
+                            }
                         }
                     }
                     is GatewayWebSocketManager.GatewayEvent.GuildDelete -> {
@@ -392,11 +409,34 @@ class ChatViewModel @Inject constructor(
                 if (channels.isNotEmpty()) {
                     _channels.value = channels
                     if (_selectedChannel.value == null || _selectedChannel.value?.serverId != selected.id) {
-                        _selectedChannel.value = channels.firstOrNull { it.type == ChannelType.TEXT }
+                        _selectedChannel.value = preferredGuildChannel(channels)
                     }
                 }
             }
             .launchIn(viewModelScope)
     }
-}
 
+    private fun preferredGuildChannel(channels: List<Channel>): Channel? =
+        channels.firstOrNull { it.type == ChannelType.TEXT }
+            ?: channels.firstOrNull { it.type == ChannelType.VOICE }
+            ?: channels.firstOrNull { it.type != ChannelType.CATEGORY && it.type != ChannelType.UNKNOWN }
+
+    private fun mergeGuilds(existing: List<Server>, incoming: List<Server>): List<Server> {
+        if (existing.isEmpty()) return incoming
+        val merged = existing.associateBy { it.id }.toMutableMap()
+        incoming.forEach { guild ->
+            val prior = merged[guild.id]
+            merged[guild.id] = if (prior == null) {
+                guild
+            } else {
+                guild.copy(
+                    channels = if (guild.channels.isNotEmpty()) guild.channels else prior.channels,
+                    iconUrl = guild.iconUrl ?: prior.iconUrl,
+                    memberCount = if (guild.memberCount != 0) guild.memberCount else prior.memberCount,
+                    onlineCount = if (guild.onlineCount != 0) guild.onlineCount else prior.onlineCount
+                )
+            }
+        }
+        return merged.values.toList()
+    }
+}

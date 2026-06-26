@@ -9,15 +9,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.fluxer.client.ui.theme.DndRed
-import com.fluxer.client.ui.theme.TextMuted
 
 @Composable
 fun ErrorState(
@@ -28,28 +23,15 @@ fun ErrorState(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = Icons.Default.Warning,
-            contentDescription = "Error Icon",
-            tint = DndRed,
-            modifier = Modifier.height(48.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Something Went Wrong",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextMuted,
-            textAlign = TextAlign.Center
+        FluxerEmptyState(
+            title = "Something went wrong",
+            body = message,
+            icon = Icons.Default.Warning,
+            modifier = Modifier.weight(1f)
         )
         Spacer(modifier = Modifier.height(24.dp))
         FluxerButton(

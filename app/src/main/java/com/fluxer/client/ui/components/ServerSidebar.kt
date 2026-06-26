@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,24 +28,26 @@ import com.fluxer.client.data.model.Server
 import com.fluxer.client.ui.theme.*
 
 /**
- * Server sidebar with sharp gaming aesthetic
+ * Server sidebar styled for the calmer Fluxer shell.
  */
 @Composable
 fun ServerSidebar(
     servers: List<Server>,
     selectedServerId: String?,
     onServerSelected: (Server) -> Unit,
+    onHomeSelected: () -> Unit,
+    unreadCountsByGuild: Map<String, Int> = emptyMap(),
     modifier: Modifier = Modifier,
     isCompact: Boolean = false
 ) {
     val iconSize = if (isCompact) 22.dp else 28.dp
     val serverIconSize = if (isCompact) 40.dp else 48.dp
-    val addButtonSize = if (isCompact) 40.dp else 48.dp
-    
     Column(
         modifier = modifier
             .fillMaxHeight()
-            .background(VelvetDark)
+            .background(VelvetBlack)
+            .border(1.dp, BorderSubtle.copy(alpha = 0.45f))
+            .padding(start = if (isCompact) 6.dp else 8.dp)
             .padding(vertical = if (isCompact) 8.dp else 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -62,7 +63,7 @@ fun ServerSidebar(
             },
             isSelected = selectedServerId == null,
             hasNotification = false,
-            onClick = { /* Navigate to DMs */ },
+            onClick = onHomeSelected,
             modifier = Modifier.padding(bottom = if (isCompact) 6.dp else 8.dp),
             size = serverIconSize
         )
@@ -71,8 +72,8 @@ fun ServerSidebar(
         Box(
             modifier = Modifier
                 .width(if (isCompact) 24.dp else 32.dp)
-                .height(2.dp)
-                .background(BorderSubtle)
+                .height(1.dp)
+                .background(BorderSubtle.copy(alpha = 0.8f))
                 .padding(vertical = if (isCompact) 6.dp else 8.dp)
         )
         
@@ -81,14 +82,12 @@ fun ServerSidebar(
             ServerIcon(
                 server = server,
                 isSelected = server.id == selectedServerId,
-                hasNotification = false, // TODO: Check unread messages
+                hasNotification = (unreadCountsByGuild[server.id] ?: 0) > 0,
                 onClick = { onServerSelected(server) },
                 modifier = Modifier.padding(vertical = if (isCompact) 3.dp else 4.dp),
                 size = serverIconSize
             )
         }
-        
-
     }
 }
 
@@ -108,9 +107,7 @@ private fun ServerIcon(
     )
     
     val interactionSource = remember { MutableInteractionSource() }
-    val cornerRadius = if (isSelected) (size * 0.33f) else (size / 2)
-    val indicatorOffset = -(size * 0.75f)
-    val indicatorHeight = size * 0.83f
+    val cornerRadius = if (isSelected) 16.dp else (size / 2)
     
     Box(
         modifier = modifier
@@ -118,12 +115,12 @@ private fun ServerIcon(
             .scale(scale)
             .clip(RoundedCornerShape(cornerRadius))
             .background(
-                if (isSelected) PhantomRed else VelvetSurface,
+                if (isSelected) SelectedItem else VelvetDark,
                 RoundedCornerShape(cornerRadius)
             )
             .border(
-                width = if (isSelected) 0.dp else 2.dp,
-                color = if (isSelected) PhantomRed else BorderSubtle,
+                width = 1.dp,
+                color = if (isSelected) PhantomRed.copy(alpha = 0.5f) else BorderSubtle,
                 shape = RoundedCornerShape(cornerRadius)
             )
             .clickable(
@@ -174,55 +171,12 @@ private fun ServerIcon(
         }
     }
     
-    // Selection indicator pill
-    if (isSelected) {
+    if (hasNotification) {
         Box(
             modifier = Modifier
-                .offset(x = indicatorOffset)
-                .width(4.dp)
-                .height(indicatorHeight)
-                .background(PhantomRed, RoundedCornerShape(0.dp, 4.dp, 4.dp, 0.dp))
-        )
-    }
-    
-    // Notification dot
-    if (hasNotification && !isSelected) {
-        Box(
-            modifier = Modifier
-                .offset((-size/12), (-size/12))
-                .size(size / 4)
-                .background(AlertYellow, RoundedCornerShape(50))
-        )
-    }
-}
-
-@Composable
-private fun AddServerButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    size: Dp = 48.dp
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val iconSize = size / 2
-    
-    Box(
-        modifier = modifier
-            .size(size)
-            .clip(RoundedCornerShape(50.dp))
-            .background(Color.Transparent)
-            .border(2.dp, SuccessGreen, RoundedCornerShape(50.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = Icons.Default.Add,
-            contentDescription = "Add Server",
-            tint = SuccessGreen,
-            modifier = Modifier.size(iconSize)
+                .offset((size / 3), -(size / 3))
+                .size(if (isSelected) 8.dp else 10.dp)
+                .background(if (isSelected) AlertYellow else PhantomRed, RoundedCornerShape(50))
         )
     }
 }
@@ -256,6 +210,8 @@ fun ChannelListContent(
     selectedChannelId: String?,
     onChannelSelected: (com.fluxer.client.data.model.Channel) -> Unit,
     onNavigateToVoiceChannel: (String) -> Unit = {},
+    unreadCountsByChannel: Map<String, Int> = emptyMap(),
+    favoriteChannelIds: Set<String> = emptySet(),
     modifier: Modifier = Modifier
 ) {
     val textChannels = channels.filter { it.type == com.fluxer.client.data.model.ChannelType.TEXT }
@@ -264,13 +220,14 @@ fun ChannelListContent(
     Column(
         modifier = modifier
             .fillMaxHeight()
-            .background(VelvetMid)
+            .background(VelvetDark)
+            .border(1.dp, BorderSubtle.copy(alpha = 0.45f))
             .padding(vertical = 16.dp)
     ) {
         // Text Channels Section
         if (textChannels.isNotEmpty()) {
             Text(
-                text = "TEXT CHANNELS",
+                text = "Text channels",
                 style = MaterialTheme.typography.labelSmall,
                 color = TextMuted,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -280,6 +237,8 @@ fun ChannelListContent(
                 ChannelItem(
                     channel = channel,
                     isSelected = channel.id == selectedChannelId,
+                    unreadCount = unreadCountsByChannel[channel.id] ?: 0,
+                    isFavorite = favoriteChannelIds.contains(channel.id),
                     onClick = { onChannelSelected(channel) }
                 )
             }
@@ -292,7 +251,7 @@ fun ChannelListContent(
             }
 
             Text(
-                text = "VOICE CHANNELS",
+                text = "Voice channels",
                 style = MaterialTheme.typography.labelSmall,
                 color = TextMuted,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -302,6 +261,8 @@ fun ChannelListContent(
                 ChannelItem(
                     channel = channel,
                     isSelected = false,
+                    unreadCount = unreadCountsByChannel[channel.id] ?: 0,
+                    isFavorite = favoriteChannelIds.contains(channel.id),
                     onClick = { onNavigateToVoiceChannel(channel.id) }
                 )
             }
@@ -313,6 +274,8 @@ fun ChannelListContent(
 private fun ChannelItem(
     channel: com.fluxer.client.data.model.Channel,
     isSelected: Boolean,
+    unreadCount: Int,
+    isFavorite: Boolean,
     onClick: () -> Unit
 ) {
     val backgroundColor = when {
@@ -326,9 +289,9 @@ private fun ChannelItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 2.dp)
-            .background(backgroundColor, RoundedCornerShape(4.dp))
+            .background(backgroundColor, RoundedCornerShape(10.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (isVoice) {
@@ -342,7 +305,7 @@ private fun ChannelItem(
             Text(
                 text = "#",
                 style = FluxerTextStyles.channelName,
-                color = if (isSelected) PhantomRed else TextMuted,
+                color = if (isSelected) TextPrimary else TextMuted,
                 modifier = Modifier.padding(end = 8.dp)
             )
         }
@@ -350,7 +313,33 @@ private fun ChannelItem(
             text = channel.displayName(),
             style = FluxerTextStyles.channelName,
             color = if (isSelected) TextPrimary else TextSecondary,
-            maxLines = 1
+            maxLines = 1,
+            modifier = Modifier.weight(1f)
         )
+
+        if (isFavorite) {
+            Text(
+                text = "★",
+                color = AlertYellow,
+                style = FluxerTextStyles.channelName,
+                modifier = Modifier.padding(start = 6.dp)
+            )
+        }
+
+        if (unreadCount > 0) {
+            Box(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(if (isSelected) PhantomRed else VelvetSurface)
+                    .padding(horizontal = 8.dp, vertical = 2.dp)
+            ) {
+                Text(
+                    text = if (unreadCount > 99) "99+" else unreadCount.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextPrimary
+                )
+            }
+        }
     }
 }

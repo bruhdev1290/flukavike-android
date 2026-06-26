@@ -10,19 +10,25 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.LoadState
@@ -61,6 +67,8 @@ fun ChatScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
     val replyingTo by viewModel.replyingTo.collectAsState()
+    val favoriteChannelIds by viewModel.favoriteChannelIds.collectAsState()
+    val unreadCountsByChannel by viewModel.unreadCountsByChannel.collectAsState()
     val activeChannel = selectedChannel
     
     val listState = rememberLazyListState()
@@ -73,8 +81,15 @@ fun ChatScreen(
     val isMedium = screenWidth >= 600.dp && screenWidth < 840.dp
     
     // Channel drawer state (for compact screens)
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var channelDrawerOpen by remember { mutableStateOf(false) }
+    val unreadCountsByGuild = remember(guilds, unreadCountsByChannel) {
+        guilds.associate { guild ->
+            val count = guild.channels.sumOf { channel -> unreadCountsByChannel[channel.id] ?: 0 }
+            guild.id to count
+        }
+    }
+    val selectedChannelUnread = activeChannel?.let { unreadCountsByChannel[it.id] ?: 0 } ?: 0
+    val isFavoriteChannel = activeChannel?.let { favoriteChannelIds.contains(it.id) } == true
     
     // Image picker for attachments
     val imagePicker = rememberLauncherForActivityResult(
@@ -134,6 +149,8 @@ fun ChatScreen(
                     channelDrawerOpen = true
                 }
             },
+            onHomeSelected = onNavigateToMessages,
+            unreadCountsByGuild = unreadCountsByGuild,
             modifier = Modifier.width(sidebarWidth),
             isCompact = isCompact
         )
@@ -148,6 +165,8 @@ fun ChatScreen(
                         selectedChannelId = activeChannel?.id,
                         onChannelSelected = { viewModel.selectChannel(it) },
                         onNavigateToVoiceChannel = onNavigateToVoiceChannel,
+                        unreadCountsByChannel = unreadCountsByChannel,
+                        favoriteChannelIds = favoriteChannelIds,
                         modifier = Modifier.width(if (isMedium) 200.dp else 240.dp)
                     )
                 }
@@ -157,72 +176,112 @@ fun ChatScreen(
                     modifier = Modifier
                         .fillMaxHeight()
                         .weight(1f)
+                        .padding(if (isCompact) 0.dp else 12.dp)
                 ) {
-                    // Top App Bar
-                    TopAppBar(
-                        title = {
-                            Column {
-                                Text(
-                                    text = selectedChannel?.displayName()?.uppercase() ?: "SELECT A CHANNEL",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = TextPrimary
-                                )
-                                ConnectionStatus(connectionState)
-                            }
-                        },
-                        navigationIcon = {
-                            // Show hamburger menu on compact screens when channels exist
+                    FluxerPanel(
+                        modifier = Modifier.fillMaxWidth(),
+                        tonal = false
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             if (isCompact && channels.isNotEmpty()) {
-                                IconButton(
+                                FluxerIconButton(
+                                    icon = Icons.Default.Menu,
+                                    contentDescription = "Channels",
                                     onClick = { channelDrawerOpen = true }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Menu,
-                                        contentDescription = "Channels",
-                                        tint = TextSecondary
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = selectedChannel?.displayName() ?: "Conversation",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = TextPrimary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = selectedServer?.name ?: "Direct messages and guild activity",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextMuted,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (activeChannel != null) {
+                                    FluxerIconButton(
+                                        icon = if (isFavoriteChannel) Icons.Default.Star else Icons.Default.StarBorder,
+                                        contentDescription = if (isFavoriteChannel) "Remove favorite" else "Favorite channel",
+                                        onClick = viewModel::toggleFavoriteForSelectedChannel,
+                                        tint = if (isFavoriteChannel) AlertYellow else TextSecondary
+                                    )
+                                }
+                                FluxerIconButton(
+                                    icon = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    onClick = { viewModel.toggleSearch() },
+                                    tint = if (isSearching) TextPrimary else TextSecondary,
+                                    containerColor = if (isSearching) PhantomRed.copy(alpha = 0.2f) else VelvetMid
+                                )
+                                if (!isCompact) {
+                                    ConnectionStatus(connectionState)
+                                }
+                                UserAvatar(
+                                    user = currentUser,
+                                    size = 36.dp,
+                                    showStatus = true,
+                                    onClick = onNavigateToProfile
+                                )
+                                if (!isCompact) {
+                                    FluxerIconButton(
+                                        icon = Icons.Default.Settings,
+                                        contentDescription = "Settings",
+                                        onClick = onNavigateToSettings
+                                    )
+                                    FluxerIconButton(
+                                        icon = Icons.AutoMirrored.Filled.Logout,
+                                        contentDescription = "Logout",
+                                        onClick = onLogout,
+                                        tint = PhantomRed
                                     )
                                 }
                             }
-                        },
-                        actions = {
-                            // Search
-                            IconButton(onClick = { viewModel.toggleSearch() }) {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Search",
-                                    tint = if (isSearching) PhantomRed else TextSecondary
-                                )
-                            }
-                            
-                            // User avatar with status - clickable to view profile
-                            UserAvatar(
-                                user = currentUser,
-                                size = 36.dp,
-                                showStatus = true,
-                                onClick = onNavigateToProfile
+                        }
+                    }
+
+                    if (!isCompact) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 10.dp, bottom = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            FluxerInlineStat(
+                                label = "Guilds",
+                                value = guilds.size.toString(),
+                                modifier = Modifier.weight(1f)
                             )
-                            
-                            IconButton(onClick = onNavigateToSettings) {
-                                Icon(
-                                    imageVector = Icons.Default.Settings,
-                                    contentDescription = "Settings",
-                                    tint = TextSecondary
-                                )
-                            }
-                            
-                            IconButton(onClick = onLogout) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.Logout,
-                                    contentDescription = "Logout",
-                                    tint = PhantomRed
-                                )
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = VelvetDark,
-                            titleContentColor = TextPrimary
-                        )
-                    )
+                            FluxerInlineStat(
+                                label = "Channels",
+                                value = channels.size.toString(),
+                                modifier = Modifier.weight(1f)
+                            )
+                            FluxerInlineStat(
+                                label = "Unread",
+                                value = selectedChannelUnread.toString(),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
                     
                     // Search Bar
                     AnimatedVisibility(visible = isSearching) {
@@ -244,34 +303,15 @@ fun ChatScreen(
                         when {
                             // No channel selected
                             selectedChannel == null -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Text(
-                                            text = "WELCOME TO FLUXER",
-                                            style = MaterialTheme.typography.headlineMedium,
-                                            color = TextPrimary
-                                        )
-                                        Text(
-                                            text = "Select a channel to start messaging",
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            color = TextMuted
-                                        )
-                                    }
-                                }
+                                FluxerEmptyState(
+                                    title = "Nothing selected",
+                                    body = "Choose a conversation from the rail or channel list to start chatting.",
+                                    icon = Icons.Default.Chat
+                                )
                             }
                             // Loading state from paging
                             messages.loadState.refresh is LoadState.Loading -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(color = PhantomRed)
-                                }
+                                FluxerLoadingState("Loading messages")
                             }
                             // Error state from paging
                             messages.loadState.refresh is LoadState.Error -> {
@@ -307,16 +347,11 @@ fun ChatScreen(
                             }
                             // Empty state
                             messages.itemCount == 0 -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "NO MESSAGES YET",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = TextMuted
-                                    )
-                                }
+                                FluxerEmptyState(
+                                    title = "No messages yet",
+                                    body = "Say hello when you're ready. This conversation is still quiet.",
+                                    icon = Icons.Default.ChatBubbleOutline
+                                )
                             }
                             // Messages list
                             else -> {
@@ -383,7 +418,7 @@ fun ChatScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(VelvetDark)
+                                .background(VelvetBlack)
                                 .padding(horizontal = if (isCompact) 8.dp else 16.dp, vertical = 12.dp)
                                 .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.navigationBars)
                         ) {
@@ -418,7 +453,7 @@ fun ChatScreen(
                     modifier = Modifier
                         .fillMaxHeight()
                         .width(280.dp)
-                        .background(VelvetMid)
+                        .background(VelvetDark)
                 ) {
                         Column {
                             // Drawer Header
@@ -433,7 +468,7 @@ fun ChatScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = selectedServer?.name?.uppercase() ?: "CHANNELS",
+                                        text = selectedServer?.name ?: "Channels",
                                         style = MaterialTheme.typography.titleMedium,
                                         color = TextPrimary,
                                         modifier = Modifier.weight(1f)
@@ -463,13 +498,14 @@ fun ChatScreen(
                                     channelDrawerOpen = false
                                     onNavigateToVoiceChannel(it)
                                 },
+                                unreadCountsByChannel = unreadCountsByChannel,
+                                favoriteChannelIds = favoriteChannelIds,
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
                     }
             }
             
-            // Error snackbar
             error?.let { errorMessage ->
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -518,7 +554,7 @@ private fun ConnectionStatus(state: com.fluxer.client.data.remote.GatewayWebSock
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(
-            text = text.uppercase(),
+            text = text,
             style = FluxerTextStyles.statusIndicator,
             color = color
         )

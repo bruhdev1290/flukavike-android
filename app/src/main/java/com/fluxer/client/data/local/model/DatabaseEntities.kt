@@ -100,6 +100,11 @@ data class NotificationFeedEntity(
     val read: Boolean
 )
 
+data class ChannelUnreadCount(
+    val channelId: String,
+    val unreadCount: Int
+)
+
 @Entity(tableName = "user_preferences")
 data class UserPreferenceEntity(
     @PrimaryKey val key: String,

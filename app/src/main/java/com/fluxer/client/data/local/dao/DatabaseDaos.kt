@@ -12,9 +12,11 @@ import com.fluxer.client.data.local.model.GuildEntity
 import com.fluxer.client.data.local.model.GuildLastChannelEntity
 import com.fluxer.client.data.local.model.NavigationStateEntity
 import com.fluxer.client.data.local.model.NotificationFeedEntity
+import com.fluxer.client.data.local.model.ChannelUnreadCount
 import com.fluxer.client.data.local.model.ReadStateEntity
 import com.fluxer.client.data.local.model.MessageEntity
 import com.fluxer.client.data.local.model.PendingMessageEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MessageDao {
@@ -116,6 +118,9 @@ interface FavoriteChannelDao {
 
     @Query("SELECT * FROM favorite_channels ORDER BY position ASC, createdAt ASC")
     suspend fun getAll(): List<FavoriteChannelEntity>
+
+    @Query("SELECT * FROM favorite_channels ORDER BY position ASC, createdAt ASC")
+    fun observeAll(): Flow<List<FavoriteChannelEntity>>
 }
 
 @Dao
@@ -134,6 +139,14 @@ interface NotificationFeedDao {
 
     @Query("SELECT * FROM notification_feed ORDER BY createdAt DESC LIMIT :limit")
     suspend fun getRecent(limit: Int = 100): List<NotificationFeedEntity>
+
+    @Query("""
+        SELECT channelId, COUNT(*) AS unreadCount
+        FROM notification_feed
+        WHERE read = 0 AND channelId IS NOT NULL
+        GROUP BY channelId
+    """)
+    fun observeUnreadCounts(): Flow<List<ChannelUnreadCount>>
 
     @Query("UPDATE notification_feed SET read = 1 WHERE id = :id")
     suspend fun markRead(id: String)

@@ -147,6 +147,7 @@ fun ProvideFluxerColors(
 ) {
     CompositionLocalProvider(
         LocalFluxerColors provides colors,
+        LocalFluxerSpacing provides FluxerSpacing(),
         content = content
     )
 }

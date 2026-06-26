@@ -32,17 +32,13 @@ import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.PhoneMissed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -57,6 +53,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fluxer.client.data.local.model.NotificationFeedEntity
+import com.fluxer.client.ui.components.FluxerEmptyState
+import com.fluxer.client.ui.components.FluxerIconButton
+import com.fluxer.client.ui.components.FluxerLoadingState
+import com.fluxer.client.ui.components.FluxerPageScaffold
 import com.fluxer.client.ui.theme.DndRed
 import com.fluxer.client.ui.theme.InfoCyan
 import com.fluxer.client.ui.theme.OnlineGreen
@@ -102,49 +102,23 @@ fun NotificationCenterScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Notifications",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = viewModel::markAllRead) {
-                        Icon(
-                            imageVector = Icons.Default.DoneAll,
-                            contentDescription = "Mark all read",
-                            tint = TextSecondary
-                        )
-                    }
-                    IconButton(onClick = viewModel::clearAll) {
-                        Icon(
-                            imageVector = Icons.Default.DeleteSweep,
-                            contentDescription = "Clear all",
-                            tint = PhantomRed
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = VelvetDark,
-                    titleContentColor = TextPrimary
-                )
+    FluxerPageScaffold(
+        title = "Notifications",
+        subtitle = "${filteredNotifications.size} items",
+        onBack = onBack,
+        headerActions = {
+            FluxerIconButton(
+                icon = Icons.Default.DoneAll,
+                contentDescription = "Mark all read",
+                onClick = viewModel::markAllRead
             )
-        },
-        containerColor = VelvetBlack
+            FluxerIconButton(
+                icon = Icons.Default.DeleteSweep,
+                contentDescription = "Clear all",
+                onClick = viewModel::clearAll,
+                tint = PhantomRed
+            )
+        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -163,9 +137,9 @@ fun NotificationCenterScreen(
                         onClick = { selectedFilter = filter },
                         label = { Text(filter.displayName) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = PhantomRed,
+                            selectedContainerColor = VelvetSurface,
                             selectedLabelColor = TextPrimary,
-                            containerColor = VelvetSurface,
+                            containerColor = VelvetDark,
                             labelColor = TextSecondary
                         )
                     )
@@ -173,12 +147,7 @@ fun NotificationCenterScreen(
             }
 
             when {
-                isLoading -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = PhantomRed)
-                }
+                isLoading -> FluxerLoadingState("Loading activity")
 
                 error != null -> Box(
                     modifier = Modifier.fillMaxSize(),
@@ -191,25 +160,11 @@ fun NotificationCenterScreen(
                     )
                 }
 
-                filteredNotifications.isEmpty() -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.NotificationsNone,
-                            contentDescription = null,
-                            tint = TextMuted,
-                            modifier = Modifier.size(64.dp)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "No notifications yet",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = TextMuted
-                        )
-                    }
-                }
+                filteredNotifications.isEmpty() -> FluxerEmptyState(
+                    title = "No notifications yet",
+                    body = "Mentions, messages, and call activity will appear here.",
+                    icon = Icons.Default.NotificationsNone
+                )
 
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -258,7 +213,7 @@ private fun NotificationCard(
     }
 
     val cardModifier = if (!notification.isRead) {
-        Modifier.border(1.dp, PhantomRed.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+        Modifier.border(1.dp, PhantomRed.copy(alpha = 0.18f), RoundedCornerShape(12.dp))
     } else {
         Modifier
     }
@@ -269,7 +224,7 @@ private fun NotificationCard(
             .clickable(onClick = onClick)
             .then(cardModifier),
         colors = CardDefaults.cardColors(
-            containerColor = if (notification.isRead) VelvetSurface else VelvetMid
+            containerColor = if (notification.isRead) VelvetDark else VelvetMid
         ),
         shape = RoundedCornerShape(12.dp)
     ) {

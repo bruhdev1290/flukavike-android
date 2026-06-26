@@ -133,7 +133,9 @@ data class Channel(
     val lastMessageId: String? = null,
     @SerialName("created_at")
     val createdAt: String? = null,
-    val recipients: List<User> = emptyList()
+    val recipients: List<User> = emptyList(),
+    @SerialName("owner_id")
+    val ownerId: String? = null
 )
 
 fun Channel.displayName(): String {
@@ -167,6 +169,7 @@ object ChannelTypeSerializer : KSerializer<ChannelType> {
 data class Server(
     val id: String,
     val name: String = "",
+    @JsonNames("icon")
     @SerialName("icon_url")
     val iconUrl: String? = null,
     @SerialName("owner_id")

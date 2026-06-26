@@ -32,7 +32,7 @@ import com.fluxer.client.data.model.Message
 import com.fluxer.client.ui.theme.*
 
 /**
- * Sharp, angular text field with Persona 5-inspired styling
+ * Shared premium text field styling.
  */
 @Composable
 fun FluxerTextField(
@@ -62,20 +62,19 @@ fun FluxerTextField(
         // Label
         label?.let {
             Text(
-                text = it.uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                color = if (isFocused) PhantomRed else TextMuted,
+                text = it,
+                style = MaterialTheme.typography.labelMedium,
+                color = if (isFocused) TextSecondary else TextMuted,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
         }
-        
-        // Text field container
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
-                .background(VelvetDark)
-                .border(2.dp, borderColor)
+                .height(54.dp)
+                .background(VelvetDark, RoundedCornerShape(12.dp))
+                .border(1.dp, borderColor, RoundedCornerShape(12.dp))
                 .onFocusChanged { isFocused = it.isFocused },
             contentAlignment = Alignment.CenterStart
         ) {
@@ -131,23 +130,12 @@ fun FluxerTextField(
                         modifier = Modifier.padding(start = 8.dp)
                     ) {
                         Text(
-                            text = if (passwordVisible) "HIDE" else "SHOW",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = PhantomRed
+                            text = if (passwordVisible) "Hide" else "Show",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = TextSecondary
                         )
                     }
                 }
-            }
-            
-            // Focus indicator line at bottom
-            if (isFocused) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .background(PhantomRed)
-                        .align(Alignment.BottomCenter)
-                )
             }
         }
         
@@ -206,11 +194,11 @@ fun MessageInputField(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = if (isCompact) 48.dp else 56.dp)
-                .background(VelvetMid, RoundedCornerShape(if (isCompact) 20.dp else 24.dp))
+                .background(VelvetDark, RoundedCornerShape(if (isCompact) 18.dp else 20.dp))
                 .border(
-                    width = if (isFocused) 2.dp else 1.dp,
-                    color = if (isFocused) PhantomRed else BorderSubtle,
-                    shape = RoundedCornerShape(if (isCompact) 20.dp else 24.dp)
+                    width = 1.dp,
+                    color = if (isFocused) PhantomRed.copy(alpha = 0.6f) else BorderSubtle,
+                    shape = RoundedCornerShape(if (isCompact) 18.dp else 20.dp)
                 )
                 .onFocusChanged { isFocused = it.isFocused },
             contentAlignment = Alignment.CenterStart
@@ -271,12 +259,19 @@ fun MessageInputField(
                             .padding(start = if (isCompact) 4.dp else 8.dp)
                             .size(if (isCompact) 32.dp else 40.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Send",
-                            tint = PhantomRed,
-                            modifier = Modifier.size(iconSize)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(if (isCompact) 28.dp else 32.dp)
+                                .background(PhantomRed, RoundedCornerShape(10.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Send,
+                                contentDescription = "Send",
+                                tint = TextPrimary,
+                                modifier = Modifier.size(iconSize - 2.dp)
+                            )
+                        }
                     }
                 }
             }

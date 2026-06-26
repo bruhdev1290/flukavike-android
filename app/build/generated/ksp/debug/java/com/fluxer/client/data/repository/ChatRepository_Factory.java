@@ -1,5 +1,6 @@
 package com.fluxer.client.data.repository;
 
+import com.fluxer.client.data.local.dao.DmChannelDao;
 import com.fluxer.client.data.remote.FluxerApiService;
 import com.fluxer.client.data.remote.GatewayWebSocketManager;
 import dagger.internal.DaggerGenerated;
@@ -27,24 +28,29 @@ public final class ChatRepository_Factory implements Factory<ChatRepository> {
 
   private final Provider<GatewayWebSocketManager> gatewayManagerProvider;
 
+  private final Provider<DmChannelDao> dmChannelDaoProvider;
+
   public ChatRepository_Factory(Provider<FluxerApiService> apiServiceProvider,
-      Provider<GatewayWebSocketManager> gatewayManagerProvider) {
+      Provider<GatewayWebSocketManager> gatewayManagerProvider,
+      Provider<DmChannelDao> dmChannelDaoProvider) {
     this.apiServiceProvider = apiServiceProvider;
     this.gatewayManagerProvider = gatewayManagerProvider;
+    this.dmChannelDaoProvider = dmChannelDaoProvider;
   }
 
   @Override
   public ChatRepository get() {
-    return newInstance(apiServiceProvider.get(), gatewayManagerProvider.get());
+    return newInstance(apiServiceProvider.get(), gatewayManagerProvider.get(), dmChannelDaoProvider.get());
   }
 
   public static ChatRepository_Factory create(Provider<FluxerApiService> apiServiceProvider,
-      Provider<GatewayWebSocketManager> gatewayManagerProvider) {
-    return new ChatRepository_Factory(apiServiceProvider, gatewayManagerProvider);
+      Provider<GatewayWebSocketManager> gatewayManagerProvider,
+      Provider<DmChannelDao> dmChannelDaoProvider) {
+    return new ChatRepository_Factory(apiServiceProvider, gatewayManagerProvider, dmChannelDaoProvider);
   }
 
   public static ChatRepository newInstance(FluxerApiService apiService,
-      GatewayWebSocketManager gatewayManager) {
-    return new ChatRepository(apiService, gatewayManager);
+      GatewayWebSocketManager gatewayManager, DmChannelDao dmChannelDao) {
+    return new ChatRepository(apiService, gatewayManager, dmChannelDao);
   }
 }

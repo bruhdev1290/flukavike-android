@@ -14,36 +14,22 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.PI
 
 /**
- * Fluxer Shapes - Sharp, angular gaming aesthetic
- * Mix of sharp corners and minimal rounding for that edgy look
+ * Fluxer shapes tuned for a calmer native feel.
  */
 
 val FluxerShapes = Shapes(
-    // Small elements: buttons, chips, badges - sharp corners
-    small = RoundedCornerShape(2.dp),
-    // Medium elements: cards, dialogs, text fields - slight rounding
-    medium = RoundedCornerShape(4.dp),
-    // Large elements: bottom sheets, expanded cards - minimal rounding
-    large = RoundedCornerShape(8.dp)
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(16.dp)
 )
 
-// Extended shapes for custom UI
 object FluxerExtendedShapes {
-    // Completely sharp for buttons
-    val sharpButton = RoundedCornerShape(0.dp)
-    
-    // Slight rounding for input fields
-    val inputField = RoundedCornerShape(4.dp)
-    
-    // Message bubbles
-    val messageSent = RoundedCornerShape(4.dp, 16.dp, 16.dp, 16.dp)
-    val messageReceived = RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)
-    
-    // Avatar
-    val avatar = RoundedCornerShape(50) // Circle
-    
-    // Panel corners
-    val panel = RoundedCornerShape(8.dp, 0.dp, 0.dp, 8.dp)
+    val sharpButton = RoundedCornerShape(8.dp)
+    val inputField = RoundedCornerShape(12.dp)
+    val messageSent = RoundedCornerShape(18.dp, 18.dp, 8.dp, 18.dp)
+    val messageReceived = RoundedCornerShape(18.dp, 18.dp, 18.dp, 8.dp)
+    val avatar = RoundedCornerShape(50)
+    val panel = RoundedCornerShape(12.dp)
 }
 
 /**
