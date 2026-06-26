@@ -8,8 +8,13 @@ import android.content.Intent
 import android.media.AudioAttributes
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import dagger.hilt.android.EntryPointAccessors
 import com.fluxer.client.MainActivity
 import com.fluxer.client.R
+import com.fluxer.client.data.model.NotificationData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -28,15 +33,60 @@ object FluxerNotificationHandler {
         val title = data["title"] ?: "New Message"
         val body = data["body"] ?: ""
         val channelId = data["channel_id"]
+        val guildId = data["guild_id"]
         val senderId = data["sender_id"]
         val messageId = data["message_id"]
+        val callId = data["call_id"]
+
+        persistNotification(
+            context = context,
+            id = data["id"] ?: data["notification_id"] ?: "${notificationType}_${messageId ?: channelId ?: System.currentTimeMillis()}",
+            type = notificationType,
+            title = title,
+            body = body,
+            data = NotificationData(
+                channelId = channelId,
+                guildId = guildId,
+                messageId = messageId,
+                senderId = senderId,
+                callId = callId,
+                url = data["url"]
+            )
+        )
 
         when (notificationType) {
             "direct_message" -> showDMNotification(context, title, body, channelId, senderId, messageId)
-            "mention" -> showMentionNotification(context, title, body, channelId, senderId, messageId)
-            "call" -> showCallNotification(context, title, body, data["call_id"])
-            "call_missed" -> showMissedCallNotification(context, title, body, data["call_id"])
-            else -> showDefaultNotification(context, title, body, channelId)
+            "mention" -> showMentionNotification(context, title, body, guildId, channelId, senderId, messageId)
+            "call" -> showCallNotification(context, title, body, callId)
+            "call_missed" -> showMissedCallNotification(context, title, body, callId)
+            else -> showDefaultNotification(context, title, body, guildId, channelId, messageId)
+        }
+    }
+
+    private fun persistNotification(
+        context: Context,
+        id: String,
+        type: String,
+        title: String,
+        body: String,
+        data: NotificationData
+    ) {
+        val entryPoint = EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            FluxerNotificationEntryPoint::class.java
+        )
+        CoroutineScope(Dispatchers.IO).launch {
+            runCatching {
+                entryPoint.notificationRepository().recordNotification(
+                    id = id,
+                    type = type,
+                    title = title,
+                    body = body,
+                    data = data
+                )
+            }.onFailure { error ->
+                Timber.e(error, "Failed to persist notification feed item")
+            }
         }
     }
 
@@ -53,6 +103,7 @@ object FluxerNotificationHandler {
             putExtra("notification_type", "dm")
             putExtra("channel_id", channelId)
             putExtra("sender_id", senderId)
+            putExtra("message_id", messageId)
         }
 
         val pendingIntent = PendingIntent.getActivity(
@@ -80,6 +131,7 @@ object FluxerNotificationHandler {
         context: Context,
         title: String,
         body: String,
+        guildId: String?,
         channelId: String?,
         senderId: String?,
         messageId: String?
@@ -87,7 +139,9 @@ object FluxerNotificationHandler {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra("notification_type", "mention")
+            putExtra("guild_id", guildId)
             putExtra("channel_id", channelId)
+            putExtra("sender_id", senderId)
             putExtra("message_id", messageId)
         }
 
@@ -189,9 +243,20 @@ object FluxerNotificationHandler {
         notificationManager.notify(System.currentTimeMillis().toInt(), notification)
     }
 
-    private fun showDefaultNotification(context: Context, title: String, body: String, channelId: String?) {
+    private fun showDefaultNotification(
+        context: Context,
+        title: String,
+        body: String,
+        guildId: String?,
+        channelId: String?,
+        messageId: String?
+    ) {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra("notification_type", "message")
+            putExtra("guild_id", guildId)
+            putExtra("channel_id", channelId)
+            putExtra("message_id", messageId)
         }
 
         val pendingIntent = PendingIntent.getActivity(

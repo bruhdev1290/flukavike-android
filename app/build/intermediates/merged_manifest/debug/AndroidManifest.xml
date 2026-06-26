@@ -16,13 +16,26 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Voice/Call permissions -->
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
 
     <!-- Foreground service for calls -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.TURN_SCREEN_ON" />
 
     <!-- Wake lock for calls -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -30,23 +43,43 @@
     <!-- Vibration for notifications -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- Launcher app-icon badge support -->
+    <uses-permission android:name="com.sec.android.provider.badge.permission.READ" />
+    <uses-permission android:name="com.sec.android.provider.badge.permission.WRITE" />
+    <uses-permission android:name="com.htc.launcher.permission.READ_SETTINGS" />
+    <uses-permission android:name="com.htc.launcher.permission.UPDATE_SHORTCUT" />
+    <uses-permission android:name="com.sonyericsson.home.permission.BROADCAST_BADGE" />
+    <uses-permission android:name="com.sonymobile.home.permission.PROVIDER_INSERT_BADGE" />
+    <uses-permission android:name="com.anddoes.launcher.permission.UPDATE_COUNT" />
+    <uses-permission android:name="com.majeur.launcher.permission.UPDATE_BADGE" />
+    <uses-permission android:name="com.huawei.android.launcher.permission.CHANGE_BADGE" />
+    <uses-permission android:name="com.huawei.android.launcher.permission.READ_SETTINGS" />
+    <uses-permission android:name="com.huawei.android.launcher.permission.WRITE_SETTINGS" />
+
+    <queries>
+        <intent>
+            <action android:name="org.unifiedpush.android.distributor.REGISTER" />
+        </intent>
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService" />
+        </intent>
+        <intent>
+            <action android:name="org.unifiedpush.android.distributor.UNREGISTER" />
+        </intent>
+    </queries>
+
     <!-- Required by older versions of Google Play services to create IID tokens -->
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE" />
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" />
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 
     <permission
         android:name="com.fluxer.client.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
         android:protectionLevel="signature" />
 
     <uses-permission android:name="com.fluxer.client.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
-    <uses-permission
-        android:name="android.permission.BLUETOOTH"
-        android:maxSdkVersion="30" />
 
     <application
         android:name="com.fluxer.client.FluxerApplication"
@@ -54,7 +87,7 @@
         android:appComponentFactory="androidx.core.app.CoreComponentFactory"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:debuggable="true"
-        android:extractNativeLibs="false"
+        android:extractNativeLibs="true"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -72,6 +105,117 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="fluxer" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true" >
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="web.fluxer.app"
+                    android:pathPrefix="/channels"
+                    android:scheme="https" />
+                <data
+                    android:host="web.fluxer.app"
+                    android:pathPrefix="/invite"
+                    android:scheme="https" />
+                <data
+                    android:host="web.fluxer.app"
+                    android:pathPrefix="/gift"
+                    android:scheme="https" />
+                <data
+                    android:host="web.fluxer.app"
+                    android:pathPrefix="/theme"
+                    android:scheme="https" />
+                <data
+                    android:host="web.fluxer.app"
+                    android:pathPrefix="/notifications"
+                    android:scheme="https" />
+                <data
+                    android:host="web.fluxer.app"
+                    android:pathPrefix="/you"
+                    android:scheme="https" />
+                <data
+                    android:host="web.canary.fluxer.app"
+                    android:pathPrefix="/channels"
+                    android:scheme="https" />
+                <data
+                    android:host="web.canary.fluxer.app"
+                    android:pathPrefix="/invite"
+                    android:scheme="https" />
+                <data
+                    android:host="web.canary.fluxer.app"
+                    android:pathPrefix="/gift"
+                    android:scheme="https" />
+                <data
+                    android:host="web.canary.fluxer.app"
+                    android:pathPrefix="/theme"
+                    android:scheme="https" />
+                <data
+                    android:host="web.canary.fluxer.app"
+                    android:pathPrefix="/notifications"
+                    android:scheme="https" />
+                <data
+                    android:host="web.canary.fluxer.app"
+                    android:pathPrefix="/you"
+                    android:scheme="https" />
+                <data
+                    android:host="web.fluxer.com"
+                    android:pathPrefix="/channels"
+                    android:scheme="https" />
+                <data
+                    android:host="web.fluxer.com"
+                    android:pathPrefix="/invite"
+                    android:scheme="https" />
+                <data
+                    android:host="web.fluxer.com"
+                    android:pathPrefix="/gift"
+                    android:scheme="https" />
+                <data
+                    android:host="web.fluxer.com"
+                    android:pathPrefix="/theme"
+                    android:scheme="https" />
+                <data
+                    android:host="web.fluxer.com"
+                    android:pathPrefix="/notifications"
+                    android:scheme="https" />
+                <data
+                    android:host="web.fluxer.com"
+                    android:pathPrefix="/you"
+                    android:scheme="https" />
+                <data
+                    android:host="web.canary.fluxer.com"
+                    android:pathPrefix="/channels"
+                    android:scheme="https" />
+                <data
+                    android:host="web.canary.fluxer.com"
+                    android:pathPrefix="/invite"
+                    android:scheme="https" />
+                <data
+                    android:host="web.canary.fluxer.com"
+                    android:pathPrefix="/gift"
+                    android:scheme="https" />
+                <data
+                    android:host="web.canary.fluxer.com"
+                    android:pathPrefix="/theme"
+                    android:scheme="https" />
+                <data
+                    android:host="web.canary.fluxer.com"
+                    android:pathPrefix="/notifications"
+                    android:scheme="https" />
+                <data
+                    android:host="web.canary.fluxer.com"
+                    android:pathPrefix="/you"
+                    android:scheme="https" />
             </intent-filter>
         </activity>
 
@@ -105,6 +249,19 @@
             </intent-filter>
         </receiver>
 
+        <!-- UnifiedPush Messaging Receiver -->
+        <receiver
+            android:name="com.fluxer.client.service.FluxerUnifiedPushReceiver"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="org.unifiedpush.android.connector.MESSAGE" />
+                <action android:name="org.unifiedpush.android.connector.UNREGISTERED" />
+                <action android:name="org.unifiedpush.android.connector.NEW_ENDPOINT" />
+                <action android:name="org.unifiedpush.android.connector.REGISTRATION_FAILED" />
+                <action android:name="org.unifiedpush.android.connector.REGISTRATION_REFUSED" />
+            </intent-filter>
+        </receiver>
+
         <!-- Firebase Metadata -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
@@ -122,6 +279,38 @@
         <activity
             android:name="androidx.activity.ComponentActivity"
             android:exported="true" />
+
+        <service
+            android:name="androidx.credentials.playservices.CredentialProviderMetadataHolder"
+            android:enabled="true"
+            android:exported="false" >
+            <meta-data
+                android:name="androidx.credentials.CREDENTIAL_PROVIDER_KEY"
+                android:value="androidx.credentials.playservices.CredentialProviderPlayServicesImpl" />
+        </service>
+
+        <activity
+            android:name="androidx.credentials.playservices.HiddenActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:enabled="true"
+            android:exported="false"
+            android:fitsSystemWindows="true"
+            android:theme="@style/Theme.Hidden" >
+        </activity>
+        <activity
+            android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <!--
+            Service handling Google Sign-In user revocation. For apps that do not integrate with
+            Google Sign-In, this service will never be started.
+        -->
+        <service
+            android:name="com.google.android.gms.auth.api.signin.RevocationBoundService"
+            android:exported="true"
+            android:permission="com.google.android.gms.auth.api.signin.permission.REVOCATION_NOTIFICATION"
+            android:visibleToInstantApps="true" />
 
         <receiver
             android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver"
@@ -177,6 +366,11 @@
                 android:value="com.google.firebase.components.ComponentRegistrar" />
         </service>
 
+        <activity
+            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <receiver
             android:name="com.google.android.gms.measurement.AppMeasurementReceiver"
             android:enabled="true"
@@ -196,11 +390,6 @@
         <property
             android:name="android.adservices.AD_SERVICES_CONFIG"
             android:resource="@xml/ga_ad_services_config" />
-
-        <activity
-            android:name="com.google.android.gms.common.api.GoogleApiActivity"
-            android:exported="false"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <provider
             android:name="com.google.firebase.provider.FirebaseInitProvider"

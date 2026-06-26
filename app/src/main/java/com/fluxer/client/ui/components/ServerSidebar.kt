@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.fluxer.client.data.model.displayName
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.fluxer.client.data.model.Server
@@ -346,7 +347,7 @@ private fun ChannelItem(
             )
         }
         Text(
-            text = channel.name,
+            text = channel.displayName(),
             style = FluxerTextStyles.channelName,
             color = if (isSelected) TextPrimary else TextSecondary,
             maxLines = 1

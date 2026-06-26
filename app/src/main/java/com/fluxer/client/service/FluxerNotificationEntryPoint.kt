@@ -9,4 +9,5 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 interface FluxerNotificationEntryPoint {
     fun notificationRepository(): NotificationRepository
+    fun navigationRepository(): com.fluxer.client.data.repository.NavigationRepository
 }

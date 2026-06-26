@@ -1,6 +1,5 @@
 package com.fluxer.client.data.remote
 
-import com.fluxer.client.data.local.SecureCookieStorage
 import javax.inject.Inject
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -16,7 +15,6 @@ import timber.log.Timber
  * Attempts to refresh the session or triggers re-authentication.
  */
 class AuthAuthenticator @Inject constructor(
-    private val cookieStorage: SecureCookieStorage
 ) : Authenticator {
 
     private val refreshMutex = Mutex()
@@ -43,12 +41,6 @@ class AuthAuthenticator @Inject constructor(
         // Only attempt refresh once per 401
         if (responseCount(response) >= 2) {
             Timber.w("🚫 Authentication failed after retry, giving up")
-            return null
-        }
-
-        // Check if we have a session to refresh
-        if (!cookieStorage.hasValidSession()) {
-            Timber.w("🚫 No session available for refresh")
             return null
         }
 

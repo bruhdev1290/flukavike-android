@@ -10,19 +10,41 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
     <!-- Voice/Call permissions -->
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
     
     <!-- Foreground service for calls -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.TURN_SCREEN_ON" />
     
     <!-- Wake lock for calls -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     
     <!-- Vibration for notifications -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    
+    <!-- Launcher app-icon badge support -->
+    <uses-permission android:name="com.sec.android.provider.badge.permission.READ" />
+    <uses-permission android:name="com.sec.android.provider.badge.permission.WRITE" />
+    <uses-permission android:name="com.htc.launcher.permission.READ_SETTINGS" />
+    <uses-permission android:name="com.htc.launcher.permission.UPDATE_SHORTCUT" />
+    <uses-permission android:name="com.sonyericsson.home.permission.BROADCAST_BADGE" />
+    <uses-permission android:name="com.sonymobile.home.permission.PROVIDER_INSERT_BADGE" />
+    <uses-permission android:name="com.anddoes.launcher.permission.UPDATE_COUNT" />
+    <uses-permission android:name="com.majeur.launcher.permission.UPDATE_BADGE" />
+    <uses-permission android:name="com.huawei.android.launcher.permission.CHANGE_BADGE" />
+    <uses-permission android:name="com.huawei.android.launcher.permission.READ_SETTINGS" />
+    <uses-permission android:name="com.huawei.android.launcher.permission.WRITE_SETTINGS" />
 
     <application
         android:name=".FluxerApplication"
@@ -46,6 +68,41 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="fluxer" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="web.fluxer.app" android:pathPrefix="/channels" />
+                <data android:scheme="https" android:host="web.fluxer.app" android:pathPrefix="/invite" />
+                <data android:scheme="https" android:host="web.fluxer.app" android:pathPrefix="/gift" />
+                <data android:scheme="https" android:host="web.fluxer.app" android:pathPrefix="/theme" />
+                <data android:scheme="https" android:host="web.fluxer.app" android:pathPrefix="/notifications" />
+                <data android:scheme="https" android:host="web.fluxer.app" android:pathPrefix="/you" />
+                <data android:scheme="https" android:host="web.canary.fluxer.app" android:pathPrefix="/channels" />
+                <data android:scheme="https" android:host="web.canary.fluxer.app" android:pathPrefix="/invite" />
+                <data android:scheme="https" android:host="web.canary.fluxer.app" android:pathPrefix="/gift" />
+                <data android:scheme="https" android:host="web.canary.fluxer.app" android:pathPrefix="/theme" />
+                <data android:scheme="https" android:host="web.canary.fluxer.app" android:pathPrefix="/notifications" />
+                <data android:scheme="https" android:host="web.canary.fluxer.app" android:pathPrefix="/you" />
+                <data android:scheme="https" android:host="web.fluxer.com" android:pathPrefix="/channels" />
+                <data android:scheme="https" android:host="web.fluxer.com" android:pathPrefix="/invite" />
+                <data android:scheme="https" android:host="web.fluxer.com" android:pathPrefix="/gift" />
+                <data android:scheme="https" android:host="web.fluxer.com" android:pathPrefix="/theme" />
+                <data android:scheme="https" android:host="web.fluxer.com" android:pathPrefix="/notifications" />
+                <data android:scheme="https" android:host="web.fluxer.com" android:pathPrefix="/you" />
+                <data android:scheme="https" android:host="web.canary.fluxer.com" android:pathPrefix="/channels" />
+                <data android:scheme="https" android:host="web.canary.fluxer.com" android:pathPrefix="/invite" />
+                <data android:scheme="https" android:host="web.canary.fluxer.com" android:pathPrefix="/gift" />
+                <data android:scheme="https" android:host="web.canary.fluxer.com" android:pathPrefix="/theme" />
+                <data android:scheme="https" android:host="web.canary.fluxer.com" android:pathPrefix="/notifications" />
+                <data android:scheme="https" android:host="web.canary.fluxer.com" android:pathPrefix="/you" />
             </intent-filter>
         </activity>
         
@@ -104,5 +161,14 @@
             android:value="fluxer_general" />
         
     </application>
+
+    <queries>
+        <intent>
+            <action android:name="org.unifiedpush.android.distributor.REGISTER" />
+        </intent>
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService" />
+        </intent>
+    </queries>
 
 </manifest>

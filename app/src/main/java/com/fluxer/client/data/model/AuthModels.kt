@@ -10,6 +10,7 @@ import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
@@ -39,11 +40,34 @@ data class AuthResponse(
     val accessToken: String? = null,
     @SerialName("refresh_token")
     val refreshToken: String? = null,
+    @SerialName("user_id")
+    val userId: String? = null,
     val user: User? = null,
-    val message: String? = null
+    val message: String? = null,
+    val mfa: Boolean = false,
+    val ticket: String? = null,
+    @SerialName("allowed_methods")
+    val allowedMethods: List<String> = emptyList(),
+    val totp: Boolean = false,
+    val sms: Boolean = false,
+    val webauthn: Boolean = false,
+    @SerialName("sms_phone_hint")
+    val smsPhoneHint: String? = null
 ) {
     fun resolvedToken(): String? = token ?: accessToken
 }
+
+@Serializable
+data class MfaTicketRequest(
+    val ticket: String
+)
+
+@Serializable
+data class WebAuthnMfaRequest(
+    val response: JsonElement,
+    val challenge: String,
+    val ticket: String
+)
 
 @Serializable
 data class User(

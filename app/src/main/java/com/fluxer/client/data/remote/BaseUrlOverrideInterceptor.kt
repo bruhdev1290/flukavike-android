@@ -13,6 +13,12 @@ class BaseUrlOverrideInterceptor @Inject constructor(
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
+        if (request.header(SKIP_BASE_OVERRIDE_HEADER) == "true") {
+            val passthrough = request.newBuilder()
+                .removeHeader(SKIP_BASE_OVERRIDE_HEADER)
+                .build()
+            return chain.proceed(passthrough)
+        }
         val baseUrl = instanceConfigStore.getActiveBaseUrl().toHttpUrlOrNull()
 
         if (baseUrl == null) {
@@ -30,5 +36,9 @@ class BaseUrlOverrideInterceptor @Inject constructor(
             .build()
 
         return chain.proceed(rewrittenRequest)
+    }
+
+    companion object {
+        const val SKIP_BASE_OVERRIDE_HEADER = "X-Fluxer-Skip-Base-Override"
     }
 }

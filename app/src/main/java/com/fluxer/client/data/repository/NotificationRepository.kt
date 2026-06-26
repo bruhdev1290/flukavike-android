@@ -1,19 +1,21 @@
 package com.fluxer.client.data.repository
 
+import com.fluxer.client.data.local.dao.NotificationFeedDao
+import com.fluxer.client.data.local.model.NotificationFeedEntity
 import com.fluxer.client.data.model.FcmTokenRequest
+import com.fluxer.client.data.model.NotificationData
 import com.fluxer.client.data.model.NotificationSettings
 import com.fluxer.client.data.model.PushTokenRequest
 import com.fluxer.client.data.remote.FluxerApiService
 import com.fluxer.client.util.Result
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class NotificationRepository @Inject constructor(
-    private val apiService: FluxerApiService
+    private val apiService: FluxerApiService,
+    private val notificationFeedDao: NotificationFeedDao
 ) {
     suspend fun registerFcmToken(token: String): Result<Unit> {
         return try {
@@ -121,5 +123,66 @@ class NotificationRepository @Inject constructor(
             Timber.e(e, "Failed to update notification settings")
             Result.Error("Network error: ${e.message}")
         }
+    }
+
+    suspend fun getRecentNotifications(limit: Int = 100): Result<List<NotificationFeedEntity>> {
+        return try {
+            Result.Success(notificationFeedDao.getRecent(limit))
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to load notification feed")
+            Result.Error("Failed to load notifications: ${e.message}")
+        }
+    }
+
+    suspend fun markNotificationRead(id: String): Result<Unit> {
+        return try {
+            notificationFeedDao.markRead(id)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to mark notification as read")
+            Result.Error("Failed to update notification: ${e.message}")
+        }
+    }
+
+    suspend fun markAllNotificationsRead(): Result<Unit> {
+        return try {
+            notificationFeedDao.markAllRead()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to mark all notifications as read")
+            Result.Error("Failed to update notifications: ${e.message}")
+        }
+    }
+
+    suspend fun clearNotificationFeed(): Result<Unit> {
+        return try {
+            notificationFeedDao.clearAll()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to clear notification feed")
+            Result.Error("Failed to clear notifications: ${e.message}")
+        }
+    }
+
+    suspend fun recordNotification(
+        id: String,
+        type: String,
+        title: String,
+        body: String,
+        data: NotificationData?
+    ) {
+        notificationFeedDao.upsert(
+            NotificationFeedEntity(
+                id = id,
+                type = type,
+                title = title,
+                body = body,
+                guildId = data?.guildId,
+                channelId = data?.channelId,
+                messageId = data?.messageId,
+                createdAt = System.currentTimeMillis(),
+                read = false
+            )
+        )
     }
 }

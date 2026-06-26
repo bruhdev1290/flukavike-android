@@ -212,6 +212,11 @@ class ChatRepository @Inject constructor(
     fun getCachedGuildChannels(guildId: String): List<Channel> =
         channelCache[guildId].orEmpty()
 
+    fun getCachedChannel(channelId: String): Channel? =
+        channelCache.values.asSequence()
+            .flatMap { it.asSequence() }
+            .firstOrNull { it.id == channelId }
+
     /**
      * Get a specific channel
      */

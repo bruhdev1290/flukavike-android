@@ -65,6 +65,12 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+        jniLibs {
+            // LiveKit/WebRTC currently brings native libraries that can trigger
+            // Android's 16 KB page-size compatibility warning when left
+            // uncompressed and zip-entry aligned by older AGP tooling.
+            useLegacyPackaging = true
+        }
     }
 }
 
@@ -75,6 +81,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
+    implementation("androidx.credentials:credentials:1.2.2")
+    implementation("androidx.credentials:credentials-play-services-auth:1.2.2")
     
     // Compose BOM
     val composeBom = platform("androidx.compose:compose-bom:2024.02.00")

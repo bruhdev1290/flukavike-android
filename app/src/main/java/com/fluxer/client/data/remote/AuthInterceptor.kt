@@ -11,19 +11,31 @@ class AuthInterceptor(
         val request = chain.request()
         val token = authTokenStorage.token
 
-        // Don't add auth header to auth endpoints
-        val path = request.url.encodedPath
-        if (path.startsWith("/api/auth/") && !path.startsWith("/api/auth/me")) {
-            return chain.proceed(request)
+        if (SkipAuthPolicy.shouldSkipAuth(request)) {
+            return chain.proceed(
+                request.newBuilder()
+                    .removeHeader("Authorization")
+                    .removeHeader(SkipAuthPolicy.SKIP_AUTH_HEADER)
+                    .build()
+            )
         }
 
         return if (!token.isNullOrBlank()) {
             val newRequest = request.newBuilder()
-                .header("Authorization", token)
+                .header("Authorization", formatSessionAuthorizationHeader(token))
                 .build()
             chain.proceed(newRequest)
         } else {
             chain.proceed(request)
+        }
+    }
+
+    private fun formatSessionAuthorizationHeader(token: String): String {
+        val trimmed = token.trim()
+        return if (trimmed.startsWith("Bearer ")) {
+            trimmed.removePrefix("Bearer ").trim()
+        } else {
+            trimmed
         }
     }
 }

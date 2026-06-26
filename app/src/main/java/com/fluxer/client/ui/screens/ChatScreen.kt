@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.fluxer.client.data.model.displayName
 import com.fluxer.client.data.model.UserStatus
 import com.fluxer.client.ui.components.*
 import com.fluxer.client.ui.theme.*
@@ -43,6 +44,9 @@ fun ChatScreen(
     onNavigateToMessages: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     onNavigateToVoiceChannel: (String) -> Unit = {},
+    initialGuildId: String? = null,
+    initialChannelId: String? = null,
+    targetMessageId: String? = null,
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
@@ -85,6 +89,18 @@ fun ChatScreen(
     // Log paging state for debugging
     LaunchedEffect(messages.loadState) {
         Timber.d("Messages load state: ${messages.loadState}")
+    }
+
+    LaunchedEffect(initialGuildId, initialChannelId, guilds, channels) {
+        if (!initialGuildId.isNullOrBlank()) {
+            viewModel.selectServerById(initialGuildId)
+        }
+        if (!initialChannelId.isNullOrBlank()) {
+            viewModel.selectChannelById(initialChannelId, initialGuildId)
+        }
+        if (!targetMessageId.isNullOrBlank()) {
+            viewModel.jumpToMessage(targetMessageId)
+        }
     }
     
     // Scroll to bottom when new messages arrive (only for new messages, not on initial load)
@@ -147,7 +163,7 @@ fun ChatScreen(
                         title = {
                             Column {
                                 Text(
-                                    text = selectedChannel?.name?.uppercase() ?: "SELECT A CHANNEL",
+                                    text = selectedChannel?.displayName()?.uppercase() ?: "SELECT A CHANNEL",
                                     style = MaterialTheme.typography.titleMedium,
                                     color = TextPrimary
                                 )
@@ -213,7 +229,7 @@ fun ChatScreen(
                         FluxerTextField(
                             value = searchQuery,
                             onValueChange = { viewModel.onSearchQueryChanged(it) },
-                            hint = "Search in #${activeChannel?.name ?: ""}",
+                            hint = "Search in #${activeChannel?.displayName() ?: ""}",
                             modifier = Modifier.fillMaxWidth().padding(8.dp)
                         )
                     }

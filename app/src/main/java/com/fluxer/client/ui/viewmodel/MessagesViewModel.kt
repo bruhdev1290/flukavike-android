@@ -3,6 +3,7 @@ package com.fluxer.client.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fluxer.client.data.model.Channel
+import com.fluxer.client.data.model.displayName
 import com.fluxer.client.data.repository.ChatRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
@@ -62,7 +63,7 @@ class MessagesViewModel @Inject constructor(
             channels
         } else {
             channels.filter { channel ->
-                channel.name.contains(query, ignoreCase = true)
+                channel.displayName().contains(query, ignoreCase = true)
             }
         }
     }

@@ -30,6 +30,7 @@ import coil.compose.AsyncImage
 import com.fluxer.client.data.model.Channel
 import com.fluxer.client.data.model.User
 import com.fluxer.client.data.model.UserStatus
+import com.fluxer.client.data.model.displayName
 import com.fluxer.client.ui.theme.*
 import com.fluxer.client.ui.viewmodel.MessagesViewModel
 import java.time.Instant
@@ -263,7 +264,9 @@ private fun DMChannelItemDiscord(
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
-    val recipient = remember { generateMockRecipient(channel) }
+    val recipient = remember(channel.id, channel.recipients) {
+        channel.recipients.firstOrNull() ?: generateMockRecipient(channel)
+    }
     val lastMessage = remember { generateMockLastMessage(channel) }
     val isFromMe = remember { (0..1).random() == 0 }
     val timestamp = remember { System.currentTimeMillis() - (0..2592000000).random() }
@@ -417,7 +420,9 @@ private fun DMContextMenu(
     onBlock: () -> Unit,
     onMuteDM: () -> Unit
 ) {
-    val recipient = remember { generateMockRecipient(channel) }
+    val recipient = remember(channel.id, channel.recipients) {
+        channel.recipients.firstOrNull() ?: generateMockRecipient(channel)
+    }
     
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -760,8 +765,8 @@ private fun generateMockRecipient(channel: Channel): User {
     val (name, _) = names.random()
     return User(
         id = channel.id,
-        username = name.lowercase().replace(" ", "_"),
-        displayName = name,
+        username = channel.displayName().ifBlank { name }.lowercase().replace(" ", "_"),
+        displayName = channel.displayName().ifBlank { name },
         avatarUrl = null,
         status = UserStatus.entries.toTypedArray().random()
     )
@@ -802,5 +807,4 @@ private fun formatDiscordTimestamp(timestamp: Long): String {
         else -> "${diffDays / 365}y"
     }
 }
-
 

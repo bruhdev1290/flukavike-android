@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fluxer.client.data.model.UpdateProfileRequest
 import com.fluxer.client.data.model.UserProfile
+import com.fluxer.client.data.model.toUserProfile
 import com.fluxer.client.data.repository.AuthRepository
 import com.fluxer.client.data.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,7 +42,7 @@ class ProfileViewModel @Inject constructor(
             
             targetUserId?.let { id ->
                 val result = if (_isCurrentUser.value) {
-                    profileRepository.getCurrentUserProfile()
+                    profileRepository.getCurrentUserProfile(id)
                 } else {
                     profileRepository.getUserProfile(id)
                 }
@@ -50,7 +51,12 @@ class ProfileViewModel @Inject constructor(
                     _profile.value = profile
                 }.onError { error ->
                     Timber.e("Failed to load profile: $error")
+                    if (_isCurrentUser.value && currentUser != null) {
+                        _profile.value = currentUser.toUserProfile()
+                    }
                 }
+            } ?: run {
+                _profile.value = currentUser?.toUserProfile()
             }
             
             _isLoading.value = false

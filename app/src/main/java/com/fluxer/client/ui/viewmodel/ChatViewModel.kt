@@ -196,6 +196,25 @@ class ChatViewModel @Inject constructor(
         _selectedChannel.value = channel
     }
 
+    fun selectServerById(guildId: String) {
+        val server = _guilds.value.firstOrNull { it.id == guildId } ?: return
+        selectServer(server)
+    }
+
+    fun selectChannelById(channelId: String, guildId: String? = null) {
+        guildId?.let { selectServerById(it) }
+        val channel = _channels.value.firstOrNull { it.id == channelId }
+            ?: _guilds.value.asSequence()
+                .flatMap { it.channels.asSequence() }
+                .firstOrNull { it.id == channelId }
+            ?: chatRepository.getCachedChannel(channelId)
+            ?: return
+        if (channel.serverId != null && _selectedServer.value?.id != channel.serverId) {
+            selectServerById(channel.serverId)
+        }
+        _selectedChannel.value = channel
+    }
+
     fun sendMessage() {
         val content = _messageInput.value.trim()
         val channelId = _selectedChannel.value?.id ?: return
@@ -380,5 +399,4 @@ class ChatViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 }
-
 

@@ -9,6 +9,8 @@
 package com.fluxer.client.data.repository
 
 import com.fluxer.client.BuildConfig
+import com.fluxer.client.data.local.dao.AuthSessionDao
+import com.fluxer.client.data.local.model.AuthSessionEntity
 import com.fluxer.client.data.local.SecureCookieStorage
 import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.model.*
@@ -24,6 +26,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import retrofit2.HttpException
 import timber.log.Timber
 import java.io.IOException
@@ -43,7 +47,8 @@ class AuthRepository @Inject constructor(
     private val csrfInterceptor: CsrfInterceptor,
     private val authenticator: AuthAuthenticator,
     private val gatewayManager: GatewayWebSocketManager,
-    private val authTokenStorage: com.fluxer.client.data.local.AuthTokenStorage
+    private val authTokenStorage: com.fluxer.client.data.local.AuthTokenStorage,
+    private val authSessionDao: AuthSessionDao
 ) : TokenRefreshHandler {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
@@ -85,29 +90,32 @@ class AuthRepository @Inject constructor(
 
             if (response.isSuccessful) {
                 val authData = response.body()
-                Timber.d("🔐 Login HTTP ${response.code()}, body null=${authData == null}, token=${authData?.resolvedToken()?.take(8)}, user=${authData?.user?.username}")
+                Timber.d("🔐 Login HTTP ${response.code()}, body null=${authData == null}, token=${authData?.resolvedToken()?.take(8)}, user=${authData?.user?.username}, mfa=${authData?.mfa}")
 
-                // Persist new token, or clear stale token so /api/auth/me uses session cookie
                 val newToken = authData?.resolvedToken()
-                if (newToken != null) {
-                    authToken = newToken
-                    authTokenStorage.setToken(newToken)
-                } else {
-                    // No token in response — clear stale stored token so the old expired
-                    // token isn't injected into /api/auth/me by AuthInterceptor
-                    authToken = null
-                    authTokenStorage.clear()
+                authToken = newToken
+
+                if (authData?.mfa == true && !authData.ticket.isNullOrBlank()) {
+                    _authState.value = AuthState.Unauthenticated
+                    val methods = authData.allowedMethods.map { it.trim().lowercase() }
+                    return LoginResult.MfaRequired(
+                        ticket = authData.ticket,
+                        totp = authData.totp || "totp" in methods,
+                        sms = authData.sms || "sms" in methods,
+                        webauthn = authData.webauthn || "webauthn" in methods,
+                        smsPhoneHint = authData.smsPhoneHint
+                    )
                 }
 
-                // Get user from body, or fall back to /api/auth/me (handles empty-body 200 responses)
                 val resolvedUser = authData?.user ?: run {
-                    Timber.d("Login response missing user, fetching /api/auth/me (authToken=${authToken?.take(8)})")
+                    Timber.d("Login response missing user, fetching /api/users/@me (authToken=${authToken?.take(8)})")
                     val userResponse = apiService.getCurrentUser(authToken = authToken)
-                    Timber.d("/api/auth/me HTTP ${userResponse.code()}, body null=${userResponse.body() == null}")
+                    Timber.d("/api/users/@me HTTP ${userResponse.code()}, body null=${userResponse.body() == null}")
                     if (userResponse.isSuccessful) userResponse.body() else null
                 }
 
                 if (resolvedUser != null) {
+                    saveSession(resolvedUser, newToken)
                     _authState.value = AuthState.Authenticated(resolvedUser)
                     Timber.i("✅ Login successful for: ${resolvedUser.username}")
 
@@ -115,21 +123,42 @@ class AuthRepository @Inject constructor(
                     gatewayManager.connect()
 
                     LoginResult.Success
+                } else if (newToken != null || cookieStorage.hasValidSession()) {
+                    if (!newToken.isNullOrBlank()) {
+                        authTokenStorage.setToken(newToken)
+                    }
+                    _authState.value = AuthState.Authenticated(null)
+                    Timber.i("✅ Login established a session without immediate user body")
+                    gatewayManager.connect()
+                    LoginResult.Success
                 } else {
+                    _authState.value = AuthState.Error("Empty response body")
                     LoginResult.Error("Empty response body")
                 }
             } else {
                 val result = parseLoginError(response.code(), response.errorBody()?.string())
-                if (result is LoginResult.Error) {
-                    _authState.value = AuthState.Error(result.message)
-                    Timber.e("❌ Login failed: ${result.message}")
+                when (result) {
+                    is LoginResult.Error -> {
+                        _authState.value = AuthState.Error(result.message)
+                        Timber.e("❌ Login failed: ${result.message}")
+                    }
+                    is LoginResult.CaptchaRequired,
+                    is LoginResult.MfaRequired,
+                    is LoginResult.IpAuthorizationRequired -> {
+                        _authState.value = AuthState.Unauthenticated
+                    }
+                    LoginResult.Success -> Unit
                 }
                 result
             }
         } catch (e: HttpException) {
             val result = parseLoginError(e.code(), e.response()?.errorBody()?.string())
-            if (result is LoginResult.Error) {
-                _authState.value = AuthState.Error(result.message)
+            when (result) {
+                is LoginResult.Error -> _authState.value = AuthState.Error(result.message)
+                is LoginResult.CaptchaRequired,
+                is LoginResult.MfaRequired,
+                is LoginResult.IpAuthorizationRequired -> _authState.value = AuthState.Unauthenticated
+                LoginResult.Success -> Unit
             }
             result
         } catch (e: IOException) {
@@ -144,6 +173,60 @@ class AuthRepository @Inject constructor(
             val error = "Unexpected error: ${e.message}"
             _authState.value = AuthState.Error(error)
             LoginResult.Error(error)
+        }
+    }
+
+    suspend fun getMfaWebAuthnOptions(ticket: String): Result<JsonObject> {
+        if (ticket.isBlank()) {
+            return Result.Error("Invalid MFA challenge")
+        }
+
+        return try {
+            val url = buildWebAuthnMfaUrl("webauthn/authentication-options")
+            Timber.d("Loading WebAuthn MFA options from $url")
+            val response = apiService.getWebAuthnMfaOptions(url, MfaTicketRequest(ticket))
+            if (response.isSuccessful) {
+                response.body()?.let { Result.Success(it) }
+                    ?: Result.Error("Empty WebAuthn options response")
+            } else {
+                Result.Error(parseError(response.code(), response.errorBody()?.string()))
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to load WebAuthn MFA options")
+            Result.Error("Failed to start passkey verification: ${e.message}")
+        }
+    }
+
+    suspend fun verifyMfaWebAuthn(
+        ticket: String,
+        challenge: String,
+        credentialResponse: JsonElement
+    ): Result<Unit> {
+        if (ticket.isBlank() || challenge.isBlank()) {
+            return Result.Error("Invalid MFA challenge")
+        }
+
+        return try {
+            val url = buildWebAuthnMfaUrl("webauthn")
+            Timber.d("Verifying WebAuthn MFA via $url")
+            val response = apiService.loginWithWebAuthnMfa(
+                url = url,
+                request = WebAuthnMfaRequest(
+                    response = credentialResponse,
+                    challenge = challenge,
+                    ticket = ticket
+                )
+            )
+
+            if (response.isSuccessful) {
+                response.body()?.let { finalizeAuthResponse(it) }
+                    ?: Result.Error("Empty MFA response body")
+            } else {
+                Result.Error(parseError(response.code(), response.errorBody()?.string()))
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "WebAuthn MFA verification failed")
+            Result.Error("Passkey verification failed: ${e.message}")
         }
     }
 
@@ -163,7 +246,6 @@ class AuthRepository @Inject constructor(
                     // Persist token for REST API auth header
                     it.resolvedToken()?.let { token ->
                         authToken = token
-                        authTokenStorage.setToken(token)
                     }
                     val resolvedUser = it.user ?: run {
                         Timber.d("Registration response missing user, fetching /api/auth/me")
@@ -171,6 +253,7 @@ class AuthRepository @Inject constructor(
                         if (userResponse.isSuccessful) userResponse.body() else null
                     }
                     resolvedUser?.let { user ->
+                        saveSession(user, authToken)
                         _authState.value = AuthState.Authenticated(user)
                         Timber.i("✅ Registration successful for: ${user.username}")
 
@@ -233,6 +316,17 @@ class AuthRepository @Inject constructor(
             val response = apiService.refreshToken()
 
             if (response.isSuccessful) {
+                val body = response.body()
+                val refreshedToken = body?.resolvedToken()
+                if (!refreshedToken.isNullOrBlank()) {
+                    val userId = body.user?.id ?: body.userId ?: authTokenStorage.activeUserId
+                    if (userId != null) {
+                        authTokenStorage.saveToken(userId, refreshedToken)
+                    } else {
+                        authTokenStorage.setToken(refreshedToken)
+                    }
+                    authToken = refreshedToken
+                }
                 Timber.i("✅ Token refreshed successfully")
                 true
             } else {
@@ -258,17 +352,26 @@ class AuthRepository @Inject constructor(
         repoScope.launch { runDiscovery() }
     }
 
+    fun exitAuthChallenge() {
+        if (_authState.value is AuthState.Loading) {
+            _authState.value = AuthState.Unauthenticated
+        }
+    }
+
     /**
      * Check for existing valid session
      */
     private fun checkExistingSession() {
-        if (cookieStorage.hasValidSession()) {
-            Timber.i("🔍 Found existing session, validating...")
-            _authState.value = AuthState.Loading
-
-            // Try to fetch current user to validate session
-            // This would typically be a suspend function, handle properly in ViewModel
-            _authState.value = AuthState.Unauthenticated // Will be updated by validateSession
+        repoScope.launch {
+            val active = authSessionDao.getActiveSession()
+            if (active != null || cookieStorage.hasValidSession()) {
+                Timber.i("🔍 Found existing session metadata, waiting for validation")
+                active?.let {
+                    authTokenStorage.setActiveUser(it.userId)
+                    authToken = authTokenStorage.token
+                }
+                _authState.value = AuthState.Loading
+            }
         }
     }
 
@@ -277,11 +380,16 @@ class AuthRepository @Inject constructor(
      */
     suspend fun validateSession(): Result<Unit> {
         return try {
+            authSessionDao.getActiveSession()?.let {
+                authTokenStorage.setActiveUser(it.userId)
+                authToken = authTokenStorage.token
+            }
             val response = apiService.getCurrentUser(authToken = authToken)
 
             if (response.isSuccessful) {
                 val user = response.body()
                 user?.let {
+                    saveSession(it, authToken)
                     _authState.value = AuthState.Authenticated(it)
                     // Reconnect to Gateway
                     gatewayManager.connect()
@@ -301,9 +409,15 @@ class AuthRepository @Inject constructor(
      * Clear all session data
      */
     private fun clearSession() {
+        val userId = authTokenStorage.activeUserId
         cookieStorage.clearAllCookies()
         csrfInterceptor.clearCsrfToken()
-        authTokenStorage.clear()
+        if (userId != null) {
+            authTokenStorage.deleteToken(userId)
+            repoScope.launch { authSessionDao.delete(userId) }
+        } else {
+            authTokenStorage.clear()
+        }
         authToken = null
         _authState.value = AuthState.Unauthenticated
         Timber.i("🧹 Session cleared")
@@ -312,13 +426,12 @@ class AuthRepository @Inject constructor(
     private suspend fun runDiscovery() {
         try {
             withTimeout(6_000L) {
-                val response = apiService.discoverInstance()
+                val wellKnownUrl = instanceConfigStore.buildWellKnownUrl()
+                val response = apiService.discoverInstance(wellKnownUrl)
                 if (response.isSuccessful) {
                     response.body()?.let { config ->
                         discoveredCaptchaConfig = config.captcha
-                        config.resolvedGateway().takeIf { it.isNotBlank() }?.let {
-                            instanceConfigStore.saveDiscoveredWebSocketUrl(it)
-                        }
+                        instanceConfigStore.saveDiscoveredConfig(config)
                         Timber.d("Instance discovered. API: ${config.resolvedApi()}, Gateway: ${config.resolvedGateway()}, Captcha: ${config.captcha != null}")
                     }
                 }
@@ -375,6 +488,57 @@ class AuthRepository @Inject constructor(
         }
     }
 
+    private suspend fun saveSession(user: User, token: String?) {
+        authSessionDao.clearActive()
+        if (!token.isNullOrBlank()) {
+            authTokenStorage.saveToken(user.id, token)
+            authToken = token
+        } else {
+            authTokenStorage.setActiveUser(user.id)
+            authToken = authTokenStorage.token
+        }
+        authSessionDao.upsert(
+            AuthSessionEntity(
+                userId = user.id,
+                active = true,
+                username = user.username,
+                displayName = user.displayName,
+                avatarUrl = user.avatarUrl,
+                instanceSnapshotJson = null,
+                updatedAt = System.currentTimeMillis()
+            )
+        )
+    }
+
+    private suspend fun finalizeAuthResponse(authData: AuthResponse): Result<Unit> {
+        val token = authData.resolvedToken()
+        val user = authData.user ?: run {
+            val userResponse = apiService.getCurrentUser(authToken = token)
+            if (userResponse.isSuccessful) userResponse.body() else null
+        }
+
+        return if (user != null) {
+            saveSession(user, token)
+            _authState.value = AuthState.Authenticated(user)
+            gatewayManager.connect()
+            Result.Success(Unit)
+        } else if (!token.isNullOrBlank()) {
+            authData.userId?.let { authTokenStorage.saveToken(it, token) }
+                ?: authTokenStorage.setToken(token)
+            authToken = token
+            _authState.value = AuthState.Authenticated(null)
+            gatewayManager.connect()
+            Result.Success(Unit)
+        } else {
+            Result.Error("Passkey verification returned no session")
+        }
+    }
+
+    private fun buildWebAuthnMfaUrl(pathSuffix: String): String {
+        val base = instanceConfigStore.getActiveApiBaseUrl().trimEnd('/')
+        return "$base/auth/login/mfa/$pathSuffix"
+    }
+
     sealed class AuthState {
         object Unauthenticated : AuthState()
         object Loading : AuthState()
@@ -385,6 +549,13 @@ class AuthRepository @Inject constructor(
     sealed class LoginResult {
         object Success : LoginResult()
         data class CaptchaRequired(val sitekey: String?, val provider: String?) : LoginResult()
+        data class MfaRequired(
+            val ticket: String,
+            val totp: Boolean,
+            val sms: Boolean,
+            val webauthn: Boolean,
+            val smsPhoneHint: String?
+        ) : LoginResult()
         data class IpAuthorizationRequired(val ticket: String?, val email: String?, val resendAvailableIn: Int?) : LoginResult()
         data class Error(val message: String) : LoginResult()
     }

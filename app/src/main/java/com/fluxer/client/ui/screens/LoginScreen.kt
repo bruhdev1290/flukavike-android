@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +46,10 @@ fun LoginScreen(
     val captchaSiteKey by viewModel.captchaSiteKey.collectAsState()
     val captchaProvider by viewModel.captchaProvider.collectAsState()
     val captchaToken by viewModel.captchaToken.collectAsState()
+    val mfaChallenge by viewModel.mfaChallenge.collectAsState()
+    val isMfaLoading by viewModel.isMfaLoading.collectAsState()
+    val isPasskeySupportedInThisBuild = viewModel.isPasskeySupportedInThisBuild
+    val context = LocalContext.current
 
     var instanceInput by remember(customInstanceUrl) { mutableStateOf(customInstanceUrl) }
     
@@ -329,6 +334,71 @@ fun LoginScreen(
                     )
                 }
             }
+
+            AnimatedVisibility(
+                visible = mfaChallenge != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Surface(
+                    color = PhantomRed.copy(alpha = 0.08f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, PhantomRed.copy(alpha = 0.55f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = PhantomRed
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "TWO-FACTOR AUTHENTICATION",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = TextPrimary,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = when {
+                                mfaChallenge?.webauthn == true && !isPasskeySupportedInThisBuild ->
+                                    viewModel.passkeyUnavailableMessage()
+                                mfaChallenge?.webauthn == true && mfaChallenge?.hasCodeMethod == true ->
+                                    "Use your passkey/security key to continue. Code verification can be added for this account too."
+                                mfaChallenge?.webauthn == true ->
+                                    "Use your passkey/security key to complete sign in."
+                                else ->
+                                    "This account requires a code-based MFA method that is not wired in this build yet."
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                            color = TextSecondary,
+                            textAlign = TextAlign.Center
+                        )
+                        if (mfaChallenge?.webauthn == true) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            LoadingButton(
+                                text = if (isPasskeySupportedInThisBuild) "USE PASSKEY" else "PASSKEY UNAVAILABLE",
+                                isLoading = isMfaLoading,
+                                enabled = isPasskeySupportedInThisBuild && !isMfaLoading,
+                                onClick = { viewModel.completeMfaWithPasskey(context) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        TextButton(
+                            onClick = { viewModel.cancelMfaChallenge() },
+                            enabled = !isMfaLoading
+                        ) {
+                            Text("BACK TO SIGN IN", color = TextMuted)
+                        }
+                    }
+                }
+            }
             
             // Error message
             AnimatedVisibility(
@@ -357,7 +427,9 @@ fun LoginScreen(
             LoadingButton(
                 text = if (isLoginMode) "SIGN IN" else "CREATE ACCOUNT",
                 isLoading = isLoading,
-                enabled = if (isLoginMode) !(captchaRequired && captchaToken == null) else true,
+                enabled = if (isLoginMode) {
+                    mfaChallenge == null && !(captchaRequired && captchaToken == null)
+                } else true,
                 onClick = {
                     if (isLoginMode) {
                         viewModel.login(email, password)

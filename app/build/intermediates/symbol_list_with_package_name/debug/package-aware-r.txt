@@ -160,6 +160,9 @@ drawable ic_call_decline
 drawable ic_call_decline_low
 drawable ic_launcher_foreground
 drawable ic_notification
+drawable ic_other_sign_in
+drawable ic_passkey
+drawable ic_password
 drawable ic_splash
 drawable icon_background
 drawable notification_action_background
@@ -294,6 +297,8 @@ layout splash_screen_view
 mipmap ic_launcher
 mipmap ic_launcher_round
 raw firebase_common_keep
+string android_credentials_TYPE_PASSWORD_CREDENTIAL
+string androidx_credentials_TYPE_PUBLIC_KEY_CREDENTIAL
 string androidx_startup
 string app_name
 string call_notification_answer_action
@@ -438,6 +443,7 @@ style TextAppearance_Compat_Notification_Time
 style TextAppearance_Compat_Notification_Title
 style Theme_Fluxer
 style Theme_Fluxer_Splash
+style Theme_Hidden
 style Theme_SplashScreen
 style Theme_SplashScreen_Common
 style Theme_SplashScreen_IconBackground

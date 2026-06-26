@@ -110,3 +110,21 @@ data class UpdateSettingsRequest(
     @SerialName("notifications_enabled")
     val notificationsEnabled: Boolean? = null
 )
+
+fun User.toUserProfile(): UserProfile =
+    UserProfile(
+        id = id,
+        username = username,
+        discriminator = discriminator,
+        email = email.ifBlank { null },
+        displayName = displayName,
+        avatarUrl = avatarUrl,
+        bannerUrl = null,
+        bio = null,
+        status = status,
+        customStatus = null,
+        createdAt = createdAt,
+        stats = null,
+        isPremium = false,
+        badges = emptyList()
+    )

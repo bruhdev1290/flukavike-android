@@ -3,7 +3,18 @@ package com.fluxer.client.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -11,40 +22,90 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.AlternateEmail
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.NotificationsNone
+import androidx.compose.material.icons.filled.PhoneMissed
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.fluxer.client.ui.theme.*
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.fluxer.client.data.local.model.NotificationFeedEntity
+import com.fluxer.client.ui.theme.DndRed
+import com.fluxer.client.ui.theme.InfoCyan
+import com.fluxer.client.ui.theme.OnlineGreen
+import com.fluxer.client.ui.theme.PhantomRed
+import com.fluxer.client.ui.theme.TextMuted
+import com.fluxer.client.ui.theme.TextPrimary
+import com.fluxer.client.ui.theme.TextSecondary
+import com.fluxer.client.ui.theme.VelvetBlack
+import com.fluxer.client.ui.theme.VelvetDark
+import com.fluxer.client.ui.theme.VelvetMid
+import com.fluxer.client.ui.theme.VelvetSurface
+import com.fluxer.client.ui.theme.WarningOrange
+import com.fluxer.client.ui.viewmodel.NotificationCenterViewModel
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationCenterScreen(
     onBack: () -> Unit,
-    onNotificationClick: (NotificationItem) -> Unit = {}
+    onNotificationClick: (NotificationItem) -> Unit = {},
+    viewModel: NotificationCenterViewModel = hiltViewModel()
 ) {
-    // Sample notifications - in real app this would come from a database
-    val notifications = remember { generateSampleNotifications() }
+    val notifications by viewModel.notifications.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
     var selectedFilter by remember { mutableStateOf(NotificationFilter.ALL) }
-    
-    val filteredNotifications = when (selectedFilter) {
-        NotificationFilter.ALL -> notifications
-        NotificationFilter.MESSAGES -> notifications.filter { it.type == NotificationType.MESSAGE }
-        NotificationFilter.MENTIONS -> notifications.filter { it.type == NotificationType.MENTION }
-        NotificationFilter.CALLS -> notifications.filter { it.type == NotificationType.CALL }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadNotifications()
     }
-    
+
+    val notificationItems = remember(notifications) { notifications.map { it.toNotificationItem() } }
+    val filteredNotifications = when (selectedFilter) {
+        NotificationFilter.ALL -> notificationItems
+        NotificationFilter.MESSAGES -> notificationItems.filter {
+            it.type == NotificationType.MESSAGE || it.type == NotificationType.SYSTEM
+        }
+        NotificationFilter.MENTIONS -> notificationItems.filter { it.type == NotificationType.MENTION }
+        NotificationFilter.CALLS -> notificationItems.filter {
+            it.type == NotificationType.CALL || it.type == NotificationType.CALL_MISSED
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
                         text = "Notifications",
                         style = MaterialTheme.typography.titleLarge,
@@ -62,14 +123,14 @@ fun NotificationCenterScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Mark all as read */ }) {
+                    IconButton(onClick = viewModel::markAllRead) {
                         Icon(
                             imageVector = Icons.Default.DoneAll,
                             contentDescription = "Mark all read",
                             tint = TextSecondary
                         )
                     }
-                    IconButton(onClick = { /* Clear all */ }) {
+                    IconButton(onClick = viewModel::clearAll) {
                         Icon(
                             imageVector = Icons.Default.DeleteSweep,
                             contentDescription = "Clear all",
@@ -90,7 +151,6 @@ fun NotificationCenterScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Filter chips
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -111,16 +171,31 @@ fun NotificationCenterScreen(
                     )
                 }
             }
-            
-            // Notifications list
-            if (filteredNotifications.isEmpty()) {
-                Box(
+
+            when {
+                isLoading -> Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    CircularProgressIndicator(color = PhantomRed)
+                }
+
+                error != null -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = error ?: "Failed to load notifications",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = DndRed
+                    )
+                }
+
+                filteredNotifications.isEmpty() -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             imageVector = Icons.Default.NotificationsNone,
                             contentDescription = null,
@@ -129,14 +204,14 @@ fun NotificationCenterScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No notifications",
+                            text = "No notifications yet",
                             style = MaterialTheme.typography.titleMedium,
                             color = TextMuted
                         )
                     }
                 }
-            } else {
-                LazyColumn(
+
+                else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -147,8 +222,11 @@ fun NotificationCenterScreen(
                     ) { notification ->
                         NotificationCard(
                             notification = notification,
-                            onClick = { onNotificationClick(notification) },
-                            onDismiss = { /* Dismiss notification */ }
+                            onClick = {
+                                viewModel.markRead(notification.id)
+                                onNotificationClick(notification)
+                            },
+                            onDismiss = { viewModel.markRead(notification.id) }
                         )
                     }
                 }
@@ -170,7 +248,7 @@ private fun NotificationCard(
         NotificationType.CALL_MISSED -> Icons.Default.PhoneMissed
         NotificationType.SYSTEM -> Icons.Default.Info
     }
-    
+
     val iconColor = when (notification.type) {
         NotificationType.MESSAGE -> InfoCyan
         NotificationType.MENTION -> WarningOrange
@@ -178,11 +256,13 @@ private fun NotificationCard(
         NotificationType.CALL_MISSED -> DndRed
         NotificationType.SYSTEM -> TextSecondary
     }
-    
+
     val cardModifier = if (!notification.isRead) {
         Modifier.border(1.dp, PhantomRed.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-    } else Modifier
-    
+    } else {
+        Modifier
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -199,7 +279,6 @@ private fun NotificationCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -213,21 +292,18 @@ private fun NotificationCard(
                     modifier = Modifier.size(24.dp)
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
-            // Content
+
             Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = notification.title,
                         style = MaterialTheme.typography.bodyLarge,
                         color = TextPrimary,
                         fontWeight = if (!notification.isRead) FontWeight.SemiBold else FontWeight.Normal
                     )
-                    
+
                     if (!notification.isRead) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Box(
@@ -237,7 +313,7 @@ private fun NotificationCard(
                         )
                     }
                 }
-                
+
                 Text(
                     text = notification.message,
                     style = MaterialTheme.typography.bodyMedium,
@@ -245,17 +321,16 @@ private fun NotificationCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Text(
                     text = formatTimestamp(notification.timestamp),
                     style = MaterialTheme.typography.labelSmall,
                     color = TextMuted
                 )
             }
-            
-            // Actions
+
             IconButton(onClick = onDismiss) {
                 Icon(
                     imageVector = Icons.Default.Close,
@@ -268,7 +343,6 @@ private fun NotificationCard(
     }
 }
 
-// Data classes
 data class NotificationItem(
     val id: String,
     val type: NotificationType,
@@ -291,11 +365,31 @@ enum class NotificationFilter(val displayName: String) {
     CALLS("Calls")
 }
 
-// Helper functions
+private fun NotificationFeedEntity.toNotificationItem(): NotificationItem {
+    val normalized = type.trim().lowercase(Locale.US)
+    val screenType = when (normalized) {
+        "mention" -> NotificationType.MENTION
+        "call" -> NotificationType.CALL
+        "call_missed" -> NotificationType.CALL_MISSED
+        "direct_message", "dm", "message" -> NotificationType.MESSAGE
+        else -> NotificationType.SYSTEM
+    }
+    return NotificationItem(
+        id = id,
+        type = screenType,
+        title = title,
+        message = body,
+        channelId = channelId,
+        senderId = null,
+        timestamp = createdAt,
+        isRead = read
+    )
+}
+
 private fun formatTimestamp(timestamp: Long): String {
     val now = System.currentTimeMillis()
     val diff = now - timestamp
-    
+
     return when {
         diff < 60_000 -> "Just now"
         diff < 3_600_000 -> "${diff / 60_000}m ago"
@@ -303,54 +397,4 @@ private fun formatTimestamp(timestamp: Long): String {
         diff < 604_800_000 -> "${diff / 86_400_000}d ago"
         else -> SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(timestamp))
     }
-}
-
-// Sample data generator
-private fun generateSampleNotifications(): List<NotificationItem> {
-    val now = System.currentTimeMillis()
-    return listOf(
-        NotificationItem(
-            id = "1",
-            type = NotificationType.MESSAGE,
-            title = "John Doe",
-            message = "Hey! Are you coming to the meeting later?",
-            channelId = "dm_123",
-            timestamp = now - 120_000,
-            isRead = false
-        ),
-        NotificationItem(
-            id = "2",
-            type = NotificationType.MENTION,
-            title = "Fluxer Developers",
-            message = "@You mentioned in #general: Check out this new feature!",
-            channelId = "channel_456",
-            timestamp = now - 3_600_000,
-            isRead = false
-        ),
-        NotificationItem(
-            id = "3",
-            type = NotificationType.CALL_MISSED,
-            title = "Jane Smith",
-            message = "Missed voice call",
-            timestamp = now - 7_200_000,
-            isRead = true
-        ),
-        NotificationItem(
-            id = "4",
-            type = NotificationType.MESSAGE,
-            title = "Team Chat",
-            message = "Alice: I've uploaded the new designs to Figma",
-            channelId = "channel_789",
-            timestamp = now - 86_400_000,
-            isRead = true
-        ),
-        NotificationItem(
-            id = "5",
-            type = NotificationType.SYSTEM,
-            title = "Fluxer",
-            message = "Your password was changed successfully",
-            timestamp = now - 172_800_000,
-            isRead = true
-        )
-    )
 }

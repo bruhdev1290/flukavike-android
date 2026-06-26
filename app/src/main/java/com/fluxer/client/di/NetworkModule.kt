@@ -80,19 +80,35 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideClientPropertiesInterceptor(): ClientPropertiesInterceptor =
+        ClientPropertiesInterceptor()
+
+    @Provides
+    @Singleton
+    fun provideNetworkRetryInterceptor(): NetworkRetryInterceptor =
+        NetworkRetryInterceptor()
+
+    @Provides
+    @Singleton
     fun provideOkHttpClient(
         cookieStorage: SecureCookieStorage,
         csrfInterceptor: CsrfInterceptor,
         baseUrlOverrideInterceptor: BaseUrlOverrideInterceptor,
         authInterceptor: AuthInterceptor,
+        clientPropertiesInterceptor: ClientPropertiesInterceptor,
+        networkRetryInterceptor: NetworkRetryInterceptor,
         loggingInterceptor: HttpLoggingInterceptor,
         authAuthenticator: AuthAuthenticator
     ): OkHttpClient {
         return OkHttpClient.Builder()
             // Cookie handling - CRITICAL for HttpOnly session cookies
             .cookieJar(cookieStorage as CookieJar)
+            // Canary-style transient network retry wrapper
+            .addInterceptor(networkRetryInterceptor)
             // Runtime instance switching for all API calls
             .addInterceptor(baseUrlOverrideInterceptor)
+            // Canary-style client identity headers
+            .addInterceptor(clientPropertiesInterceptor)
             // Auth token injection
             .addInterceptor(authInterceptor)
             // CSRF protection

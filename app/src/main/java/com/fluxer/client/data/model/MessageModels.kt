@@ -12,6 +12,7 @@ import com.fluxer.client.data.local.model.MessageEntity
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNames
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -119,8 +120,9 @@ data class SendMessageRequest(
 @Serializable
 data class Channel(
     val id: String,
-    val name: String,
-    val type: ChannelType,
+    val name: String = "",
+    val type: ChannelType = ChannelType.UNKNOWN,
+    @JsonNames("guild_id")
     @SerialName("server_id")
     val serverId: String? = null,
     @SerialName("parent_id")
@@ -130,8 +132,17 @@ data class Channel(
     @SerialName("last_message_id")
     val lastMessageId: String? = null,
     @SerialName("created_at")
-    val createdAt: String? = null
+    val createdAt: String? = null,
+    val recipients: List<User> = emptyList()
 )
+
+fun Channel.displayName(): String {
+    if (name.isNotBlank()) return name
+    val recipient = recipients.firstOrNull()
+    return recipient?.displayName?.takeIf { it.isNotBlank() }
+        ?: recipient?.username?.takeIf { it.isNotBlank() }
+        ?: "Untitled channel"
+}
 
 @Serializable(with = ChannelTypeSerializer::class)
 enum class ChannelType(val value: Int) {

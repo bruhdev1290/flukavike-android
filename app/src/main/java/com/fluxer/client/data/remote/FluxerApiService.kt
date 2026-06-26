@@ -10,6 +10,7 @@ package com.fluxer.client.data.remote
 import com.fluxer.client.data.model.*
 import retrofit2.Response
 import retrofit2.http.*
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Fluxer REST API Service
@@ -19,8 +20,8 @@ interface FluxerApiService {
 
     // ==================== DISCOVERY ====================
 
-    @GET("/.well-known/fluxer")
-    suspend fun discoverInstance(): Response<InstanceConfig>
+    @GET
+    suspend fun discoverInstance(@Url url: String): Response<InstanceConfig>
 
     // ==================== AUTH ====================
 
@@ -39,6 +40,20 @@ interface FluxerApiService {
 
     @POST("/api/auth/refresh")
     suspend fun refreshToken(): Response<AuthResponse>
+
+    @POST
+    suspend fun getWebAuthnMfaOptions(
+        @Url url: String,
+        @Body request: MfaTicketRequest,
+        @Header(BaseUrlOverrideInterceptor.SKIP_BASE_OVERRIDE_HEADER) skipBaseOverride: String = "true"
+    ): Response<JsonObject>
+
+    @POST
+    suspend fun loginWithWebAuthnMfa(
+        @Url url: String,
+        @Body request: WebAuthnMfaRequest,
+        @Header(BaseUrlOverrideInterceptor.SKIP_BASE_OVERRIDE_HEADER) skipBaseOverride: String = "true"
+    ): Response<AuthResponse>
 
     @GET("/api/auth/csrf")
     suspend fun getCsrfToken(): Response<CsrfResponse>

@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
  data class InstanceConfig(
-    val api: String,
+    val api: String = "",
     val gateway: String = "",
     val cdn: String? = null,
     @SerialName("public_api")

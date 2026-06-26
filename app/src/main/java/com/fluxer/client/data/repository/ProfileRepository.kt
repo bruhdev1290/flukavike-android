@@ -28,9 +28,9 @@ class ProfileRepository @Inject constructor(
         }
     }
 
-    suspend fun getCurrentUserProfile(): Result<UserProfile> {
+    suspend fun getCurrentUserProfile(userId: String): Result<UserProfile> {
         return try {
-            val response = apiService.getCurrentUserProfile()
+            val response = apiService.getUserProfile(userId)
             if (response.isSuccessful) {
                 response.body()?.let {
                     Result.Success(it)

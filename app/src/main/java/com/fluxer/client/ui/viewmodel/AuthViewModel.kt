@@ -1,11 +1,15 @@
 package com.fluxer.client.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fluxer.client.BuildConfig
 import com.fluxer.client.data.local.InstanceConfigStore
+import com.fluxer.client.data.remote.WebAuthnResult
+import com.fluxer.client.data.remote.WebAuthnService
 import com.fluxer.client.data.repository.AuthRepository
 import com.fluxer.client.data.repository.AuthRepository.AuthState
+import com.fluxer.client.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -15,8 +19,15 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val instanceConfigStore: InstanceConfigStore
+    private val instanceConfigStore: InstanceConfigStore,
+    private val webAuthnService: WebAuthnService
 ) : ViewModel() {
+
+    companion object {
+        private val PASSKEY_ENABLED_PACKAGES = setOf("com.fluxer", "com.fluxer.canary")
+        private const val PASSKEY_UNSUPPORTED_MESSAGE =
+            "Passkey sign-in is not available in this Android build yet. Fluxer only trusts its official Android app package for passkeys."
+    }
 
     val authState: StateFlow<AuthState> = authRepository.authState
 
@@ -51,19 +62,34 @@ class AuthViewModel @Inject constructor(
     private val _captchaToken = MutableStateFlow<String?>(null)
     val captchaToken: StateFlow<String?> = _captchaToken.asStateFlow()
 
+    private val _mfaChallenge = MutableStateFlow<MfaChallengeUi?>(null)
+    val mfaChallenge: StateFlow<MfaChallengeUi?> = _mfaChallenge.asStateFlow()
+
+    private val _isMfaLoading = MutableStateFlow(false)
+    val isMfaLoading: StateFlow<Boolean> = _isMfaLoading.asStateFlow()
+
+    val isPasskeySupportedInThisBuild: Boolean =
+        BuildConfig.APPLICATION_ID in PASSKEY_ENABLED_PACKAGES
+
+    private var sessionRestoreAttempted = false
+
     init {
-        // Check for existing session on startup
         viewModelScope.launch {
-            if (authRepository.sessionCookieFlow.firstOrNull() != null) {
-                _isLoading.value = true
-                authRepository.validateSession()
-                    .onSuccess { 
-                        _navigateToChat.emit(Unit)
-                    }
-                    .onError { 
-                        Timber.w("Session validation failed: $it")
-                    }
-                _isLoading.value = false
+            authState.collect { state ->
+                if (state is AuthState.Loading && !sessionRestoreAttempted) {
+                    sessionRestoreAttempted = true
+                    _isLoading.value = true
+                    authRepository.validateSession()
+                        .onSuccess {
+                            _navigateToChat.emit(Unit)
+                        }
+                        .onError {
+                            Timber.w("Session validation failed: $it")
+                        }
+                    _isLoading.value = false
+                } else if (state !is AuthState.Loading) {
+                    sessionRestoreAttempted = false
+                }
             }
         }
     }
@@ -74,6 +100,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             _loginError.value = null
+            _mfaChallenge.value = null
             
             when (val result = authRepository.login(email, password, _captchaToken.value)) {
                 is AuthRepository.LoginResult.Success -> {
@@ -83,6 +110,7 @@ class AuthViewModel @Inject constructor(
                 }
                 is AuthRepository.LoginResult.CaptchaRequired -> {
                     _isLoading.value = false
+                    authRepository.exitAuthChallenge()
                     _captchaRequired.value = true
                     _captchaSiteKey.value = result.sitekey?.takeIf { it.isNotBlank() } ?: BuildConfig.HCAPTCHA_SITE_KEY
                     val resolved = result.provider?.trim()?.lowercase() ?: "hcaptcha"
@@ -91,12 +119,25 @@ class AuthViewModel @Inject constructor(
                 }
                 is AuthRepository.LoginResult.IpAuthorizationRequired -> {
                     _isLoading.value = false
+                    authRepository.exitAuthChallenge()
                     resetCaptchaState()
                     _loginError.value = if (!result.email.isNullOrBlank()) {
                         "Check ${result.email} and approve this login attempt."
                     } else {
                         "Approve this login attempt from your email, then try again."
                     }
+                }
+                is AuthRepository.LoginResult.MfaRequired -> {
+                    _isLoading.value = false
+                    resetCaptchaState()
+                    _mfaChallenge.value = MfaChallengeUi(
+                        ticket = result.ticket,
+                        totp = result.totp,
+                        sms = result.sms,
+                        webauthn = result.webauthn,
+                        smsPhoneHint = result.smsPhoneHint
+                    )
+                    _loginError.value = null
                 }
                 is AuthRepository.LoginResult.Error -> {
                     _isLoading.value = false
@@ -105,6 +146,69 @@ class AuthViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun completeMfaWithPasskey(context: Context) {
+        val challenge = _mfaChallenge.value ?: run {
+            _loginError.value = "No active two-factor challenge."
+            return
+        }
+        if (!challenge.webauthn) {
+            _loginError.value = "Passkey verification is not available for this challenge."
+            return
+        }
+        if (!isPasskeySupportedInThisBuild) {
+            _loginError.value = PASSKEY_UNSUPPORTED_MESSAGE
+            return
+        }
+
+        viewModelScope.launch {
+            _isMfaLoading.value = true
+            _loginError.value = null
+
+            when (val options = authRepository.getMfaWebAuthnOptions(challenge.ticket)) {
+                is Result.Success -> {
+                    when (val credential = webAuthnService.authenticate(context, options.data)) {
+                        is WebAuthnResult.Success -> {
+                            when (val verified = authRepository.verifyMfaWebAuthn(
+                                ticket = challenge.ticket,
+                                challenge = credential.challenge,
+                                credentialResponse = credential.credentialResponse
+                            )) {
+                                is Result.Success -> {
+                                    _mfaChallenge.value = null
+                                    _isMfaLoading.value = false
+                                    _navigateToChat.emit(Unit)
+                                }
+                                is Result.Error -> {
+                                    _isMfaLoading.value = false
+                                    _loginError.value = verified.message
+                                }
+                                Result.Loading -> Unit
+                            }
+                        }
+                        WebAuthnResult.Cancelled -> {
+                            _isMfaLoading.value = false
+                        }
+                        is WebAuthnResult.Error -> {
+                            _isMfaLoading.value = false
+                            _loginError.value = credential.message
+                        }
+                    }
+                }
+                is Result.Error -> {
+                    _isMfaLoading.value = false
+                    _loginError.value = options.message
+                }
+                Result.Loading -> Unit
+            }
+        }
+    }
+
+    fun cancelMfaChallenge() {
+        _mfaChallenge.value = null
+        _isMfaLoading.value = false
+        _loginError.value = null
     }
 
     fun register(email: String, username: String, password: String) {
@@ -197,4 +301,16 @@ class AuthViewModel @Inject constructor(
         }
         return true
     }
+
+    data class MfaChallengeUi(
+        val ticket: String,
+        val totp: Boolean,
+        val sms: Boolean,
+        val webauthn: Boolean,
+        val smsPhoneHint: String?
+    ) {
+        val hasCodeMethod: Boolean = totp || sms
+    }
+
+    fun passkeyUnavailableMessage(): String = PASSKEY_UNSUPPORTED_MESSAGE
 }

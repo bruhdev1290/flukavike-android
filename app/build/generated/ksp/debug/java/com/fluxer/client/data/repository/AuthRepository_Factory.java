@@ -3,6 +3,7 @@ package com.fluxer.client.data.repository;
 import com.fluxer.client.data.local.AuthTokenStorage;
 import com.fluxer.client.data.local.InstanceConfigStore;
 import com.fluxer.client.data.local.SecureCookieStorage;
+import com.fluxer.client.data.local.dao.AuthSessionDao;
 import com.fluxer.client.data.remote.AuthAuthenticator;
 import com.fluxer.client.data.remote.CsrfInterceptor;
 import com.fluxer.client.data.remote.FluxerApiService;
@@ -42,13 +43,16 @@ public final class AuthRepository_Factory implements Factory<AuthRepository> {
 
   private final Provider<AuthTokenStorage> authTokenStorageProvider;
 
+  private final Provider<AuthSessionDao> authSessionDaoProvider;
+
   public AuthRepository_Factory(Provider<FluxerApiService> apiServiceProvider,
       Provider<SecureCookieStorage> cookieStorageProvider,
       Provider<InstanceConfigStore> instanceConfigStoreProvider,
       Provider<CsrfInterceptor> csrfInterceptorProvider,
       Provider<AuthAuthenticator> authenticatorProvider,
       Provider<GatewayWebSocketManager> gatewayManagerProvider,
-      Provider<AuthTokenStorage> authTokenStorageProvider) {
+      Provider<AuthTokenStorage> authTokenStorageProvider,
+      Provider<AuthSessionDao> authSessionDaoProvider) {
     this.apiServiceProvider = apiServiceProvider;
     this.cookieStorageProvider = cookieStorageProvider;
     this.instanceConfigStoreProvider = instanceConfigStoreProvider;
@@ -56,11 +60,12 @@ public final class AuthRepository_Factory implements Factory<AuthRepository> {
     this.authenticatorProvider = authenticatorProvider;
     this.gatewayManagerProvider = gatewayManagerProvider;
     this.authTokenStorageProvider = authTokenStorageProvider;
+    this.authSessionDaoProvider = authSessionDaoProvider;
   }
 
   @Override
   public AuthRepository get() {
-    return newInstance(apiServiceProvider.get(), cookieStorageProvider.get(), instanceConfigStoreProvider.get(), csrfInterceptorProvider.get(), authenticatorProvider.get(), gatewayManagerProvider.get(), authTokenStorageProvider.get());
+    return newInstance(apiServiceProvider.get(), cookieStorageProvider.get(), instanceConfigStoreProvider.get(), csrfInterceptorProvider.get(), authenticatorProvider.get(), gatewayManagerProvider.get(), authTokenStorageProvider.get(), authSessionDaoProvider.get());
   }
 
   public static AuthRepository_Factory create(Provider<FluxerApiService> apiServiceProvider,
@@ -69,14 +74,16 @@ public final class AuthRepository_Factory implements Factory<AuthRepository> {
       Provider<CsrfInterceptor> csrfInterceptorProvider,
       Provider<AuthAuthenticator> authenticatorProvider,
       Provider<GatewayWebSocketManager> gatewayManagerProvider,
-      Provider<AuthTokenStorage> authTokenStorageProvider) {
-    return new AuthRepository_Factory(apiServiceProvider, cookieStorageProvider, instanceConfigStoreProvider, csrfInterceptorProvider, authenticatorProvider, gatewayManagerProvider, authTokenStorageProvider);
+      Provider<AuthTokenStorage> authTokenStorageProvider,
+      Provider<AuthSessionDao> authSessionDaoProvider) {
+    return new AuthRepository_Factory(apiServiceProvider, cookieStorageProvider, instanceConfigStoreProvider, csrfInterceptorProvider, authenticatorProvider, gatewayManagerProvider, authTokenStorageProvider, authSessionDaoProvider);
   }
 
   public static AuthRepository newInstance(FluxerApiService apiService,
       SecureCookieStorage cookieStorage, InstanceConfigStore instanceConfigStore,
       CsrfInterceptor csrfInterceptor, AuthAuthenticator authenticator,
-      GatewayWebSocketManager gatewayManager, AuthTokenStorage authTokenStorage) {
-    return new AuthRepository(apiService, cookieStorage, instanceConfigStore, csrfInterceptor, authenticator, gatewayManager, authTokenStorage);
+      GatewayWebSocketManager gatewayManager, AuthTokenStorage authTokenStorage,
+      AuthSessionDao authSessionDao) {
+    return new AuthRepository(apiService, cookieStorage, instanceConfigStore, csrfInterceptor, authenticator, gatewayManager, authTokenStorage, authSessionDao);
   }
 }
