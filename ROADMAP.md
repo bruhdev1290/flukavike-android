@@ -154,7 +154,6 @@ Last updated: 2026-06-27
 **Effort: 2-3 hours**
 - [ ] Certificate pinning for API and WebSocket connections
 - [ ] Screenshot prevention flag for DM screens (`FLAG_SECURE`)
-- [ ] Root/emulator detection (optional, low priority)
 - [ ] Audit for hardcoded secrets or debug logs in release builds
 
 ### Performance
