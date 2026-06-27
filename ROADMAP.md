@@ -1,371 +1,188 @@
 # Fluxer Android Client - Development Roadmap
 
-## 🔴 CRITICAL - Must Have (Do These First)
-
-### 1. Gradle Wrapper Setup
-**Priority: BLOCKING**  
-**Effort: 5 minutes**
-
-Without these files, the project cannot be built by anyone else (including CI/CD).
-
-Files needed:
-```
-gradle/
-├── wrapper/
-│   ├── gradle-wrapper.jar          (download from gradle.org)
-│   └── gradle-wrapper.properties   (specify gradle 8.2)
-├── gradlew                         (Unix wrapper script)
-└── gradlew.bat                     (Windows wrapper script)
-```
-
-Quick setup:
-```bash
-# In project root:
-gradle wrapper --gradle-version 8.2
-```
+Last updated: 2026-06-27
 
 ---
 
-### 2. Local Database (Room) - Offline Support
-**Priority: HIGH**  
-**Effort: 4-6 hours**
+## ✅ COMPLETED
 
-Currently messages disappear when app restarts. Need persistent storage.
+### Infrastructure & Build
+- [x] Gradle wrapper setup (`gradle/wrapper/`)
+- [x] Hilt dependency injection (`AppModule`, `NetworkModule`, `DatabaseModule`, `FeaturesModule`)
+- [x] Room database with entities, DAOs, and DI (`AppDatabase`, `DatabaseEntities`, `DatabaseDaos`)
+- [x] DataStore preferences (`AppPreferencesStore`, `DataStoreExt`)
+- [x] Instance configuration store (`InstanceConfigStore`, `InstanceConfig`)
+- [x] BuildConfig fields: base URL, WebSocket URL, hCaptcha site key
+- [x] Release build with minify + resource shrinking + ProGuard rules
 
-#### Implementation Checklist:
-- [x] Add Room dependencies to `app/build.gradle.kts`
-- [x] Create `@Entity` classes:
-  - `MessageEntity` (cached messages)
-  - `ChannelEntity` (cached channels)
-  - `GuildEntity` (cached servers)
-  - `PendingMessageEntity` (offline queue)
-- [x] Create `@Dao` interfaces:
-  - `MessageDao` - insert, get by channel, delete old
-  - `ChannelDao` - upsert, get by guild
-  - `PendingMessageDao` - queue for offline sending
-- [x] Create `AppDatabase` class
-- [x] Add to DI module (`DatabaseModule.kt`)
-- [x] Update `ChatRepository` to:
-  - Check database first, then fetch from API
-  - Store new messages to database
-  - Sync pending messages when online
+### Auth System (HANDS OFF — see CLAUDE.md)
+- [x] Login with session cookie + auth token
+- [x] CSRF token interception
+- [x] Secure cookie storage (EncryptedSharedPreferences)
+- [x] Auth token storage
+- [x] hCaptcha widget (callback-based, not polling)
+- [x] IP auth required flow
+- [x] WebAuthn support (`WebAuthnService`)
+- [x] Auth authenticator + interceptor chain
 
-#### Dependencies to add:
-```kotlin
-implementation("androidx.room:room-runtime:2.6.1")
-implementation("androidx.room:room-ktx:2.6.1")
-ksp("androidx.room:room-compiler:2.6.1")
-```
+### Networking
+- [x] OkHttp client with tuned timeouts (20s call timeout, retryOnConnectionFailure=false)
+- [x] Interceptor stack: baseUrlOverride → auth → csrf → clientProperties
+- [x] Retrofit + kotlinx-serialization converter
+- [x] Gateway WebSocket manager (`GatewayWebSocketManager`, `GatewayModels`)
+- [x] Multiple API services: `FluxerApiService`, `FriendsApiService`, `AvatarApiService`, `UploadApiService`, `InviteApiService`, `PinApiService`, `ReadStateApiService`, `GuildManagementApiService`, `GuildMembersApiService`
+- [x] `NetworkRetryInterceptor`, `BaseUrlOverrideInterceptor`, `ClientPropertiesInterceptor`
+- [x] Skip-auth policy for unauthenticated endpoints
+
+### Messaging & Chat
+- [x] Guild/server list with separate channel fetch (channels not embedded in guild objects)
+- [x] Message pagination via Paging 3 (`MessagePagingSource`)
+- [x] Message caching via Room
+- [x] Message bubbles: `MessageBubble`, `EnhancedMessageBubble`, `DiscordMessageBubble`
+- [x] Image/attachment support (`ChatAttachment`, `UploadApiService`)
+- [x] Coil image loading with GIF support
+- [x] Pinned messages (`PinApiService`)
+- [x] Read state tracking (`ReadStateApiService`)
+- [x] Starred channels (`StarredChannelsScreen`, `StarredChannelsViewModel`)
+
+### Voice & Calls
+- [x] LiveKit-based voice channel implementation (`LiveKitVoiceManager`)
+- [x] Voice channel screen and overlay (`VoiceChannelScreen`, `VoiceChannelOverlay`)
+- [x] Active call screen (`ActiveCallScreen`, `CallOverlay`)
+- [x] Telecom `ConnectionService` integration (`FluxerCallConnectionService`)
+- [x] Call broadcast receiver (`CallBroadcastReceiver`)
+- [x] Voice message player (`VoiceMessagePlayer`)
+- [x] Voice and call data models (`VoiceModels`, `CallModels`)
+
+### Push Notifications
+- [x] Firebase Cloud Messaging (`FluxerMessagingService`)
+- [x] UnifiedPush support (`FluxerUnifiedPushReceiver`, `UnifiedPushManager`)
+- [x] Notification handler and entry point (`FluxerNotificationHandler`, `FluxerNotificationEntryPoint`)
+- [x] Notification helper utilities (`NotificationHelper`, `NotificationPreferences`)
+- [x] Notification center screen (`NotificationCenterScreen`, `NotificationCenterViewModel`)
+- [x] Per-channel notification settings (`NotificationSettingsScreen`, `NotificationSettingsViewModel`)
+
+### Friends & Relationships
+- [x] Friends screen (`FriendsScreen`, `FriendsViewModel`)
+- [x] Friends API service and repository (`FriendsApiService`, `FriendsRepository`)
+- [x] Relationship models (`RelationshipModels`)
+
+### Direct Messages
+- [x] DM inbox screen (`MessagesScreen`, `MessagesViewModel`)
+- [x] DM conversation via chat screen
+
+### Guild Management
+- [x] Guild management repository and API service (`GuildManagementRepository`, `GuildManagementApiService`)
+- [x] Guild members API (`GuildMembersApiService`)
+- [x] Invite system (`InviteApiService`, `InviteModels`)
+- [x] Server sidebar with context menu (`ServerSidebar`, `ServerContextMenu`)
+
+### Profile & Account
+- [x] Profile screen with editing (`ProfileScreen`, `ProfileViewModel`, `ProfileRepository`)
+- [x] Profile models (`ProfileModels`)
+- [x] Account settings screen (`AccountScreen`)
+
+### Settings & Preferences
+- [x] Settings screen with sections (`SettingsScreen`, `SettingsViewModel`)
+- [x] Appearance settings (`AppearanceScreen`)
+- [x] Language settings (`LanguageScreen`)
+- [x] Accessibility settings screen (`AccessibilityScreen`)
+- [x] Storage management screen (`StorageScreen`)
+- [x] About and support screens (`AboutScreen`, `SupportScreen`)
+- [x] App preferences view model (`AppPreferencesViewModel`)
+
+### UI & Navigation
+- [x] App chrome shell with bottom nav (`AppChrome`, `ShellViewModel`)
+- [x] Compose navigation with typed routes (`FluxerRoutes`, `NavigationRepository`)
+- [x] Home state management (`HomeStateRepository`)
+- [x] Feature bottom sheets (`FeatureSheets`)
+- [x] Reusable components: `FluxerButton`, `FluxerTextField`, `ErrorState`
+- [x] CDN URL builder (`CdnUrlBuilder`)
+
+### Security
+- [x] Biometric unlock (`BiometricLockManager`)
+- [x] EncryptedSharedPreferences for session/token storage
+- [x] ProGuard/R8 enabled in release builds
+
+### Testing Infrastructure
+- [x] JUnit 4, MockK, kotlinx-coroutines-test, MockWebServer dependencies added
+- [x] Instrumented test runner configured
 
 ---
 
-### 3. Push Notifications (FCM)
-**Priority: HIGH**  
-**Effort: 3-4 hours**
+## 🟡 IN PROGRESS / PARTIALLY DONE
 
-Essential for real chat apps - users need notifications when mentioned/DMed while app is backgrounded.
+### Image Attachments
+- [x] Upload API service (`UploadApiService`)
+- [x] `ChatAttachment` composable for rendering
+- [ ] File picker integration (system file chooser)
+- [ ] Image compression before upload
+- [ ] Upload progress tracking
+- [ ] Fullscreen image viewer (tap to expand)
 
-#### Implementation Checklist:
-- [ ] Create Firebase project at https://console.firebase.google.com
-- [ ] Add `google-services.json` to `app/` directory
-- [ ] Add FCM dependencies to `app/build.gradle.kts`
-- [ ] Add `google-services` plugin to build files
-- [ ] Create `FluxerMessagingService` extending `FirebaseMessagingService`
-  - Override `onMessageReceived()` to show notifications
-  - Override `onNewToken()` to send token to server
-- [ ] Create notification channels (Android 8.0+)
-  - "Direct Messages" (high priority)
-  - "Mentions" (high priority)  
-  - "General" (default priority)
-- [ ] Add notification permission request (Android 13+)
-- [ ] Update `AndroidManifest.xml` with service declaration
-- [ ] Add API call to register FCM token with Fluxer server
-
-#### Dependencies to add:
-```kotlin
-implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-implementation("com.google.firebase:firebase-messaging")
-```
+### Error Handling
+- [x] `ErrorState` composable for error display
+- [ ] Consistent error snackbars across all screens
+- [ ] Exponential backoff for failed API calls
+- [ ] Offline mode banner
+- [ ] Specific HTTP error code handling (401 auto-logout, 429 rate limit countdown)
 
 ---
 
-## 🟡 IMPORTANT - Should Have
+## 🔴 REMAINING
 
-### 4. Image Loading & Attachments
-**Priority: MEDIUM**  
-**Effort: 3-4 hours**
-
-Users expect to share images in chat.
-
-#### Implementation Checklist:
-- [x] Add Coil for image loading (already in deps, verify configured)
-- [ ] Add file picker integration
-- [ ] Update `FluxerApiService` with multipart upload:
-  ```kotlin
-  @Multipart
-  @POST("/api/channels/{channelId}/attachments")
-  suspend fun uploadAttachment(
-      @Path("channelId") channelId: String,
-      @Part file: MultipartBody.Part
-  ): Response<Attachment>
-  ```
-- [ ] Create `FileUploadManager` for:
-  - Image compression before upload
-  - Upload progress tracking
-  - Retry on failure
-- [x] Update `MessageBubble` to show:
-  - Image thumbnails
-  - Loading state
-  - Error state with retry
-- [ ] Add image viewer (fullscreen tap-to-view)
-
-#### Dependencies:
-```kotlin
-// Already included but verify:
-implementation("io.coil-kt:coil-compose:2.5.0")
-```
-
----
-
-### 5. Unit & Integration Tests
-**Priority: MEDIUM**  
+### Unit & Integration Tests
 **Effort: 6-8 hours**
+- [ ] `AuthRepositoryTest` — login success/failure, logout
+- [ ] `SecureCookieStorageTest` — persistence, encryption, expiration
+- [ ] `ChatRepositoryTest` — WebSocket events, message caching, offline queue
+- [ ] `AuthViewModel` state machine tests
+- [ ] `ChatViewModel` message sending tests
+- [ ] Instrumented tests for critical UI flows (login → chat)
 
-Essential for reliability and confident refactoring.
-
-#### Implementation Checklist:
-- [ ] Add test dependencies:
-  ```kotlin
-  testImplementation("junit:junit:4.13.2")
-  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-  testImplementation("io.mockk:mockk:1.13.9")
-  testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
-  ```
-- [ ] Create `AuthRepositoryTest`:
-  - Test login success stores cookies
-  - Test login failure returns error
-  - Test logout clears session
-- [ ] Create `SecureCookieStorageTest`:
-  - Test cookie persistence
-  - Test encryption/decryption
-  - Test expiration handling
-- [ ] Create `ChatRepositoryTest`:
-  - Mock WebSocket events
-  - Test message caching
-  - Test offline queue
-- [ ] Create ViewModel tests:
-  - `AuthViewModel` state transitions
-  - `ChatViewModel` message sending
-- [ ] Add instrumented tests for critical UI flows
-
----
-
-### 6. Search & Pagination
-**Priority: MEDIUM**  
+### Search
 **Effort: 2-3 hours**
+- [ ] Message search API endpoint wired up
+- [ ] Search UI in chat screen (search bar, results list)
 
-Current implementation loads all messages - won't scale.
+### Push Notifications — Server Registration
+**Effort: 1-2 hours**
+- [ ] Send FCM/UnifiedPush token to Fluxer server on login and token refresh
+- [ ] Confirm server-side token storage and delivery
 
-#### Implementation Checklist:
-- [x] Update `FluxerApiService.getMessages()` - already supports `before` param
-- [x] Update `ChatRepository` with paginated loading:
-  ```kotlin
-  fun getMessagesPaginated(channelId: String): Flow<PagingData<Message>>
-  ```
-- [x] Add Paging 3 dependency and implementation
-- [x] Update `ChatScreen` with infinite scroll
-- [x] Add search API endpoint:
-  ```kotlin
-  @GET("/api/channels/{channelId}/messages/search")
-  suspend fun searchMessages(
-      @Path("channelId") channelId: String,
-      @Query("q") query: String
-  ): Response<List<Message>>
-  ```
-- [x] Add search UI to chat screen
-
-#### Dependencies:
-```kotlin
-implementation("androidx.paging:paging-runtime-ktx:3.2.1")
-implementation("androidx.paging:paging-compose:3.2.1")
-```
-
----
-
-### 7. Error Handling & Retry Logic
-**Priority: MEDIUM**  
+### Security Hardening
 **Effort: 2-3 hours**
+- [ ] Certificate pinning for API and WebSocket connections
+- [ ] Screenshot prevention flag for DM screens (`FLAG_SECURE`)
+- [ ] Root/emulator detection (optional, low priority)
+- [ ] Audit for hardcoded secrets or debug logs in release builds
 
-Better UX when network is flaky.
-
-#### Implementation Checklist:
-- [ ] Add `SnackbarHost` to all screens for error messages
-- [ ] Implement exponential backoff for API retries
-- [ ] Add "Retry" buttons for failed operations
-- [ ] Create offline mode banner
-- [ ] Handle specific error codes:
-  - 401: Session expired → auto-logout
-  - 403: Show permission error
-  - 429: Rate limit with countdown
-  - 500+: Server error with retry
-
----
-
-## 🟢 NICE TO HAVE - Polish Features
-
-### 8. User Preferences (DataStore)
-**Priority: LOW**  
+### Performance
 **Effort: 2-3 hours**
-
-Settings screen for customization.
-
-#### Implementation Checklist:
-- [ ] Create `UserPreferences` data class
-- [ ] Create `PreferencesRepository` using DataStore
-- [ ] Create Settings screen with:
-  - Theme toggle (Dark/Light/System)
-  - Notification settings per channel type
-  - Message font size
-  - Compact mode toggle
-- [ ] Persist settings across app restarts
-- [ ] Apply settings to UI components
+- [ ] Baseline profiles for faster cold start
+- [ ] Review recomposition hot spots with Android Studio profiler
+- [ ] Tune R8 rules for release APK size
 
 ---
 
-### 9. Voice Channels (WebRTC)
-**Priority: LOW**  
-**Effort: 8-12 hours**
-
-Complex feature - defer until text chat is solid.
-
-#### Implementation Checklist:
-- [ ] Add WebRTC dependency
-- [ ] Implement voice channel UI (different from text)
-- [ ] Handle audio permissions
-- [ ] Implement voice activity detection
-- [ ] Add mute/deafen controls
-- [ ] Handle audio focus (respect calls/other apps)
-
-#### Dependencies:
-```kotlin
-implementation("org.webrtc:google-webrtc:1.0.x")
-```
-
----
-
-### 10. Accessibility Improvements
-**Priority: LOW**  
-**Effort: 3-4 hours**
-
-Make app usable for everyone.
-
-#### Implementation Checklist:
-- [ ] Add `contentDescription` to all icons
-- [ ] Add `contentDescription` to avatars (username)
-- [ ] Ensure minimum touch targets (48dp)
-- [ ] Add semantic properties to message list
-- [ ] Test with TalkBack screen reader
-- [ ] Support high contrast mode
-- [ ] Respect system font size settings
-
----
-
-### 11. Performance Optimizations
-**Priority: LOW**  
-**Effort: 2-3 hours**
-
-Polish for smooth 60fps.
-
-#### Implementation Checklist:
-- [ ] Add baseline profiles for faster startup
-- [ ] Implement message list virtualization (already using LazyColumn)
-- [ ] Add image caching strategy
-- [ ] Optimize recomposition with `remember` and keys
-- [ ] Profile with Android Studio profiler
-- [ ] Reduce APK size (R8 rules, resource shrinking)
-
----
-
-### 12. Security Hardening
-**Priority: LOW**  
-**Effort: 2-3 hours**
-
-Extra security layers.
-
-#### Implementation Checklist:
-- [ ] Add certificate pinning for API calls
-- [ ] Implement root detection
-- [ ] Add screenshot prevention option (for sensitive DMs)
-- [ ] Obfuscate sensitive strings in release builds
-- [ ] Add biometric unlock option
-- [ ] Audit for hardcoded secrets
-
----
-
-## 📋 Quick Start Commands
-
-### After cloning this repo:
+## 📋 Build & Run
 
 ```bash
-# 1. Setup Gradle wrapper (CRITICAL)
-gradle wrapper --gradle-version 8.2
-
-# 2. Create local.properties
-sdk.dir=/path/to/your/Android/Sdk
-
-# 3. Open in Android Studio and sync
-
-# 4. Run on device/emulator
+# Open in Android Studio and sync, or:
 ./gradlew installDebug
+
+# Generate Room code after entity changes:
+./gradlew kspDebugKotlin
+
+# Release build:
+./gradlew assembleRelease
 ```
-
-### Adding Room (from #2):
-
-```bash
-# After adding dependencies and entities:
-./gradlew kspDebugKotlin  # Generate Room code
-```
-
-### Adding FCM (from #3):
-
-```bash
-# After adding google-services.json:
-./gradlew clean build
-```
-
----
-
-## 🎯 Suggested Implementation Order
-
-**Phase 1: Core Stability (Week 1)**
-1. Gradle wrapper (#1)
-2. Room database (#2)
-3. Basic tests (#5 for auth)
-
-**Phase 2: Production Ready (Week 2)**
-4. Push notifications (#3)
-5. Image attachments (#4)
-6. Pagination (#6)
-7. Error handling (#7)
-
-**Phase 3: Polish (Week 3-4)**
-8. User preferences (#8)
-9. Accessibility (#10)
-10. Performance (#11)
-
-**Phase 4: Advanced Features (Future)**
-11. Voice channels (#9)
-12. Security hardening (#12)
 
 ---
 
 ## 📝 Notes
 
-- All file paths assume project root is `flukavike-android/`
-- Effort estimates assume familiar with Android/Kotlin
-- Test on real devices, not just emulator
-- Keep dependencies updated (Dependabot/ Renovate)
-
----
-
-Last updated: 2026-04-01
+- Voice channels use **LiveKit**, not raw WebRTC
+- Push notifications support both **FCM** and **UnifiedPush** (ntfy-compatible)
+- Auth system is stable and load-bearing — see `CLAUDE.md` for the full list of hands-off files
+- `minSdk 26` (Android 8.0) — biometric and `ConnectionService` both require this
