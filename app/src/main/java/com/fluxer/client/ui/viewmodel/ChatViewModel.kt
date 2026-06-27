@@ -7,6 +7,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.fluxer.client.data.model.*
 import com.fluxer.client.data.remote.GatewayWebSocketManager
+import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.repository.ChatRepository
 import com.fluxer.client.data.repository.AuthRepository
 import com.fluxer.client.data.repository.GuildManagementRepository
@@ -28,8 +29,11 @@ class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val authRepository: AuthRepository,
     private val homeStateRepository: HomeStateRepository,
-    private val guildManagementRepository: GuildManagementRepository
+    private val guildManagementRepository: GuildManagementRepository,
+    private val instanceConfigStore: InstanceConfigStore
 ) : ViewModel() {
+
+    val cdnBaseUrl: String? get() = instanceConfigStore.getCdnBaseUrl()
 
     // Current user
     val currentUser: StateFlow<com.fluxer.client.data.model.User?> = authRepository.authState

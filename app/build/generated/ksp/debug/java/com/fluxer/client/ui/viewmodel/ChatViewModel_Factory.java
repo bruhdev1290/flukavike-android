@@ -1,5 +1,6 @@
 package com.fluxer.client.ui.viewmodel;
 
+import com.fluxer.client.data.local.InstanceConfigStore;
 import com.fluxer.client.data.repository.AuthRepository;
 import com.fluxer.client.data.repository.ChatRepository;
 import com.fluxer.client.data.repository.GuildManagementRepository;
@@ -33,31 +34,37 @@ public final class ChatViewModel_Factory implements Factory<ChatViewModel> {
 
   private final Provider<GuildManagementRepository> guildManagementRepositoryProvider;
 
+  private final Provider<InstanceConfigStore> instanceConfigStoreProvider;
+
   public ChatViewModel_Factory(Provider<ChatRepository> chatRepositoryProvider,
       Provider<AuthRepository> authRepositoryProvider,
       Provider<HomeStateRepository> homeStateRepositoryProvider,
-      Provider<GuildManagementRepository> guildManagementRepositoryProvider) {
+      Provider<GuildManagementRepository> guildManagementRepositoryProvider,
+      Provider<InstanceConfigStore> instanceConfigStoreProvider) {
     this.chatRepositoryProvider = chatRepositoryProvider;
     this.authRepositoryProvider = authRepositoryProvider;
     this.homeStateRepositoryProvider = homeStateRepositoryProvider;
     this.guildManagementRepositoryProvider = guildManagementRepositoryProvider;
+    this.instanceConfigStoreProvider = instanceConfigStoreProvider;
   }
 
   @Override
   public ChatViewModel get() {
-    return newInstance(chatRepositoryProvider.get(), authRepositoryProvider.get(), homeStateRepositoryProvider.get(), guildManagementRepositoryProvider.get());
+    return newInstance(chatRepositoryProvider.get(), authRepositoryProvider.get(), homeStateRepositoryProvider.get(), guildManagementRepositoryProvider.get(), instanceConfigStoreProvider.get());
   }
 
   public static ChatViewModel_Factory create(Provider<ChatRepository> chatRepositoryProvider,
       Provider<AuthRepository> authRepositoryProvider,
       Provider<HomeStateRepository> homeStateRepositoryProvider,
-      Provider<GuildManagementRepository> guildManagementRepositoryProvider) {
-    return new ChatViewModel_Factory(chatRepositoryProvider, authRepositoryProvider, homeStateRepositoryProvider, guildManagementRepositoryProvider);
+      Provider<GuildManagementRepository> guildManagementRepositoryProvider,
+      Provider<InstanceConfigStore> instanceConfigStoreProvider) {
+    return new ChatViewModel_Factory(chatRepositoryProvider, authRepositoryProvider, homeStateRepositoryProvider, guildManagementRepositoryProvider, instanceConfigStoreProvider);
   }
 
   public static ChatViewModel newInstance(ChatRepository chatRepository,
       AuthRepository authRepository, HomeStateRepository homeStateRepository,
-      GuildManagementRepository guildManagementRepository) {
-    return new ChatViewModel(chatRepository, authRepository, homeStateRepository, guildManagementRepository);
+      GuildManagementRepository guildManagementRepository,
+      InstanceConfigStore instanceConfigStore) {
+    return new ChatViewModel(chatRepository, authRepository, homeStateRepository, guildManagementRepository, instanceConfigStore);
   }
 }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,8 +26,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import com.fluxer.client.data.model.Channel
+import com.fluxer.client.data.model.Server
 import com.fluxer.client.data.model.User
 import com.fluxer.client.data.model.UserStatus
 import com.fluxer.client.data.model.displayName
@@ -50,9 +53,11 @@ fun MessagesScreen(
     onChannelSelected: (Channel) -> Unit,
     onViewProfile: (String) -> Unit = {},
     onStartCall: (String) -> Unit = {},
+    onServerSelected: (String) -> Unit = {},
     viewModel: MessagesViewModel = hiltViewModel()
 ) {
     val dmChannels by viewModel.dmChannels.collectAsState()
+    val guilds by viewModel.guilds.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val unreadCountsByChannel by viewModel.unreadCountsByChannel.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -150,6 +155,15 @@ fun MessagesScreen(
                                 }
                             }
                         )
+                        if (guilds.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            FluxerSectionTitle(title = "Servers")
+                            ServersQuickRow(
+                                servers = guilds,
+                                cdnBaseUrl = viewModel.cdnBaseUrl,
+                                onServerSelected = onServerSelected
+                            )
+                        }
                         Spacer(modifier = Modifier.height(12.dp))
                         FluxerSectionTitle(title = "Direct messages")
                     }
@@ -173,6 +187,7 @@ fun MessagesScreen(
                             channel = dmChannel,
                             unreadCount = unreadCountsByChannel[dmChannel.id] ?: 0,
                             isPinned = viewModel.isPinned(dmChannel.id),
+                            cdnBaseUrl = viewModel.cdnBaseUrl,
                             onClick = { onChannelSelected(dmChannel) },
                             onLongClick = {
                                 selectedChannel = dmChannel
@@ -189,7 +204,8 @@ fun MessagesScreen(
     if (showContextMenu && selectedChannel != null) {
         DMContextMenu(
             channel = selectedChannel!!,
-            onDismiss = { 
+            cdnBaseUrl = viewModel.cdnBaseUrl,
+            onDismiss = {
                 showContextMenu = false
                 selectedChannel = null
             },
@@ -234,6 +250,59 @@ fun MessagesScreen(
                 selectedChannel = null
             }
         )
+    }
+}
+
+@Composable
+private fun ServersQuickRow(
+    servers: List<Server>,
+    cdnBaseUrl: String?,
+    onServerSelected: (String) -> Unit
+) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)
+    ) {
+        items(servers) { server ->
+            val iconUrl = com.fluxer.client.util.CdnUrlBuilder.serverIconUrl(cdnBaseUrl, server.id, server.iconUrl)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .width(72.dp)
+                    .clickable { onServerSelected(server.id) }
+            ) {
+                Surface(
+                    modifier = Modifier.size(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = VelvetSurface
+                ) {
+                    if (iconUrl != null) {
+                        coil.compose.AsyncImage(
+                            model = iconUrl,
+                            contentDescription = server.name,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = server.name.take(1).uppercase(),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextPrimary
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = server.name,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
     }
 }
 
@@ -287,6 +356,7 @@ private fun DMChannelItemDiscord(
     channel: Channel,
     unreadCount: Int,
     isPinned: Boolean,
+    cdnBaseUrl: String? = null,
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
@@ -316,9 +386,10 @@ private fun DMChannelItemDiscord(
                 shape = CircleShape,
                 color = VelvetSurface
             ) {
-                if (recipient.avatarUrl != null) {
+                val resolvedAvatarUrl = com.fluxer.client.util.CdnUrlBuilder.avatarUrl(cdnBaseUrl, recipient.id, recipient.avatarUrl)
+                if (resolvedAvatarUrl != null) {
                     AsyncImage(
-                        model = recipient.avatarUrl,
+                        model = resolvedAvatarUrl,
                         contentDescription = recipient.username,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -444,6 +515,7 @@ private fun SystemBadge() {
 @Composable
 private fun DMContextMenu(
     channel: Channel,
+    cdnBaseUrl: String? = null,
     onDismiss: () -> Unit,
     onViewProfile: () -> Unit,
     onStartCall: () -> Unit,
@@ -497,9 +569,10 @@ private fun DMContextMenu(
                     shape = CircleShape,
                     color = VelvetSurface
                 ) {
-                    if (recipient.avatarUrl != null) {
+                    val resolvedContextAvatarUrl = com.fluxer.client.util.CdnUrlBuilder.avatarUrl(cdnBaseUrl, recipient.id, recipient.avatarUrl)
+                if (resolvedContextAvatarUrl != null) {
                         AsyncImage(
-                            model = recipient.avatarUrl,
+                            model = resolvedContextAvatarUrl,
                             contentDescription = recipient.username,
                             modifier = Modifier.fillMaxSize()
                         )

@@ -27,6 +27,8 @@ import com.fluxer.client.ui.components.FluxerLoadingState
 import com.fluxer.client.ui.components.FluxerPageScaffold
 import com.fluxer.client.ui.components.FluxerPanel
 import com.fluxer.client.ui.theme.*
+import com.fluxer.client.data.local.GestureSensitivity
+import com.fluxer.client.ui.viewmodel.AppPreferencesViewModel
 import com.fluxer.client.ui.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,11 +40,18 @@ fun SettingsScreen(
     onNavigateToAccount: () -> Unit,
     onNavigateToStorage: () -> Unit,
     onNavigateToAbout: () -> Unit,
+    onNavigateToAppearance: () -> Unit = {},
+    onNavigateToAccessibility: () -> Unit = {},
     onLogout: () -> Unit,
-    viewModel: SettingsViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel(),
+    prefsViewModel: AppPreferencesViewModel = hiltViewModel()
 ) {
     val isLoading by viewModel.isLoading.collectAsState()
     val notice by viewModel.notice.collectAsState()
+    val biometricLockEnabled by prefsViewModel.biometricLockEnabled.collectAsState()
+    val accentColor by prefsViewModel.accentColor.collectAsState()
+    val gesturesEnabled by prefsViewModel.gesturesEnabled.collectAsState()
+    val gestureSensitivity by prefsViewModel.gestureSensitivity.collectAsState()
     
     FluxerPageScaffold(
         title = "Settings",
@@ -85,20 +94,163 @@ fun SettingsScreen(
 
                     SettingsSection("App") {
                         SettingsMenuItem(
+                            icon = Icons.Default.Palette,
+                            title = "Appearance",
+                            subtitle = "Accent color, theme presets, and display",
+                            onClick = onNavigateToAppearance
+                        )
+                        SettingsDivider()
+                        SettingsMenuItem(
+                            icon = Icons.Default.Accessibility,
+                            title = "Accessibility",
+                            subtitle = "Font size, text scale, and readability",
+                            onClick = onNavigateToAccessibility
+                        )
+                        SettingsDivider()
+                        SettingsMenuItem(
                             icon = Icons.Default.Storage,
                             title = "Storage & Data",
                             subtitle = "Cache, downloads, and media storage",
                             onClick = onNavigateToStorage
                         )
+                        SettingsDivider()
+                        // Gestures toggle + sensitivity inline
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { prefsViewModel.setGesturesEnabled(!gesturesEnabled) }
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    modifier = Modifier.size(40.dp),
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = VelvetMid
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.SwipeRight,
+                                            contentDescription = null,
+                                            tint = if (gesturesEnabled) accentColor else TextSecondary,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Swipe Gestures",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = TextPrimary,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = "Swipe to open channel list, close drawers, and navigate",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = TextMuted
+                                    )
+                                }
+                                Switch(
+                                    checked = gesturesEnabled,
+                                    onCheckedChange = { prefsViewModel.setGesturesEnabled(it) },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = TextPrimary,
+                                        checkedTrackColor = accentColor
+                                    )
+                                )
+                            }
+                            if (gesturesEnabled) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 72.dp, end = 16.dp, bottom = 14.dp)
+                                ) {
+                                    Text(
+                                        text = "Sensitivity",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = TextMuted
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        GestureSensitivity.entries.forEach { option ->
+                                            val selected = gestureSensitivity == option
+                                            Surface(
+                                                shape = RoundedCornerShape(20.dp),
+                                                color = if (selected) accentColor.copy(alpha = 0.18f) else VelvetMid,
+                                                modifier = Modifier.clickable { prefsViewModel.setGestureSensitivity(option) }
+                                            ) {
+                                                Text(
+                                                    text = option.displayName,
+                                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                                                    style = MaterialTheme.typography.labelLarge,
+                                                    color = if (selected) accentColor else TextMuted,
+                                                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    SettingsSection("Developer & Support") {
+                    SettingsSection("Privacy & Security") {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { prefsViewModel.setBiometricLock(!biometricLockEnabled) }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            androidx.compose.material3.Surface(
+                                modifier = Modifier.size(40.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                color = com.fluxer.client.ui.theme.VelvetMid
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Fingerprint,
+                                        contentDescription = null,
+                                        tint = if (biometricLockEnabled) accentColor else com.fluxer.client.ui.theme.TextSecondary,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Biometric Lock",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = com.fluxer.client.ui.theme.TextPrimary,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "Require biometric authentication when opening the app",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = com.fluxer.client.ui.theme.TextMuted
+                                )
+                            }
+                            Switch(
+                                checked = biometricLockEnabled,
+                                onCheckedChange = { prefsViewModel.setBiometricLock(it) },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = com.fluxer.client.ui.theme.TextPrimary,
+                                    checkedTrackColor = accentColor
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    SettingsSection("Support") {
                         SettingsMenuItem(
                             icon = Icons.AutoMirrored.Filled.Help,
                             title = "Help & Support",
-                            subtitle = "Get help with Fluxer",
+                            subtitle = "Get help with Flukavike",
                             onClick = onNavigateToSupport
                         )
                         SettingsDivider()

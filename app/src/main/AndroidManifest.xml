@@ -9,6 +9,9 @@
     <!-- Notification permissions -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
+    <!-- Biometric lock -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
     <!-- Voice/Call permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />

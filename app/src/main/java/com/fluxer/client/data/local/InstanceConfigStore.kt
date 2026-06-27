@@ -56,6 +56,13 @@ class InstanceConfigStore @Inject constructor(
             ?: BuildConfig.FLUXER_WS_URL
     }
 
+    fun getCdnBaseUrl(): String? {
+        val snapshot = prefs.getString(KEY_INSTANCE_SNAPSHOT, null) ?: return null
+        return runCatching {
+            Json.decodeFromString<InstanceConfig>(snapshot).resolvedCdn()
+        }.getOrNull()
+    }
+
     fun getPublicVapidKey(): String? {
         val snapshot = prefs.getString(KEY_INSTANCE_SNAPSHOT, null) ?: return null
         return runCatching {

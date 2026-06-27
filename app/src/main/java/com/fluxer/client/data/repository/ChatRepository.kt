@@ -61,6 +61,9 @@ class ChatRepository @Inject constructor(
 
     private val _dmChannelsFlow = MutableStateFlow<List<Channel>>(emptyList())
     val dmChannelsFlow: StateFlow<List<Channel>> = _dmChannelsFlow.asStateFlow()
+
+    private val _guildsFlow = MutableStateFlow<List<Server>>(emptyList())
+    val guilds: StateFlow<List<Server>> = _guildsFlow.asStateFlow()
     
     // Voice state cache per channel
     private val voiceStateCache = mutableMapOf<String, MutableStateFlow<List<com.fluxer.client.data.model.VoiceStateUpdateEvent>>>()
@@ -662,6 +665,14 @@ class ChatRepository @Inject constructor(
                 is GatewayWebSocketManager.GatewayEvent.Ready -> {
                     cacheChannelsFromReady(event.data)
                     cacheDmChannels(event.data.privateChannels)
+                    _guildsFlow.value = event.data.guilds
+                    // Fetch full guild list (with names + icons) to fill in what READY omits
+                    scope.launch {
+                        val result = getUserGuilds()
+                        result.onSuccess { servers ->
+                            if (servers.isNotEmpty()) _guildsFlow.value = servers
+                        }
+                    }
                 }
                 is GatewayWebSocketManager.GatewayEvent.MessageCreate -> {
                     addMessageToCache(event.message.channelId, event.message)
@@ -704,17 +715,25 @@ class ChatRepository @Inject constructor(
                         channelCache[event.guild.id] = event.guild.channels
                         _channelCacheFlow.value = channelCache.toMap()
                     }
+                    val current = _guildsFlow.value.toMutableList()
+                    val idx = current.indexOfFirst { it.id == event.guild.id }
+                    if (idx >= 0) current[idx] = event.guild else current.add(event.guild)
+                    _guildsFlow.value = current
                 }
                 is GatewayWebSocketManager.GatewayEvent.GuildUpdate -> {
-                    // Channels may not be present in guild update, only update if they are
                     if (event.guild.channels.isNotEmpty()) {
                         channelCache[event.guild.id] = event.guild.channels
                         _channelCacheFlow.value = channelCache.toMap()
                     }
+                    val current = _guildsFlow.value.toMutableList()
+                    val idx = current.indexOfFirst { it.id == event.guild.id }
+                    if (idx >= 0) current[idx] = event.guild
+                    _guildsFlow.value = current
                 }
                 is GatewayWebSocketManager.GatewayEvent.GuildDelete -> {
                     channelCache.remove(event.guildId)
                     _channelCacheFlow.value = channelCache.toMap()
+                    _guildsFlow.value = _guildsFlow.value.filter { it.id != event.guildId }
                 }
                 is GatewayWebSocketManager.GatewayEvent.VoiceStateUpdate -> {
                     updateVoiceStateCache(event.data)

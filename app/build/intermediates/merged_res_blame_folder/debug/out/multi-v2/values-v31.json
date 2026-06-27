@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.fluxer.client.app-mergeDebugResources-80:/values-v31/values-v31.xml",
+            "outputFile": "com.fluxer.client.app-mergeDebugResources-83:/values-v31/values-v31.xml",
             "map": [
                 {
                     "source": "/Users/andrewgonzalez/.gradle/caches/transforms-3/436518e38ed1a439541309eff4269a9b/transformed/core-splashscreen-1.0.1/res/values-v31/values-v31.xml",

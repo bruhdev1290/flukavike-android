@@ -5,7 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
@@ -58,6 +59,7 @@ import com.fluxer.client.navigation.RoutePaths
 import com.fluxer.client.navigation.ShellBranch
 import com.fluxer.client.navigation.routeFromIntent
 import com.fluxer.client.ui.screens.AboutScreen
+import com.fluxer.client.ui.screens.AccessibilityScreen
 import com.fluxer.client.ui.screens.AccountScreen
 import com.fluxer.client.ui.screens.ActiveCallScreen
 import com.fluxer.client.ui.screens.AppearanceScreen
@@ -81,15 +83,23 @@ import com.fluxer.client.ui.theme.TextMuted
 import com.fluxer.client.ui.theme.TextPrimary
 import com.fluxer.client.ui.theme.VelvetBlack
 import com.fluxer.client.ui.theme.VelvetDark
+import com.fluxer.client.ui.viewmodel.AppPreferencesViewModel
 import com.fluxer.client.ui.viewmodel.AuthViewModel
 import com.fluxer.client.ui.viewmodel.ShellUiState
 import com.fluxer.client.ui.viewmodel.ShellViewModel
+import com.fluxer.client.data.local.AppPreferencesStore
+import com.fluxer.client.util.BiometricLockManager
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
+    @Inject lateinit var appPreferencesStore: AppPreferencesStore
+
     private val incomingRoute = mutableStateOf<FluxerRoute?>(null)
+    private val isLocked = mutableStateOf(false)
+    private var wentToBackground = false
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -108,12 +118,44 @@ class MainActivity : ComponentActivity() {
         handleNotificationIntent(intent)
 
         setContent {
-            FluxerTheme {
+            AppThemeWrapper {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    FluxerApp(initialRoute = incomingRoute.value)
+                    val locked by isLocked
+                    if (locked) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(VelvetBlack),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Default.Fingerprint,
+                                    contentDescription = null,
+                                    tint = PhantomRed,
+                                    modifier = Modifier.size(72.dp)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "Flukavike is locked",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = TextPrimary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Authenticate to continue",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextMuted
+                                )
+                            }
+                        }
+                    } else {
+                        FluxerApp(initialRoute = incomingRoute.value)
+                    }
                 }
             }
         }
@@ -124,6 +166,26 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
         incomingRoute.value = routeFromIntent(intent)
         handleNotificationIntent(intent)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (appPreferencesStore.biometricLockEnabled.value) {
+            wentToBackground = true
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (wentToBackground && appPreferencesStore.biometricLockEnabled.value) {
+            wentToBackground = false
+            isLocked.value = true
+            BiometricLockManager.showPrompt(
+                activity = this,
+                onSuccess = { isLocked.value = false },
+                onFailed = { finishAffinity() }
+            )
+        }
     }
 
     private fun requestPermissions() {
@@ -160,6 +222,18 @@ class MainActivity : ComponentActivity() {
                     "action=${it.getStringExtra("action")}"
             )
         }
+    }
+}
+
+@Composable
+private fun AppThemeWrapper(
+    prefsVm: AppPreferencesViewModel = hiltViewModel(),
+    content: @Composable () -> Unit
+) {
+    val accentColor by prefsVm.accentColor.collectAsState()
+    val fontScale by prefsVm.fontScale.collectAsState()
+    FluxerTheme(accentColor = accentColor, fontScale = fontScale.scale) {
+        content()
     }
 }
 
@@ -252,6 +326,9 @@ private fun ShellContent(
             },
             onStartCall = { channelId ->
                 shellViewModel.navigate(FluxerRoute.DmCall(channelId))
+            },
+            onServerSelected = { guildId ->
+                shellViewModel.navigate(FluxerRoute.Guild(guildId))
             }
         )
         path.startsWith("/channels/@me/") && path.endsWith("/call") -> {
@@ -310,6 +387,8 @@ private fun ShellContent(
             onNavigateToAccount = { shellViewModel.navigateToPath("/settings/account") },
             onNavigateToStorage = { shellViewModel.navigateToPath("/settings/storage") },
             onNavigateToAbout = { shellViewModel.navigateToPath("/settings/about") },
+            onNavigateToAppearance = { shellViewModel.navigateToPath("/settings/appearance") },
+            onNavigateToAccessibility = { shellViewModel.navigateToPath("/settings/accessibility") },
             onLogout = authViewModel::logout
         )
         path.startsWith("/settings/guild/") -> PlaceholderScreen(
@@ -322,7 +401,8 @@ private fun ShellContent(
             onBack = { shellViewModel.navigate(FluxerRoute.You) },
             onLogout = authViewModel::logout
         )
-        path.startsWith("/settings/appearance") -> AppearanceScreen(onBack = { shellViewModel.navigate(FluxerRoute.You) })
+        path.startsWith("/settings/appearance") -> AppearanceScreen(onBack = { shellViewModel.navigate(FluxerRoute.Settings) })
+        path.startsWith("/settings/accessibility") -> AccessibilityScreen(onBack = { shellViewModel.navigate(FluxerRoute.Settings) })
         path.startsWith("/settings/storage") -> StorageScreen(onBack = { shellViewModel.navigate(FluxerRoute.You) })
         path.startsWith("/settings/language") -> LanguageScreen(onBack = { shellViewModel.navigate(FluxerRoute.You) })
         path.startsWith("/settings/notifications") -> NotificationSettingsScreen(

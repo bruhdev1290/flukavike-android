@@ -31,6 +31,7 @@ import com.fluxer.client.data.model.Message
 import com.fluxer.client.data.model.Reaction
 import com.fluxer.client.data.model.User
 import com.fluxer.client.ui.theme.*
+import com.fluxer.client.util.CdnUrlBuilder
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -43,6 +44,7 @@ fun MessageBubble(
     message: Message,
     isOwnMessage: Boolean,
     showAvatar: Boolean,
+    cdnBaseUrl: String? = null,
     onDelete: () -> Unit,
     onReply: () -> Unit,
     onAddReaction: (String) -> Unit,
@@ -72,6 +74,7 @@ fun MessageBubble(
                 UserAvatar(
                     user = message.author,
                     size = 40.dp,
+                    cdnBaseUrl = cdnBaseUrl,
                     modifier = Modifier.padding(end = 12.dp),
                     onClick = if (onAvatarClick != null && message.author?.id != null)
                         { { onAvatarClick(message.author.id) } } else null
@@ -134,6 +137,7 @@ fun MessageBubble(
                         message.replyTo?.let { replyMessage ->
                             ReplyPreview(
                                 message = replyMessage,
+                                cdnBaseUrl = cdnBaseUrl,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                         }
@@ -292,6 +296,7 @@ fun MessageBubble(
 @Composable
 private fun ReplyPreview(
     message: Message,
+    cdnBaseUrl: String? = null,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -330,10 +335,11 @@ private fun ReplyPreview(
             modifier = Modifier.padding(start = 4.dp)
         ) {
             // Author avatar (small)
-            if (!message.author?.avatarUrl.isNullOrBlank()) {
+            val replyAvatarUrl = CdnUrlBuilder.avatarUrl(cdnBaseUrl, message.author?.id ?: "", message.author?.avatarUrl)
+            if (replyAvatarUrl != null) {
                 SubcomposeAsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(message.author?.avatarUrl)
+                        .data(replyAvatarUrl)
                         .crossfade(true)
                         .build(),
                     contentDescription = null,
@@ -508,6 +514,7 @@ private fun EmojiPickerDialog(
 fun UserAvatar(
     user: User?,
     size: androidx.compose.ui.unit.Dp,
+    cdnBaseUrl: String? = null,
     modifier: Modifier = Modifier,
     showStatus: Boolean = true,
     onClick: (() -> Unit)? = null,
@@ -529,11 +536,12 @@ fun UserAvatar(
             color = VelvetSurface,
             border = androidx.compose.foundation.BorderStroke(2.dp, BorderSubtle)
         ) {
-            if (!user?.avatarUrl.isNullOrBlank()) {
+            val resolvedAvatarUrl = CdnUrlBuilder.avatarUrl(cdnBaseUrl, user?.id ?: "", user?.avatarUrl)
+            if (resolvedAvatarUrl != null) {
                 // Load user avatar image
                 SubcomposeAsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(user?.avatarUrl)
+                        .data(resolvedAvatarUrl)
                         .crossfade(true)
                         .build(),
                     contentDescription = user?.username ?: "User",

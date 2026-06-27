@@ -13,12 +13,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Policy
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Update
-import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -102,7 +98,7 @@ fun AboutScreen(
             
             // App Name
             Text(
-                text = "Fluxer",
+                text = "Flukavike",
                 style = MaterialTheme.typography.headlineMedium,
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold
@@ -176,38 +172,6 @@ fun AboutScreen(
             // Links Section
             SettingsSection(title = "Links") {
                 AboutLinkItem(
-                    icon = Icons.Default.Description,
-                    title = "Terms of Service",
-                    onClick = {
-                        openUrl(context, "https://fluxer.app/terms")
-                    }
-                )
-                SettingsDivider()
-                AboutLinkItem(
-                    icon = Icons.Default.Policy,
-                    title = "Privacy Policy",
-                    onClick = {
-                        openUrl(context, "https://fluxer.app/privacy")
-                    }
-                )
-                SettingsDivider()
-                AboutLinkItem(
-                    icon = Icons.Default.Security,
-                    title = "Security",
-                    onClick = {
-                        openUrl(context, "https://fluxer.app/security")
-                    }
-                )
-                SettingsDivider()
-                AboutLinkItem(
-                    icon = Icons.Default.VerifiedUser,
-                    title = "Acknowledgements",
-                    onClick = {
-                        openUrl(context, "https://fluxer.app/acknowledgements")
-                    }
-                )
-                SettingsDivider()
-                AboutLinkItem(
                     icon = Icons.Default.Code,
                     title = "Open Source",
                     subtitle = "View source code on GitHub",
@@ -225,7 +189,6 @@ fun AboutScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
                     .clickable {
-                        // Open Play Store
                         openUrl(context, "https://play.google.com/store/apps/details?id=com.fluxer.client")
                     },
                 color = VelvetSurface,
@@ -246,7 +209,7 @@ fun AboutScreen(
                     
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Rate Fluxer",
+                            text = "Rate Flukavike",
                             style = MaterialTheme.typography.bodyLarge,
                             color = TextPrimary,
                             fontWeight = FontWeight.Medium
@@ -271,16 +234,16 @@ fun AboutScreen(
             
             // Footer
             Text(
-                text = "Made with ❤️ by the Fluxer Team",
+                text = "Made with ❤️ by Andrew",
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextMuted,
                 textAlign = TextAlign.Center
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
-                text = "© 2026 Fluxer Inc. All rights reserved.",
+                text = "© 2026 Andrew. All rights reserved.",
                 style = MaterialTheme.typography.bodySmall,
                 color = TextMuted,
                 textAlign = TextAlign.Center

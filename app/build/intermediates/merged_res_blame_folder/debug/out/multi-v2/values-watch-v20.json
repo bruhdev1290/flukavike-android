@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.fluxer.client.app-mergeDebugResources-80:/values-watch-v20/values-watch-v20.xml",
+            "outputFile": "com.fluxer.client.app-mergeDebugResources-83:/values-watch-v20/values-watch-v20.xml",
             "map": [
                 {
                     "source": "/Users/andrewgonzalez/.gradle/caches/transforms-3/436518e38ed1a439541309eff4269a9b/transformed/core-splashscreen-1.0.1/res/values-watch-v20/values-watch-v20.xml",
@@ -18,6 +18,25 @@
                         "startOffsets": "715,789,865,940,1017,1088,1156,1226",
                         "endColumns": "73,75,74,76,70,67,69,67",
                         "endOffsets": "784,860,935,1012,1083,1151,1221,1289"
+                    }
+                },
+                {
+                    "source": "/Users/andrewgonzalez/.gradle/caches/transforms-3/97b0ca3cdccbc13b695a4366c2075390/transformed/appcompat-1.6.1/res/values-watch-v20/values-watch-v20.xml",
+                    "from": {
+                        "startLines": "2,5,8",
+                        "startColumns": "4,4,4",
+                        "startOffsets": "55,214,385",
+                        "endLines": "4,7,10",
+                        "endColumns": "12,12,12",
+                        "endOffsets": "209,380,553"
+                    },
+                    "to": {
+                        "startLines": "18,21,24",
+                        "startColumns": "4,4,4",
+                        "startOffsets": "1294,1453,1624",
+                        "endLines": "20,23,26",
+                        "endColumns": "12,12,12",
+                        "endOffsets": "1448,1619,1792"
                     }
                 },
                 {

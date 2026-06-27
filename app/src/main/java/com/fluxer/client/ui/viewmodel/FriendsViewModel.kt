@@ -2,6 +2,7 @@ package com.fluxer.client.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.model.Relationship
 import com.fluxer.client.data.repository.FriendsRepository
 import com.fluxer.client.util.Result
@@ -12,8 +13,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FriendsViewModel @Inject constructor(
-    private val repository: FriendsRepository
+    private val repository: FriendsRepository,
+    private val instanceConfigStore: InstanceConfigStore
 ) : ViewModel() {
+
+    val cdnBaseUrl: String? get() = instanceConfigStore.getCdnBaseUrl()
 
     private val _relationships = MutableStateFlow<List<Relationship>>(emptyList())
 

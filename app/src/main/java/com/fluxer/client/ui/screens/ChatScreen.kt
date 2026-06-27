@@ -8,8 +8,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import com.fluxer.client.data.local.GestureSensitivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
@@ -49,6 +56,7 @@ import com.fluxer.client.data.model.displayName
 import com.fluxer.client.data.model.UserStatus
 import com.fluxer.client.ui.components.*
 import com.fluxer.client.ui.theme.*
+import com.fluxer.client.ui.viewmodel.AppPreferencesViewModel
 import com.fluxer.client.ui.viewmodel.ChatViewModel
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -67,7 +75,8 @@ fun ChatScreen(
     initialGuildId: String? = null,
     initialChannelId: String? = null,
     targetMessageId: String? = null,
-    viewModel: ChatViewModel = hiltViewModel()
+    viewModel: ChatViewModel = hiltViewModel(),
+    prefsViewModel: AppPreferencesViewModel = hiltViewModel()
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
     val selectedChannel by viewModel.selectedChannel.collectAsState()
@@ -96,6 +105,9 @@ fun ChatScreen(
     val invitePreview by viewModel.invitePreview.collectAsState()
     val editingMessage by viewModel.editingMessage.collectAsState()
     val activeChannel = selectedChannel
+
+    val gesturesEnabled by prefsViewModel.gesturesEnabled.collectAsState()
+    val gestureSensitivity by prefsViewModel.gestureSensitivity.collectAsState()
 
     var showCustomStatus by remember { mutableStateOf(false) }
     var showJoinServer by remember { mutableStateOf(false) }
@@ -547,6 +559,7 @@ fun ChatScreen(
                                                 message = message,
                                                 isOwnMessage = isOwnMessage,
                                                 showAvatar = showAvatar,
+                                                cdnBaseUrl = viewModel.cdnBaseUrl,
                                                 onDelete = { viewModel.deleteMessage(message.id) },
                                                 onReply = { viewModel.startReply(message) },
                                                 onAddReaction = { emoji ->
@@ -708,71 +721,29 @@ fun ChatScreen(
                 }
             }
             
-            // Compact Channel Drawer - Slides OVER the content, not replacing server sidebar
-            if (isCompact && channelDrawerOpen && channels.isNotEmpty()) {
-                // Backdrop to close drawer when clicking outside
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f))
-                        .clickable { channelDrawerOpen = false }
-                )
-                
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(280.dp)
-                        .background(VelvetDark)
-                ) {
-                        Column {
-                            // Drawer Header
-                            Surface(
-                                color = VelvetDark,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = selectedServer?.name ?: "Channels",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = TextPrimary,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    
-                                    IconButton(
-                                        onClick = { channelDrawerOpen = false }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Menu,
-                                            contentDescription = "Close",
-                                            tint = TextSecondary
-                                        )
-                                    }
-                                }
-                            }
-                            
-                            // Channel List
-                            ChannelListContent(
-                                channels = channels,
-                                selectedChannelId = activeChannel?.id,
-                                onChannelSelected = {
-                                    viewModel.selectChannel(it)
-                                    channelDrawerOpen = false
-                                },
-                                onNavigateToVoiceChannel = {
-                                    channelDrawerOpen = false
-                                    onNavigateToVoiceChannel(it)
-                                },
-                                unreadCountsByChannel = unreadCountsByChannel,
-                                favoriteChannelIds = favoriteChannelIds,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
+            // Gesture edge zone + animated channel drawer — isolated composable
+            // so its animation recompositions don't affect the ServerSidebar above
+            if (isCompact && channels.isNotEmpty()) {
+                ChannelDrawerOverlay(
+                    open = channelDrawerOpen,
+                    serverName = selectedServer?.name ?: "Channels",
+                    channels = channels,
+                    selectedChannelId = activeChannel?.id,
+                    unreadCountsByChannel = unreadCountsByChannel,
+                    favoriteChannelIds = favoriteChannelIds,
+                    gesturesEnabled = gesturesEnabled,
+                    gestureSensitivity = gestureSensitivity,
+                    onOpen = { channelDrawerOpen = true },
+                    onClose = { channelDrawerOpen = false },
+                    onChannelSelected = {
+                        viewModel.selectChannel(it)
+                        channelDrawerOpen = false
+                    },
+                    onNavigateToVoiceChannel = {
+                        channelDrawerOpen = false
+                        onNavigateToVoiceChannel(it)
                     }
+                )
             }
             
             error?.let { errorMessage ->
@@ -1041,6 +1012,125 @@ private fun AttachmentPreviewBar(
                 color = PhantomRed,
                 trackColor = VelvetDark
             )
+        }
+    }
+}
+
+// Isolated composable so its animation recompositions don't propagate up to ChatScreen
+// and don't affect ServerSidebar's touch handling.
+@Composable
+private fun BoxScope.ChannelDrawerOverlay(
+    open: Boolean,
+    serverName: String,
+    channels: List<com.fluxer.client.data.model.Channel>,
+    selectedChannelId: String?,
+    unreadCountsByChannel: Map<String, Int>,
+    favoriteChannelIds: Set<String>,
+    gesturesEnabled: Boolean,
+    gestureSensitivity: GestureSensitivity,
+    onOpen: () -> Unit,
+    onClose: () -> Unit,
+    onChannelSelected: (com.fluxer.client.data.model.Channel) -> Unit,
+    onNavigateToVoiceChannel: (String) -> Unit,
+) {
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    var edgeDragAccum by remember { mutableFloatStateOf(0f) }
+    var closeDragAccum by remember { mutableFloatStateOf(0f) }
+
+    val drawerOffsetX by animateDpAsState(
+        targetValue = if (open) 0.dp else (-280.dp),
+        animationSpec = tween(220),
+        label = "drawerOffsetX"
+    )
+    val isAnimatingOut = !open && drawerOffsetX > (-280.dp)
+
+    // Edge swipe zone — only when closed
+    if (gesturesEnabled && !open) {
+        Box(
+            modifier = Modifier
+                .width(24.dp)
+                .fillMaxHeight()
+                .align(Alignment.CenterStart)
+                .draggable(
+                    orientation = Orientation.Horizontal,
+                    state = rememberDraggableState { delta ->
+                        if (delta > 0) {
+                            edgeDragAccum += delta
+                            val threshold = with(density) { gestureSensitivity.thresholdDp.dp.toPx() }
+                            if (edgeDragAccum >= threshold) {
+                                onOpen()
+                                edgeDragAccum = 0f
+                            }
+                        }
+                    },
+                    onDragStopped = { edgeDragAccum = 0f }
+                )
+        )
+    }
+
+    // Backdrop — instant show/hide (no animation) so it never lingers and blocks taps
+    if (open) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f))
+                .clickable { onClose() }
+        )
+    }
+
+    // Drawer panel — animated slide, kept alive during exit animation
+    if (open || isAnimatingOut) {
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(280.dp)
+                .offset(x = drawerOffsetX)
+                .background(VelvetDark)
+                .draggable(
+                    enabled = gesturesEnabled,
+                    orientation = Orientation.Horizontal,
+                    state = rememberDraggableState { delta ->
+                        if (delta < 0) {
+                            closeDragAccum += -delta
+                            val threshold = with(density) { gestureSensitivity.thresholdDp.dp.toPx() }
+                            if (closeDragAccum >= threshold) {
+                                onClose()
+                                closeDragAccum = 0f
+                            }
+                        } else {
+                            closeDragAccum = 0f
+                        }
+                    },
+                    onDragStopped = { closeDragAccum = 0f }
+                )
+        ) {
+            Column {
+                Surface(color = VelvetDark, modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = serverName,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = TextPrimary,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = onClose) {
+                            Icon(Icons.Default.Menu, contentDescription = "Close", tint = TextSecondary)
+                        }
+                    }
+                }
+                ChannelListContent(
+                    channels = channels,
+                    selectedChannelId = selectedChannelId,
+                    onChannelSelected = onChannelSelected,
+                    onNavigateToVoiceChannel = onNavigateToVoiceChannel,
+                    unreadCountsByChannel = unreadCountsByChannel,
+                    favoriteChannelIds = favoriteChannelIds,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
     }
 }

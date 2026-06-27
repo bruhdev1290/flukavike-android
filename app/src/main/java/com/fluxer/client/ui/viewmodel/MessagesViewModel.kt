@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.fluxer.client.data.model.Channel
 import com.fluxer.client.data.model.ChannelType
 import com.fluxer.client.data.model.displayName
+import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.repository.AuthRepository
 import com.fluxer.client.data.repository.ChatRepository
 import com.fluxer.client.data.repository.HomeStateRepository
@@ -20,8 +21,11 @@ import javax.inject.Inject
 class MessagesViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val homeStateRepository: HomeStateRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val instanceConfigStore: InstanceConfigStore
 ) : ViewModel() {
+
+    val cdnBaseUrl: String? get() = instanceConfigStore.getCdnBaseUrl()
 
     private val _allDmChannels = MutableStateFlow<List<Channel>>(emptyList())
     private val _dmChannels = MutableStateFlow<List<Channel>>(emptyList())
@@ -39,6 +43,8 @@ class MessagesViewModel @Inject constructor(
 
     val unreadCountsByChannel: StateFlow<Map<String, Int>> = homeStateRepository.unreadCountsByChannel
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    val guilds = chatRepository.guilds
 
     init {
         viewModelScope.launch {

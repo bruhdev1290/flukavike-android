@@ -182,6 +182,7 @@ fun FriendsScreen(
                         RelationshipRow(
                             relationship = relationship,
                             tab = selectedTab,
+                            cdnBaseUrl = viewModel.cdnBaseUrl,
                             onMessage = { onStartDm(relationship.user.id) },
                             onAccept = { viewModel.sendFriendRequest() },
                             onRemove = { viewModel.removeRelationship(relationship.user.id) },
@@ -199,6 +200,7 @@ fun FriendsScreen(
 private fun RelationshipRow(
     relationship: Relationship,
     tab: Int,
+    cdnBaseUrl: String? = null,
     onMessage: () -> Unit,
     onAccept: () -> Unit,
     onRemove: () -> Unit,
@@ -213,9 +215,10 @@ private fun RelationshipRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Avatar
-        if (!user.avatarUrl.isNullOrBlank()) {
+        val resolvedAvatarUrl = com.fluxer.client.util.CdnUrlBuilder.avatarUrl(cdnBaseUrl, user.id, user.avatarUrl)
+        if (resolvedAvatarUrl != null) {
             AsyncImage(
-                model = user.avatarUrl,
+                model = resolvedAvatarUrl,
                 contentDescription = null,
                 modifier = Modifier.size(40.dp).clip(CircleShape)
             )

@@ -36,6 +36,7 @@ fun EnhancedMessageBubble(
     message: Message,
     isOwnMessage: Boolean,
     showAvatar: Boolean,
+    cdnBaseUrl: String? = null,
     onDelete: () -> Unit,
     onReply: (Message) -> Unit = {},
     onReact: (String) -> Unit = {},
@@ -68,6 +69,7 @@ fun EnhancedMessageBubble(
                 UserAvatar(
                     user = message.author,
                     size = 40.dp,
+                    cdnBaseUrl = cdnBaseUrl,
                     modifier = Modifier.padding(end = 12.dp)
                 )
             } else if (!isOwnMessage) {

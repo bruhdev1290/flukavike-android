@@ -1,61 +1,58 @@
 package com.fluxer.client.ui.theme
 
 import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.Density
 import androidx.core.view.WindowCompat
 
-/**
- * Fluxer Dark Theme - Persona 5 Inspired
- * Sharp, high-contrast gaming aesthetic
- */
+val LocalAccentColor = compositionLocalOf { PhantomRed }
 
-private val DarkColorScheme = darkColorScheme(
-    primary = PhantomRed,
+private fun buildDarkColorScheme(accent: Color) = darkColorScheme(
+    primary = accent,
     onPrimary = TextOnRed,
-    primaryContainer = PhantomRedDark,
+    primaryContainer = accent.copy(alpha = 0.25f),
     onPrimaryContainer = TextPrimary,
-    
+
     secondary = InfoCyan,
     onSecondary = VelvetBlack,
     secondaryContainer = VelvetLight,
     onSecondaryContainer = TextPrimary,
-    
+
     tertiary = AlertYellow,
     onTertiary = VelvetBlack,
     tertiaryContainer = VelvetLight,
     onTertiaryContainer = TextPrimary,
-    
+
     background = VelvetBlack,
     onBackground = TextPrimary,
-    
+
     surface = VelvetDark,
     onSurface = TextPrimary,
     surfaceVariant = VelvetMid,
     onSurfaceVariant = TextSecondary,
-    
+
     error = DndRed,
     onError = TextPrimary,
     errorContainer = DndRed.copy(alpha = 0.2f),
     onErrorContainer = DndRed,
-    
+
     outline = BorderSubtle,
     outlineVariant = BorderDark,
-    
+
     scrim = OverlayDark
 )
 
 private val LightColorScheme = lightColorScheme(
-    // We primarily use dark theme, but define light for completeness
     primary = PhantomRed,
     onPrimary = TextOnRed,
     secondary = InfoCyan,
@@ -67,27 +64,19 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun FluxerTheme(
-    darkTheme: Boolean = true, // Default to dark theme
-    dynamicColor: Boolean = false, // Disable dynamic colors for consistent branding
+    darkTheme: Boolean = true,
+    accentColor: Color = PhantomRed,
+    fontScale: Float = 1.0f,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) 
-            else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-    
+    val colorScheme = if (darkTheme) buildDarkColorScheme(accentColor) else LightColorScheme
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.background.toArgb()
             window.navigationBarColor = colorScheme.background.toArgb()
-            
             WindowCompat.getInsetsController(window, view).apply {
                 isAppearanceLightStatusBars = !darkTheme
                 isAppearanceLightNavigationBars = !darkTheme
@@ -95,26 +84,38 @@ fun FluxerTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = FluxerTypography,
-        shapes = FluxerShapes,
-        content = content
-    )
+    val baseDensity = LocalDensity.current
+    val scaledDensity = Density(density = baseDensity.density, fontScale = fontScale)
+
+    CompositionLocalProvider(
+        LocalAccentColor provides accentColor,
+        LocalFluxerColors provides FluxerColors(
+            phantomRed = accentColor,
+            phantomRedDark = accentColor.copy(alpha = 0.7f),
+            selectedItem = accentColor.copy(alpha = 0.16f),
+            glowRed = accentColor.copy(alpha = 0.22f),
+            borderSharp = accentColor
+        ),
+        LocalFluxerSpacing provides FluxerSpacing()
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = FluxerTypography,
+            shapes = FluxerShapes
+        ) {
+            CompositionLocalProvider(LocalDensity provides scaledDensity) {
+                content()
+            }
+        }
+    }
 }
 
-/**
- * Custom theme extension for accessing custom colors
- */
 object FluxerTheme {
     val colors: FluxerColors
         @Composable
         get() = LocalFluxerColors.current
 }
 
-/**
- * Custom colors that extend beyond Material3 color scheme
- */
 data class FluxerColors(
     val phantomRed: Color = PhantomRed,
     val phantomRedDark: Color = PhantomRedDark,
