@@ -1,155 +1,137 @@
 # Fluxer Android Client
 
-A native Android client for Fluxer (an open-source Discord alternative), built with bulletproof authentication handling and a sharp, gaming-inspired UI aesthetic.
+A native Android client for the [Fluxer](https://fluxer.app/) chat platform, built with Jetpack Compose, Hilt, OkHttp, and a premium dark UI.
+
+> This repository is named `flukavike-android`; the Android app is branded **Fluxer** (`com.fluxer.client`).
+
+---
+
+## Why a native Android client?
+
+Fluxer already has an official app, so why build a native Android client from scratch?
+
+### Goals
+
+- **Deeper Android integration** — written directly against the Android SDK and Jetpack Compose, this client can adopt new platform features (large-screen layouts, foldables, desktop/DeX windowing, per-app language preferences, themed icons, etc.) as soon as Google ships them, without waiting for a cross-platform framework to catch up.
+- **Different UX priorities** — a third-party client can experiment with alternative navigation, themes, notification behavior, and power-user features that the official app may not prioritize.
+- **Native performance & battery life** — no Flutter engine or bridge overhead; foreground services, WebSocket keepalives, push routing, and background sync are implemented with direct Android lifecycle controls, which tends to yield better idle battery behavior and more predictable cpu ask scheduling.
+- **Tighter system integration** — native share sheets, notification channels, app shortcuts, widgets, intents/deep-links, biometric unlock, and accessibility hooks all plug directly into the OS.
+- **Smaller runtime footprint** — the APK only ships the libraries the app actually uses, rather than bundling a cross-platform runtime.
+
+### Trade-offs
+
+- **Maintenance burden** — every API change on Fluxer’s side has to be adapted here manually, and this client is Android-only.
+- **Feature parity** — new official features may take time to land, and some platform-exclusive capabilities may never be replicated.
+- **API stability risk** — unofficial/self-built clients depend on server APIs that can change without notice.
+- **Resource constraints** — a smaller team means slower iteration than a first-party product backed by the platform vendor.
+
+In short, this project is for users who want a more Android-native, customizable, and battery-conscious Fluxer experience — even if it means living on the bleeding edge.
 
 ---
 
 ## !! DO NOT EDIT — CRITICAL SYSTEMS !!
 
-The following code was broken, debugged, and fixed through extensive testing against the live Fluxer API.
-**Do not refactor, restructure, or "improve" any of it. Do not touch it for any reason unless a bug is explicitly traced here.**
+Several core systems in this app were broken, debugged, and fixed through extensive testing against the live Fluxer API.
+**Do not refactor, restructure, or "improve" them unless a bug is explicitly traced there.**
 
-| System | Files | Why it must not change |
-|--------|-------|------------------------|
-| **Auth flow** | `AuthRepository.kt`, `AuthViewModel.kt`, `AuthAuthenticator.kt`, `AuthInterceptor.kt`, `CsrfInterceptor.kt` | Discovery was blocking login for 12+ min; callTimeout, interceptor order, and retry settings are all load-bearing |
-| **Network config** | `NetworkModule.kt` | Interceptor order, `callTimeout(20s)`, and `retryOnConnectionFailure(false)` prevent infinite hangs |
-| **API endpoints** | `FluxerApiService.kt` | `/api/users/@me` is correct (NOT `/api/auth/me`); guild objects do NOT embed channels |
-| **Data models** | `AuthModels.kt`, `MessageModels.kt` | `User.email` defaults to `""`; `ChannelType` uses a custom int serializer — API sends `0/1/2/4`, not strings |
-| **Captcha widget** | `CaptchaWidget.kt` | Uses `?onload=` callback — do not revert to polling |
-| **Channel loading** | `ChatViewModel.selectServer()` | Must call `getGuildChannels()` — `server.channels` is always empty from REST |
+The affected systems include:
 
-See `CLAUDE.md` for full details on every fix and why it was made.
+- **Authentication flow** — cookie/token storage, session refresh, CSRF handling, and MFA/WebAuthn paths.
+- **Network configuration** — OkHttp client setup, interceptor ordering, timeouts, and retry policy.
+- **API endpoint paths and data models** — exact REST paths and serializers verified against the live API.
+- **Captcha loading** — callback-based initialization.
+- **Channel/guild loading logic** — verified fetch paths and UI state updates.
+
+The specific files involved change as the codebase evolves. **See [`CLAUDE.md`](CLAUDE.md) for the current list of files and the full details on every fix.**
 
 ---
 
-## 🎯 Key Features
+## 🎯 Features
 
-### Bulletproof Authentication
-The app solves the critical authentication challenges that plagued previous Swift attempts:
+### Authentication & Security
+- **Cookie + token auth** with encrypted `SecureCookieStorage` (AES-256 via `EncryptedSharedPreferences`).
+- **Automatic session refresh** via `AuthAuthenticator` on 401 responses.
+- **CSRF protection** via `CsrfInterceptor` for all state-changing requests.
+- **hCaptcha support** with `?onload=` callback integration.
+- **WebAuthn MFA** flow for passwordless second-factor login.
+- **Biometric app lock** via `BiometricLockManager`.
 
-- **Secure CookieJar** (`SecureCookieStorage`): Uses `EncryptedSharedPreferences` to persistently store HttpOnly cookies (including `fluxer_session`) with AES-256 encryption.
-- **Automatic Token Refresh** (`AuthAuthenticator`): An OkHttp `Authenticator` that seamlessly refreshes expired access tokens using the refresh token, retrying failed requests automatically.
-- **CSRF Protection** (`CsrfInterceptor`): An OkHttp `Interceptor` that fetches and attaches a CSRF token (`X-CSRF-Token`) to all state-modifying requests (POST, PATCH, DELETE).
+### Messaging
+- Real-time text channels and direct messages backed by a WebSocket gateway.
+- Infinite scroll pagination for message history.
+- In-channel and global search.
+- Reactions, edits, deletes, and typing indicators.
+- Rich attachments with image previews (Coil + GIF support).
 
-### Offline First
-- **Local Database**: Messages are cached locally using Room, allowing users to view past conversations even when offline.
-- **Offline Queue**: Messages sent while offline are queued and automatically sent when the connection is restored.
+### Voice & Calls
+- Voice channels powered by [LiveKit](https://livekit.io/).
+- Direct message calls with native call-style UI and foreground service.
 
-### Modern Chat Experience
-- **Image Attachments**: View images directly in the chat.
-- **Infinite Scroll**: Messages are paginated, allowing for efficient loading of long chat histories.
-- **Message Search**: Quickly find messages within a channel.
-- **Error Handling**: A clear error message with a retry option is shown when the network is unreliable.
+### Friends, Servers & Profiles
+- Friend list, requests, and user relationships.
+- Server/guild navigation with channel lists.
+- User profiles with avatar support and status indicators.
+- Server management and invite handling.
 
-- **CSRF Token Management** (`CsrfInterceptor`): Automatically extracts CSRF tokens from cookies/headers and injects them into state-changing requests
-- **Token Refresh** (`AuthAuthenticator`): Handles 401 responses by attempting session refresh before requiring re-login
-- **Automatic Cookie Attachment**: All requests automatically include the correct cookies thanks to OkHttp's CookieJar interface
+### Notifications
+- Firebase Cloud Messaging (FCM) for push notifications.
+- [UnifiedPush](https://unifiedpush.org/) support as a FCM-free alternative.
+- Rich notification routing to the correct channel, DM, or call.
 
-### Architecture
-- **Clean MVVM**: Fully decoupled UI layer with ViewModels, Repositories, and Data layer
-- **Dependency Injection**: Hilt for clean dependency management
-- **Reactive Streams**: Kotlin Flow for state management and real-time updates
-- **Repository Pattern**: Abstracted data sources (REST API + WebSocket Gateway)
+### Offline & Persistence
+- Local caching with Room (`MessageEntity`, `ChannelEntity`, `GuildEntity`, `PendingMessageEntity`).
+- Pending message queue for offline sending.
+- DataStore-backed user preferences and instance configuration.
 
-### Real-time Messaging
-- **WebSocket Gateway**: OkHttp WebSocket with auto-reconnection, heartbeat, and session resumption
-- **Event-driven Updates**: Gateway events automatically update local caches
-- **Optimistic UI**: Messages appear instantly while syncing in background
+### UI / UX
+- Premium dark theme with Phantom Red accent.
+- Compose Material 3 with custom typography, shapes, and spacing.
+- Deep-linking support (`fluxer://`, `https://web.fluxer.app/...`, canary variants).
+- Settings hub: appearance, notifications, account, storage, language, accessibility.
 
-### UI/UX - Persona 5 Inspired
-- **Dark Mode First**: Deep blacks (`#0D0D0D`) with high contrast
-- **Phantom Red Accent**: Signature red (`#E63946`) for primary actions
-- **Sharp Angles**: Rectangular buttons, minimal rounding, slash-shaped elements
-- **Gaming Aesthetic**: Bold typography, dramatic shadows, status indicators
+---
 
 ## 🏗️ Project Structure
 
 ```
 com.fluxer.client/
 ├── data/
-│   ├── local/
-│   │   └── SecureCookieStorage.kt      # Encrypted cookie persistence
-│   ├── remote/
-│   │   ├── FluxerApiService.kt         # Retrofit REST API
-│   │   ├── GatewayWebSocketManager.kt  # WebSocket connection
-│   │   ├── CsrfInterceptor.kt          # CSRF token handling
-│   │   └── AuthAuthenticator.kt        # 401 refresh handler
-│   ├── model/
-│   │   ├── AuthModels.kt               # Login/Register/Auth DTOs
-│   │   ├── MessageModels.kt            # Message/Channel DTOs
-│   │   └── GatewayModels.kt            # WebSocket event DTOs
-│   └── repository/
-│       ├── AuthRepository.kt           # Auth operations
-│       └── ChatRepository.kt           # Chat operations
-├── di/
-│   └── NetworkModule.kt                # Hilt DI configuration
+│   ├── local/                 # Room DB, DataStore, encrypted cookie/token storage
+│   ├── model/                 # DTOs for auth, messages, gateway, voice, calls, etc.
+│   ├── paging/                # Paging 3 sources
+│   ├── remote/                # Retrofit/OAuth/WebAuthn services + interceptors + WebSocket
+│   └── repository/            # Auth, Chat, Friends, Guild, Settings, Notifications, etc.
+├── di/                        # Hilt modules (network, database, features)
+├── navigation/                # Route definitions and deep-link parsing
+├── service/                   # FCM, UnifiedPush, call foreground service, broadcast receiver
 ├── ui/
-│   ├── theme/
-│   │   ├── Color.kt                    # Persona 5 color palette
-│   │   ├── Theme.kt                    # Dark theme configuration
-│   │   ├── Type.kt                     # Typography
-│   │   └── Shape.kt                    # Custom shapes
-│   ├── components/
-│   │   ├── FluxerButton.kt             # Gaming-style buttons
-│   │   ├── FluxerTextField.kt          # Sharp input fields
-│   │   ├── MessageBubble.kt            # Chat message bubbles
-│   │   └── ServerSidebar.kt            # Server/channel navigation
-│   ├── screens/
-│   │   ├── LoginScreen.kt              # Auth UI
-│   │   └── ChatScreen.kt               # Main chat UI
-│   └── viewmodel/
-│       ├── AuthViewModel.kt            # Auth state management
-│       └── ChatViewModel.kt            # Chat state management
+│   ├── components/            # Reusable Compose components
+│   ├── screens/               # Login, Chat, Settings, Friends, Voice, Profile, etc.
+│   ├── theme/                 # Colors, typography, shapes, spacing
+│   └── viewmodel/             # ViewModels per screen/feature
+├── util/                      # Helpers: CDN URLs, notifications, UnifiedPush, Result, etc.
+├── FluxerApplication.kt
 └── MainActivity.kt
 ```
 
-## 🔐 Authentication Flow
+---
 
-### Login Process
-1. User enters credentials in `LoginScreen`
-2. `AuthViewModel` calls `AuthRepository.login()`
-3. Retrofit makes POST to `/api/auth/login`
-4. Server responds with `Set-Cookie: fluxer_session=...; HttpOnly`
-5. `SecureCookieStorage` intercepts and **encrypts** the cookie
-6. CSRF token extracted from response and cached
-7. Gateway WebSocket connects with session cookie
-8. User state flows to UI, navigation to `ChatScreen`
+## 🛠️ Tech Stack
 
-### Request Flow (with Auth)
-```
-Request → CsrfInterceptor (adds X-CSRF-Token header)
-        → CookieJar (adds fluxer_session cookie)
-        → Server
-        
-Response → CookieJar (saves new cookies)
-         → CsrfInterceptor (extracts new CSRF token)
-         → Repository
-```
+| Layer | Libraries |
+|-------|-----------|
+| UI | Jetpack Compose (BOM 2024.02.00), Material 3, Navigation Compose |
+| DI | Hilt 2.50 + KSP |
+| Networking | OkHttp 4.12, Retrofit 2.9, Kotlinx Serialization |
+| Persistence | Room 2.6.1, DataStore 1.0.0, EncryptedSharedPreferences |
+| Real-time | OkHttp WebSocket (`GatewayWebSocketManager`) |
+| Images | Coil 2.6.0 (+ GIF) |
+| Voice/Video | LiveKit Android SDK 2.5.0 |
+| Push | Firebase Messaging, UnifiedPush connector |
+| Auth | WebAuthn/FIDO2, Biometric 1.1.0 |
+| Async | Kotlin Coroutines, Kotlin Flow, Paging 3 |
 
-### 401 Handling
-1. Response returns 401
-2. `AuthAuthenticator` intercepts
-3. Attempts `POST /api/auth/refresh`
-4. If successful: retries original request with new cookies
-5. If failed: clears session, triggers re-login
-
-## 🎨 UI Design System
-
-### Colors
-| Token | Hex | Usage |
-|-------|-----|-------|
-| PhantomRed | #E63946 | Primary buttons, accents |
-| VelvetBlack | #0D0D0D | Background |
-| VelvetDark | #141414 | Cards, panels |
-| VelvetMid | #1A1A1A | Input fields |
-| TextPrimary | #FFFFFF | Main text |
-| TextSecondary | #B3B3B3 | Secondary text |
-
-### Components
-- **FluxerButton**: Sharp rectangular buttons with red accent
-- **SlashButton**: Diagonal-edged buttons for primary CTAs
-- **FluxerTextField**: Bordered inputs with red focus indicator
-- **MessageBubble**: Asymmetric rounded corners (Persona 5 style)
+---
 
 ## 🚀 Getting Started
 
@@ -159,67 +141,128 @@ Response → CookieJar (saves new cookies)
 - Android SDK 34
 
 ### Configuration
-1. Update `FLUXER_BASE_URL` in `app/build.gradle.kts`:
+
+Base URLs and hCaptcha site key are defined in `app/build.gradle.kts`:
+
 ```kotlin
-buildConfigField("String", "FLUXER_BASE_URL", """"https://your-fluxer-instance.com"""
+defaultConfig {
+    buildConfigField("String", "FLUXER_BASE_URL", """"https://web.fluxer.app/"""")
+    buildConfigField("String", "FLUXER_WS_URL", """"wss://gateway.fluxer.app"""")
+    buildConfigField("String", "HCAPTCHA_SITE_KEY", """"your-site-key"""")
+}
 ```
 
-2. Update `FLUXER_WS_URL` for WebSocket:
-```kotlin
-buildConfigField("String", "FLUXER_WS_URL", """"wss://your-fluxer-instance.com"""
-```
+Override them in `buildTypes.debug` for a local/self-hosted instance.
+
+### Firebase / Push
+
+A placeholder `google-services.json` is included for builds. For real push notifications, replace it with a Firebase project config or configure UnifiedPush.
 
 ### Build
+
 ```bash
 ./gradlew assembleDebug
 ```
 
-## 🔧 Technical Highlights
+Install to a device or emulator:
 
-### Secure Cookie Storage
-```kotlin
-// Uses EncryptedSharedPreferences with AES-256-GCM
-class SecureCookieStorage(context: Context) : CookieJar {
-    private val encryptedPrefs = EncryptedSharedPreferences.create(...)
-    
-    override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
-        // Encrypts and stores HttpOnly cookies
-    }
-    
-    override fun loadForRequest(url: HttpUrl): List<Cookie> {
-        // Decrypts and returns cookies for domain
-    }
-}
+```bash
+./gradlew installDebug
 ```
 
-### CSRF Protection
-```kotlin
-class CsrfInterceptor : Interceptor {
-    override fun intercept(chain: Chain): Response {
-        // Adds X-CSRF-Token header to POST/PUT/DELETE
-        if (requiresCsrf(request.method)) {
-            builder.header("X-CSRF-Token", getCsrfToken())
-        }
-    }
-}
+---
+
+## 🔐 Authentication Flow
+
+1. User enters credentials (and solves captcha if required) in `LoginScreen`.
+2. `AuthViewModel` calls `AuthRepository.login()`.
+3. Retrofit POSTs to `/api/auth/login`; the server sets the `fluxer_session` HttpOnly cookie.
+4. `SecureCookieStorage` encrypts and persists the cookie.
+5. `AuthTokenStorage` persists the access token separately.
+6. CSRF token is fetched from `/api/auth/csrf` and cached.
+7. Gateway WebSocket connects using the session cookie.
+8. Auth state flows to the UI and navigates to the main chat shell.
+
+### Authenticated request pipeline
+
+```
+Request  → BaseUrlOverrideInterceptor
+         → AuthInterceptor (Authorization header)
+         → CsrfInterceptor (X-CSRF-Token for mutating methods)
+         → CookieJar (fluxer_session cookie)
+         → Server
+
+Response → CookieJar (save updated cookies)
+         → CsrfInterceptor (extract new CSRF token)
+         → Repository
 ```
 
-### WebSocket Gateway
-- Auto-reconnection with exponential backoff
-- Heartbeat/ping-pong keepalive
-- Session resumption on reconnect
-- Event-driven architecture
+### 401 handling
+1. Response returns 401.
+2. `AuthAuthenticator` intercepts.
+3. Attempts `POST /api/auth/refresh`.
+4. On success: retries the original request with refreshed cookies.
+5. On failure: clears the session and returns to `LoginScreen`.
 
-## 📱 Screenshots
+---
 
-*(To be added once UI is finalized)*
+## 🎨 Design System
+
+### Colors
+| Token | Hex | Usage |
+|-------|-----|-------|
+| PhantomRed | `#E15463` | Primary buttons, accents |
+| PhantomRedDark | `#B83A4D` | Pressed states |
+| VelvetBlack | `#0F1115` | Background |
+| VelvetDark | `#151922` | Cards, panels |
+| VelvetMid | `#1C2230` | Input fields |
+| TextPrimary | `#F4F7FB` | Main text |
+| TextSecondary | `#CCD3DF` | Secondary text |
+| TextMuted | `#8B96A8` | Tertiary text |
+| SuccessGreen | `#55C59A` | Online / success |
+| AlertYellow | `#F3C969` | Away / warnings |
+| DndRed | `#EA646B` | Do-not-disturb |
+
+### Components
+- `FluxerButton` / `SlashButton` — primary action buttons.
+- `FluxerTextField` — bordered inputs with red focus indicator.
+- `MessageBubble` / `DiscordMessageBubble` / `EnhancedMessageBubble` — message rendering variants.
+- `ServerSidebar` — server and DM navigation rail.
+
+---
+
+## 🧪 Testing
+
+Unit test dependencies are configured:
+
+```kotlin
+testImplementation("junit:junit:4.13.2")
+testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+testImplementation("io.mockk:mockk:1.13.9")
+androidTestImplementation("androidx.test.ext:junit:1.1.5")
+androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+```
+
+Run tests:
+
+```bash
+./gradlew test
+```
+
+---
+
+## 🗺️ Roadmap
+
+See [`ROADMAP.md`](ROADMAP.md) for planned and completed features.
+
+---
 
 ## 📝 License
 
-MIT License - See LICENSE file for details
+MIT License — See LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
-- Persona 5 for the UI inspiration
-- OkHttp team for the excellent networking library
-- Jetpack Compose team for the modern UI toolkit
+- [Fluxer](https://fluxer.app/) team and community
+- OkHttp / Retrofit / Coil / LiveKit maintainers
+- Jetpack Compose team
