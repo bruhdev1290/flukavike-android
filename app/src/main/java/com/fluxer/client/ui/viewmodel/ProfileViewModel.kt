@@ -6,6 +6,7 @@ import android.net.Uri
 import com.fluxer.client.data.model.UpdateProfileRequest
 import com.fluxer.client.data.model.UserProfile
 import com.fluxer.client.data.model.toUserProfile
+import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.repository.AuthRepository
 import com.fluxer.client.data.repository.FriendsRepository
 import com.fluxer.client.data.repository.ProfileRepository
@@ -19,8 +20,10 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val authRepository: AuthRepository,
-    private val friendsRepository: FriendsRepository
+    private val friendsRepository: FriendsRepository,
+    private val instanceConfigStore: InstanceConfigStore
 ) : ViewModel() {
+    val cdnBaseUrl: String? get() = instanceConfigStore.getCdnBaseUrl()
 
     private val _profile = MutableStateFlow<UserProfile?>(null)
     val profile: StateFlow<UserProfile?> = _profile.asStateFlow()

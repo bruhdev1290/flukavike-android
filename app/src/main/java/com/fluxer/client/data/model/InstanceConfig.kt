@@ -42,9 +42,9 @@ import kotlinx.serialization.Serializable
     }
 
     fun resolvedCdn(): String? {
-        return cdn?.takeIf { it.isNotBlank() }
+        return endpoints?.media?.takeIf { it.isNotBlank() }
+            ?: cdn?.takeIf { it.isNotBlank() }
             ?: endpoints?.staticCdn?.takeIf { it.isNotBlank() }
-            ?: endpoints?.media?.takeIf { it.isNotBlank() }
     }
 
     fun resolvedWeb(): String? {

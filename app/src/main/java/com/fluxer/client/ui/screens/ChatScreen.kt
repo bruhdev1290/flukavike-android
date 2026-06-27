@@ -8,9 +8,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import com.fluxer.client.data.local.GestureSensitivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -72,6 +69,7 @@ fun ChatScreen(
     onNavigateToVoiceChannel: (String) -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToUserProfile: (String) -> Unit = {},
+    onNavigateToServer: (String) -> Unit = {},
     initialGuildId: String? = null,
     initialChannelId: String? = null,
     targetMessageId: String? = null,
@@ -185,13 +183,15 @@ fun ChatScreen(
         ServerSidebar(
             servers = guilds,
             selectedServerId = selectedServer?.id,
-            onServerSelected = {
-                viewModel.selectServer(it)
+            onServerSelected = { server ->
+                onNavigateToServer(server.id)
+                viewModel.selectServer(server)
                 if (isCompact && channels.isNotEmpty()) channelDrawerOpen = true
             },
             onHomeSelected = onNavigateToMessages,
             unreadCountsByGuild = unreadCountsByGuild,
             onJoinServer = { showAddServerMenu = true },
+            cdnBaseUrl = viewModel.cdnBaseUrl,
             modifier = Modifier.width(sidebarWidth),
             isCompact = isCompact
         )
@@ -721,29 +721,109 @@ fun ChatScreen(
                 }
             }
             
-            // Gesture edge zone + animated channel drawer — isolated composable
-            // so its animation recompositions don't affect the ServerSidebar above
-            if (isCompact && channels.isNotEmpty()) {
-                ChannelDrawerOverlay(
-                    open = channelDrawerOpen,
-                    serverName = selectedServer?.name ?: "Channels",
-                    channels = channels,
-                    selectedChannelId = activeChannel?.id,
-                    unreadCountsByChannel = unreadCountsByChannel,
-                    favoriteChannelIds = favoriteChannelIds,
-                    gesturesEnabled = gesturesEnabled,
-                    gestureSensitivity = gestureSensitivity,
-                    onOpen = { channelDrawerOpen = true },
-                    onClose = { channelDrawerOpen = false },
-                    onChannelSelected = {
-                        viewModel.selectChannel(it)
-                        channelDrawerOpen = false
-                    },
-                    onNavigateToVoiceChannel = {
-                        channelDrawerOpen = false
-                        onNavigateToVoiceChannel(it)
+            // Gesture state — all hoisted unconditionally (Compose rules of hooks)
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            var edgeDragAccum by remember { mutableFloatStateOf(0f) }
+            var closeDragAccum by remember { mutableFloatStateOf(0f) }
+            val edgeDragState = rememberDraggableState { delta ->
+                if (delta > 0) {
+                    edgeDragAccum += delta
+                    val threshold = with(density) { gestureSensitivity.thresholdDp.dp.toPx() }
+                    if (edgeDragAccum >= threshold) {
+                        channelDrawerOpen = true
+                        edgeDragAccum = 0f
                     }
+                }
+            }
+            val closeDragState = rememberDraggableState { delta ->
+                if (delta < 0) {
+                    closeDragAccum += -delta
+                    val threshold = with(density) { gestureSensitivity.thresholdDp.dp.toPx() }
+                    if (closeDragAccum >= threshold) {
+                        channelDrawerOpen = false
+                        closeDragAccum = 0f
+                    }
+                } else closeDragAccum = 0f
+            }
+
+            // Edge swipe zone — separate, lightweight, never touches drawer lifecycle
+            if (isCompact && gesturesEnabled && !channelDrawerOpen && channels.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .width(24.dp)
+                        .fillMaxHeight()
+                        .align(Alignment.CenterStart)
+                        .draggable(
+                            orientation = Orientation.Horizontal,
+                            state = edgeDragState,
+                            onDragStopped = { edgeDragAccum = 0f }
+                        )
                 )
+            }
+
+            // Channel drawer — original instant show/hide, no extra composables kept alive
+            if (isCompact && channelDrawerOpen && channels.isNotEmpty()) {
+
+                // Backdrop — tap to close, or swipe left to close
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f))
+                        .clickable { channelDrawerOpen = false }
+                        .let {
+                            if (gesturesEnabled) it.draggable(
+                                orientation = Orientation.Horizontal,
+                                state = closeDragState,
+                                onDragStopped = { closeDragAccum = 0f }
+                            ) else it
+                        }
+                )
+
+                // Drawer panel
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(280.dp)
+                        .background(VelvetDark)
+                ) {
+                    Column {
+                        Surface(color = VelvetDark, modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = selectedServer?.name ?: "Channels",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = TextPrimary,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(onClick = { channelDrawerOpen = false }) {
+                                    Icon(
+                                        Icons.Default.Menu,
+                                        contentDescription = "Close",
+                                        tint = TextSecondary
+                                    )
+                                }
+                            }
+                        }
+                        ChannelListContent(
+                            channels = channels,
+                            selectedChannelId = activeChannel?.id,
+                            onChannelSelected = {
+                                viewModel.selectChannel(it)
+                                channelDrawerOpen = false
+                            },
+                            onNavigateToVoiceChannel = {
+                                channelDrawerOpen = false
+                                onNavigateToVoiceChannel(it)
+                            },
+                            unreadCountsByChannel = unreadCountsByChannel,
+                            favoriteChannelIds = favoriteChannelIds,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
             }
             
             error?.let { errorMessage ->
@@ -1016,124 +1096,6 @@ private fun AttachmentPreviewBar(
     }
 }
 
-// Isolated composable so its animation recompositions don't propagate up to ChatScreen
-// and don't affect ServerSidebar's touch handling.
-@Composable
-private fun BoxScope.ChannelDrawerOverlay(
-    open: Boolean,
-    serverName: String,
-    channels: List<com.fluxer.client.data.model.Channel>,
-    selectedChannelId: String?,
-    unreadCountsByChannel: Map<String, Int>,
-    favoriteChannelIds: Set<String>,
-    gesturesEnabled: Boolean,
-    gestureSensitivity: GestureSensitivity,
-    onOpen: () -> Unit,
-    onClose: () -> Unit,
-    onChannelSelected: (com.fluxer.client.data.model.Channel) -> Unit,
-    onNavigateToVoiceChannel: (String) -> Unit,
-) {
-    val density = androidx.compose.ui.platform.LocalDensity.current
-    var edgeDragAccum by remember { mutableFloatStateOf(0f) }
-    var closeDragAccum by remember { mutableFloatStateOf(0f) }
-
-    val drawerOffsetX by animateDpAsState(
-        targetValue = if (open) 0.dp else (-280.dp),
-        animationSpec = tween(220),
-        label = "drawerOffsetX"
-    )
-    val isAnimatingOut = !open && drawerOffsetX > (-280.dp)
-
-    // Edge swipe zone — only when closed
-    if (gesturesEnabled && !open) {
-        Box(
-            modifier = Modifier
-                .width(24.dp)
-                .fillMaxHeight()
-                .align(Alignment.CenterStart)
-                .draggable(
-                    orientation = Orientation.Horizontal,
-                    state = rememberDraggableState { delta ->
-                        if (delta > 0) {
-                            edgeDragAccum += delta
-                            val threshold = with(density) { gestureSensitivity.thresholdDp.dp.toPx() }
-                            if (edgeDragAccum >= threshold) {
-                                onOpen()
-                                edgeDragAccum = 0f
-                            }
-                        }
-                    },
-                    onDragStopped = { edgeDragAccum = 0f }
-                )
-        )
-    }
-
-    // Backdrop — instant show/hide (no animation) so it never lingers and blocks taps
-    if (open) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f))
-                .clickable { onClose() }
-        )
-    }
-
-    // Drawer panel — animated slide, kept alive during exit animation
-    if (open || isAnimatingOut) {
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(280.dp)
-                .offset(x = drawerOffsetX)
-                .background(VelvetDark)
-                .draggable(
-                    enabled = gesturesEnabled,
-                    orientation = Orientation.Horizontal,
-                    state = rememberDraggableState { delta ->
-                        if (delta < 0) {
-                            closeDragAccum += -delta
-                            val threshold = with(density) { gestureSensitivity.thresholdDp.dp.toPx() }
-                            if (closeDragAccum >= threshold) {
-                                onClose()
-                                closeDragAccum = 0f
-                            }
-                        } else {
-                            closeDragAccum = 0f
-                        }
-                    },
-                    onDragStopped = { closeDragAccum = 0f }
-                )
-        ) {
-            Column {
-                Surface(color = VelvetDark, modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = serverName,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = TextPrimary,
-                            modifier = Modifier.weight(1f)
-                        )
-                        IconButton(onClick = onClose) {
-                            Icon(Icons.Default.Menu, contentDescription = "Close", tint = TextSecondary)
-                        }
-                    }
-                }
-                ChannelListContent(
-                    channels = channels,
-                    selectedChannelId = selectedChannelId,
-                    onChannelSelected = onChannelSelected,
-                    onNavigateToVoiceChannel = onNavigateToVoiceChannel,
-                    unreadCountsByChannel = unreadCountsByChannel,
-                    favoriteChannelIds = favoriteChannelIds,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
-    }
-}
 
 private fun formatPreviewBytes(size: Long): String {
     if (size < 1024) return "$size B"

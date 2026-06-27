@@ -347,6 +347,7 @@ private fun ShellContent(
             onNavigateToVoiceChannel = { shellViewModel.navigate(FluxerRoute.DmCall(it)) },
             onNavigateToNotifications = { shellViewModel.navigate(FluxerRoute.Notifications) },
             onNavigateToUserProfile = { userId -> shellViewModel.navigate(FluxerRoute.UserProfile(userId)) },
+            onNavigateToServer = { guildId -> shellViewModel.navigate(FluxerRoute.Guild(guildId)) },
             initialChannelId = path.trim('/').split('/').getOrNull(2),
             targetMessageId = path.trim('/').split('/').getOrNull(3)
         )
@@ -458,6 +459,9 @@ private fun GuildOrChannelContent(
         onNavigateToVoiceChannel = { channelId -> shellViewModel.navigate(FluxerRoute.GuildVoice(guildId ?: "", channelId)) },
         onNavigateToNotifications = { shellViewModel.navigate(FluxerRoute.Notifications) },
         onNavigateToUserProfile = { userId -> shellViewModel.navigate(FluxerRoute.UserProfile(userId)) },
+        onNavigateToServer = { targetGuildId ->
+            shellViewModel.navigate(FluxerRoute.Guild(targetGuildId))
+        },
         initialGuildId = guildId,
         initialChannelId = channelId,
         targetMessageId = parts.getOrNull(3)

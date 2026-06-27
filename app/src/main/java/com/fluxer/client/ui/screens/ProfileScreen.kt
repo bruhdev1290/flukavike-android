@@ -171,7 +171,11 @@ private fun ProfileContent(
                 ) {
                     if (profile.avatarUrl != null) {
                         AsyncImage(
-                            model = profile.avatarUrl,
+                            model = com.fluxer.client.util.CdnUrlBuilder.avatarUrl(
+                                viewModel.cdnBaseUrl,
+                                profile.id,
+                                profile.avatarUrl
+                            ),
                             contentDescription = profile.username,
                             modifier = Modifier
                                 .fillMaxSize()

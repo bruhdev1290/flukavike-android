@@ -33,6 +33,7 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.fluxer.client.data.model.Server
 import com.fluxer.client.ui.theme.*
+import com.fluxer.client.util.CdnUrlBuilder
 
 /**
  * Server sidebar styled for the calmer Fluxer shell.
@@ -45,6 +46,7 @@ fun ServerSidebar(
     onHomeSelected: () -> Unit,
     unreadCountsByGuild: Map<String, Int> = emptyMap(),
     onJoinServer: (() -> Unit)? = null,
+    cdnBaseUrl: String? = null,
     modifier: Modifier = Modifier,
     isCompact: Boolean = false
 ) {
@@ -89,6 +91,7 @@ fun ServerSidebar(
         servers.forEach { server ->
             ServerIcon(
                 server = server,
+                iconUrl = CdnUrlBuilder.serverIconUrl(cdnBaseUrl, server.id, server.iconUrl),
                 isSelected = server.id == selectedServerId,
                 hasNotification = (unreadCountsByGuild[server.id] ?: 0) > 0,
                 onClick = { onServerSelected(server) },
@@ -124,6 +127,7 @@ fun ServerSidebar(
 @Composable
 private fun ServerIcon(
     server: Server? = null,
+    iconUrl: String? = null,
     icon: @Composable (() -> Unit)? = null,
     isSelected: Boolean,
     hasNotification: Boolean,
@@ -162,11 +166,11 @@ private fun ServerIcon(
     ) {
         if (icon != null) {
             icon()
-        } else if (!server?.iconUrl.isNullOrBlank()) {
+        } else if (!iconUrl.isNullOrBlank()) {
             // Load server icon image
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(server?.iconUrl)
+                    .data(iconUrl)
                     .crossfade(true)
                     .build(),
                 contentDescription = server?.name ?: "Server",
