@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 // =============================================================================
 // !! DO NOT MAKE User.email NON-NULLABLE !!
 // Message author objects from the Fluxer API do not include email.

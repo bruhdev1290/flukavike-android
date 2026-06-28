@@ -12,6 +12,7 @@ import com.fluxer.client.data.repository.ChatRepository
 import com.fluxer.client.data.repository.AuthRepository
 import com.fluxer.client.data.repository.GuildManagementRepository
 import com.fluxer.client.data.repository.HomeStateRepository
+import com.fluxer.client.data.repository.ProfileRepository
 import com.fluxer.client.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,6 +31,7 @@ class ChatViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val homeStateRepository: HomeStateRepository,
     private val guildManagementRepository: GuildManagementRepository,
+    private val profileRepository: ProfileRepository,
     private val instanceConfigStore: InstanceConfigStore
 ) : ViewModel() {
 
@@ -55,6 +57,10 @@ class ChatViewModel @Inject constructor(
     // Selected server/guild
     private val _selectedServer = MutableStateFlow<Server?>(null)
     val selectedServer: StateFlow<Server?> = _selectedServer.asStateFlow()
+
+    // Server profile
+    private val _serverProfile = MutableStateFlow<com.fluxer.client.data.model.ServerProfile?>(null)
+    val serverProfile: StateFlow<com.fluxer.client.data.model.ServerProfile?> = _serverProfile.asStateFlow()
 
     // Refresh trigger for when messages change
     private val _refreshTrigger = MutableStateFlow(0)
@@ -213,6 +219,9 @@ class ChatViewModel @Inject constructor(
         fun selectServer(server: Server) {
         Timber.i("🖱️ selectServer called: ${server.name} (${server.id})")
         _selectedServer.value = server
+
+        // Load server profile when a server is selected
+        loadServerProfile(server.id)
 
         // Check if channels came with the server from Gateway READY event
         // Fluxer sends channels exclusively via Gateway, REST returns empty []
@@ -627,6 +636,30 @@ class ChatViewModel @Inject constructor(
                 }
             }
             .launchIn(viewModelScope)
+    }
+
+    fun loadServerProfile(guildId: String?) {
+        if (guildId.isNullOrBlank()) {
+            _serverProfile.value = null
+            return
+        }
+        viewModelScope.launch {
+            profileRepository.getServerProfile(guildId)
+                .onSuccess { profile ->
+                    _serverProfile.value = profile
+                    // Merge profile fields back into the selected server so the UI reflects them
+                    _selectedServer.value?.takeIf { it.id == profile.id }?.let { selected ->
+                        _selectedServer.value = selected.copy(
+                            description = profile.description,
+                            bannerUrl = profile.bannerUrl,
+                            vanityUrl = profile.vanityUrl,
+                            memberCount = if (profile.memberCount != 0) profile.memberCount else selected.memberCount,
+                            onlineCount = if (profile.onlineCount != 0) profile.onlineCount else selected.onlineCount
+                        )
+                    }
+                }
+                .onError { Timber.w("Failed to load server profile for $guildId: $it") }
+        }
     }
 
     private fun preferredGuildChannel(channels: List<Channel>): Channel? =

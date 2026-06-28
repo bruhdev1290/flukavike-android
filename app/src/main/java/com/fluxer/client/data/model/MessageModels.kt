@@ -5,10 +5,13 @@
 // - Message.authorId, .content, .createdAt default to "" — API omits these in some contexts
 // See CLAUDE.md for full details.
 // =============================================================================
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package com.fluxer.client.data.model
 
 import com.fluxer.client.data.local.model.AuthorEntity
 import com.fluxer.client.data.local.model.MessageEntity
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -186,7 +189,14 @@ data class Server(
     @SerialName("online_count")
     val onlineCount: Int = 0,
     @SerialName("created_at")
-    val createdAt: String? = null
+    val createdAt: String? = null,
+    val description: String? = null,
+    @JsonNames("banner")
+    @SerialName("banner_url")
+    val bannerUrl: String? = null,
+    @JsonNames("vanity_url_code")
+    @SerialName("vanity_url")
+    val vanityUrl: String? = null
 )
 
 @Serializable

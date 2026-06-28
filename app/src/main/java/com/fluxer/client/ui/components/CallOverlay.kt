@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.fluxer.client.data.model.*
 import com.fluxer.client.ui.theme.*
+import com.fluxer.client.util.CdnUrlBuilder
 
 @Composable
 fun IncomingCallScreen(
@@ -57,9 +58,15 @@ fun IncomingCallScreen(
                     color = VelvetSurface,
                     border = androidx.compose.foundation.BorderStroke(4.dp, PhantomRed.copy(alpha = 0.5f))
                 ) {
-                    if (callData.caller.avatarUrl != null) {
+                    val callerAvatarUrl = CdnUrlBuilder.avatarUrlOrDefault(
+                        cdnBase = null,
+                        staticCdnBase = null,
+                        userId = callData.caller.id,
+                        hash = callData.caller.avatarUrl
+                    )
+                    if (callerAvatarUrl != null) {
                         AsyncImage(
-                            model = callData.caller.avatarUrl,
+                            model = callerAvatarUrl,
                             contentDescription = callData.caller.username,
                             modifier = Modifier.fillMaxSize()
                         )
@@ -171,9 +178,15 @@ fun ActiveCallScreen(
                 color = VelvetSurface,
                 border = androidx.compose.foundation.BorderStroke(4.dp, OnlineGreen)
             ) {
-                if (otherParticipant.user.avatarUrl != null) {
+                val otherAvatarUrl = CdnUrlBuilder.avatarUrlOrDefault(
+                    cdnBase = null,
+                    staticCdnBase = null,
+                    userId = otherParticipant.user.id,
+                    hash = otherParticipant.user.avatarUrl
+                )
+                if (otherAvatarUrl != null) {
                     AsyncImage(
-                        model = otherParticipant.user.avatarUrl,
+                        model = otherAvatarUrl,
                         contentDescription = otherParticipant.user.username,
                         modifier = Modifier.fillMaxSize()
                     )

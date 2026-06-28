@@ -17,6 +17,7 @@ import coil.compose.AsyncImage
 import com.fluxer.client.data.model.CallType
 import com.fluxer.client.ui.theme.*
 import com.fluxer.client.ui.viewmodel.CallViewModel
+import com.fluxer.client.util.CdnUrlBuilder
 
 @Composable
 fun ActiveCallScreen(
@@ -83,9 +84,15 @@ fun ActiveCallScreen(
                         color = VelvetSurface,
                         border = androidx.compose.foundation.BorderStroke(4.dp, OnlineGreen)
                     ) {
-                        if (participant.user.avatarUrl != null) {
+                        val avatarUrl = CdnUrlBuilder.avatarUrlOrDefault(
+                            cdnBase = null,
+                            staticCdnBase = null,
+                            userId = participant.user.id,
+                            hash = participant.user.avatarUrl
+                        )
+                        if (avatarUrl != null) {
                             AsyncImage(
-                                model = participant.user.avatarUrl,
+                                model = avatarUrl,
                                 contentDescription = participant.user.username,
                                 modifier = Modifier.fillMaxSize()
                             )

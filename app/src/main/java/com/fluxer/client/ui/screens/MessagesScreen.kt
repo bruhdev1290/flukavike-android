@@ -386,7 +386,12 @@ private fun DMChannelItemDiscord(
                 shape = CircleShape,
                 color = VelvetSurface
             ) {
-                val resolvedAvatarUrl = com.fluxer.client.util.CdnUrlBuilder.avatarUrl(cdnBaseUrl, recipient.id, recipient.avatarUrl)
+                val resolvedAvatarUrl = com.fluxer.client.util.CdnUrlBuilder.avatarUrlOrDefault(
+                    cdnBase = cdnBaseUrl,
+                    staticCdnBase = null,
+                    userId = recipient.id,
+                    hash = recipient.avatarUrl
+                )
                 if (resolvedAvatarUrl != null) {
                     AsyncImage(
                         model = resolvedAvatarUrl,
@@ -569,7 +574,12 @@ private fun DMContextMenu(
                     shape = CircleShape,
                     color = VelvetSurface
                 ) {
-                    val resolvedContextAvatarUrl = com.fluxer.client.util.CdnUrlBuilder.avatarUrl(cdnBaseUrl, recipient.id, recipient.avatarUrl)
+                    val resolvedContextAvatarUrl = com.fluxer.client.util.CdnUrlBuilder.avatarUrlOrDefault(
+                    cdnBase = cdnBaseUrl,
+                    staticCdnBase = null,
+                    userId = recipient.id,
+                    hash = recipient.avatarUrl
+                )
                 if (resolvedContextAvatarUrl != null) {
                         AsyncImage(
                             model = resolvedContextAvatarUrl,

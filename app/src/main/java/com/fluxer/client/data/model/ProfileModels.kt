@@ -1,7 +1,11 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package com.fluxer.client.data.model
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNames
 
 @Serializable
 data class UserProfileResponse(
@@ -31,6 +35,8 @@ data class UserProfileResponse(
 @Serializable
 data class UserProfileDetails(
     val bio: String? = null,
+    @JsonNames("banner")
+    @SerialName("banner_url")
     val banner: String? = null
 )
 
@@ -44,6 +50,7 @@ data class UserProfile(
     val displayName: String? = null,
     @SerialName("avatar_url")
     val avatarUrl: String? = null,
+    @JsonNames("banner")
     @SerialName("banner_url")
     val bannerUrl: String? = null,
     val bio: String? = null,
@@ -169,3 +176,24 @@ fun User.toUserProfile(): UserProfile =
         isPremium = false,
         badges = emptyList()
     )
+
+@Serializable
+data class ServerProfile(
+    val id: String,
+    val name: String = "",
+    @SerialName("icon_url")
+    val iconUrl: String? = null,
+    @SerialName("banner_url")
+    val bannerUrl: String? = null,
+    val description: String? = null,
+    @SerialName("vanity_url")
+    val vanityUrl: String? = null,
+    @SerialName("owner_id")
+    val ownerId: String = "",
+    @SerialName("member_count")
+    val memberCount: Int = 0,
+    @SerialName("online_count")
+    val onlineCount: Int = 0,
+    @SerialName("created_at")
+    val createdAt: String? = null
+)

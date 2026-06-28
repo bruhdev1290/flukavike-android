@@ -78,10 +78,10 @@ com.fluxer.client.app-credentials-1.2.2-76 /Users/andrewgonzalez/.gradle/caches/
 com.fluxer.client.app-ui-tooling-data-release-77 /Users/andrewgonzalez/.gradle/caches/transforms-3/fb5bf0a3dfe39b857ab382e702213f47/transformed/ui-tooling-data-release/res
 com.fluxer.client.app-savedstate-ktx-1.2.1-78 /Users/andrewgonzalez/.gradle/caches/transforms-3/fbd3432189879c6ddccfe45e9f39f6fb/transformed/savedstate-ktx-1.2.1/res
 com.fluxer.client.app-runtime-release-79 /Users/andrewgonzalez/.gradle/caches/transforms-3/fd906700bffe8cc348542ba050b75024/transformed/runtime-release/res
-com.fluxer.client.app-res-80 /Users/andrewgonzalez/flukavike-android/app/build/generated/res/processDebugGoogleServices
-com.fluxer.client.app-resValues-81 /Users/andrewgonzalez/flukavike-android/app/build/generated/res/resValues/debug
-com.fluxer.client.app-packageDebugResources-82 /Users/andrewgonzalez/flukavike-android/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
-com.fluxer.client.app-packageDebugResources-83 /Users/andrewgonzalez/flukavike-android/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
-com.fluxer.client.app-merged_res-84 /Users/andrewgonzalez/flukavike-android/app/build/intermediates/merged_res/debug
-com.fluxer.client.app-debug-85 /Users/andrewgonzalez/flukavike-android/app/src/debug/res
-com.fluxer.client.app-main-86 /Users/andrewgonzalez/flukavike-android/app/src/main/res
+com.fluxer.client.app-res-80 /Users/andrewgonzalez/Downloads/flukavike-android/app/build/generated/res/processDebugGoogleServices
+com.fluxer.client.app-resValues-81 /Users/andrewgonzalez/Downloads/flukavike-android/app/build/generated/res/resValues/debug
+com.fluxer.client.app-packageDebugResources-82 /Users/andrewgonzalez/Downloads/flukavike-android/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+com.fluxer.client.app-packageDebugResources-83 /Users/andrewgonzalez/Downloads/flukavike-android/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+com.fluxer.client.app-merged_res-84 /Users/andrewgonzalez/Downloads/flukavike-android/app/build/intermediates/merged_res/debug
+com.fluxer.client.app-debug-85 /Users/andrewgonzalez/Downloads/flukavike-android/app/src/debug/res
+com.fluxer.client.app-main-86 /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/res

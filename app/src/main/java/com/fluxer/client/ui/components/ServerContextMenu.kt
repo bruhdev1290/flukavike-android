@@ -13,15 +13,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.fluxer.client.data.model.Server
 import com.fluxer.client.ui.theme.*
+import com.fluxer.client.util.CdnUrlBuilder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServerContextMenu(
     server: Server,
+    cdnBaseUrl: String? = null,
     onDismiss: () -> Unit,
     onMarkAsRead: () -> Unit,
     onNotificationSettings: () -> Unit,
@@ -71,9 +74,15 @@ fun ServerContextMenu(
                     shape = RoundedCornerShape(16.dp),
                     color = VelvetSurface
                 ) {
-                    if (server.iconUrl != null) {
+                    val iconUrl = CdnUrlBuilder.serverIconUrl(
+                        cdnBase = cdnBaseUrl,
+                        guildId = server.id,
+                        hash = server.iconUrl,
+                        size = 128
+                    )
+                    if (iconUrl != null) {
                         AsyncImage(
-                            model = server.iconUrl,
+                            model = iconUrl,
                             contentDescription = server.name,
                             modifier = Modifier.fillMaxSize()
                         )
@@ -97,6 +106,17 @@ fun ServerContextMenu(
                         color = TextPrimary,
                         fontWeight = FontWeight.SemiBold
                     )
+
+                    if (!server.description.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = server.description,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextMuted,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                     
                     Spacer(modifier = Modifier.height(4.dp))
                     

@@ -63,6 +63,13 @@ class InstanceConfigStore @Inject constructor(
         }.getOrNull()
     }
 
+    fun getStaticCdnBaseUrl(): String? {
+        val snapshot = prefs.getString(KEY_INSTANCE_SNAPSHOT, null) ?: return null
+        return runCatching {
+            Json.decodeFromString<InstanceConfig>(snapshot).resolvedStaticCdn()
+        }.getOrNull()
+    }
+
     fun getPublicVapidKey(): String? {
         val snapshot = prefs.getString(KEY_INSTANCE_SNAPSHOT, null) ?: return null
         return runCatching {

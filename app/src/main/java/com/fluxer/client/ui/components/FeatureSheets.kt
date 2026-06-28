@@ -27,6 +27,7 @@ import com.fluxer.client.data.model.InviteInfo
 import com.fluxer.client.data.model.Message
 import com.fluxer.client.data.model.User
 import com.fluxer.client.ui.theme.*
+import com.fluxer.client.util.CdnUrlBuilder
 
 // ==================== PROFILE CARD SHEET ====================
 
@@ -36,9 +37,17 @@ fun ProfileCardSheet(
     user: User,
     onDismiss: () -> Unit,
     onViewFullProfile: (String) -> Unit,
-    onSendMessage: ((String) -> Unit)? = null
+    onSendMessage: ((String) -> Unit)? = null,
+    cdnBaseUrl: String? = null
 ) {
     val displayName = user.displayName?.takeIf { it.isNotBlank() } ?: user.username
+    val avatarUrl = CdnUrlBuilder.avatarUrlOrDefault(
+        cdnBase = cdnBaseUrl,
+        staticCdnBase = null,
+        userId = user.id,
+        hash = user.avatarUrl,
+        size = CdnUrlBuilder.Sizes.AVATAR_PROFILE
+    )
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -57,9 +66,9 @@ fun ProfileCardSheet(
                     .background(VelvetSurface, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                if (user.avatarUrl != null) {
+                if (avatarUrl != null) {
                     AsyncImage(
-                        model = user.avatarUrl,
+                        model = avatarUrl,
                         contentDescription = displayName,
                         modifier = Modifier.fillMaxSize().clip(CircleShape),
                         contentScale = ContentScale.Crop
@@ -264,9 +273,17 @@ fun JoinServerSheet(
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (preview.guild?.iconUrl != null) {
+                        val previewIconUrl = preview.guild?.let { guild ->
+                            CdnUrlBuilder.serverIconUrl(
+                                cdnBase = null,
+                                guildId = guild.id,
+                                hash = guild.iconUrl,
+                                size = 96
+                            )
+                        }
+                        if (previewIconUrl != null) {
                             AsyncImage(
-                                model = preview.guild.iconUrl,
+                                model = previewIconUrl,
                                 contentDescription = preview.guild.name,
                                 modifier = Modifier.size(48.dp).clip(CircleShape)
                             )
@@ -427,6 +444,12 @@ private fun MemberListContent(members: List<GuildMember>, modifier: Modifier = M
 private fun MemberRow(member: GuildMember) {
     val user = member.user
     val displayName = member.nick ?: user?.displayName?.takeIf { it.isNotBlank() } ?: user?.username ?: "Unknown"
+    val avatarUrl = CdnUrlBuilder.avatarUrlOrDefault(
+        cdnBase = null,
+        staticCdnBase = null,
+        userId = user?.id ?: "",
+        hash = member.avatarUrl ?: user?.avatarUrl
+    )
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -439,9 +462,9 @@ private fun MemberRow(member: GuildMember) {
                 .background(VelvetSurface, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            if (member.avatarUrl != null || user?.avatarUrl != null) {
+            if (avatarUrl != null) {
                 AsyncImage(
-                    model = member.avatarUrl ?: user?.avatarUrl,
+                    model = avatarUrl,
                     contentDescription = displayName,
                     modifier = Modifier.fillMaxSize().clip(CircleShape)
                 )

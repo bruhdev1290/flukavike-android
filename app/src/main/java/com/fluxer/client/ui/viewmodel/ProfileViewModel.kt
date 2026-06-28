@@ -43,23 +43,31 @@ class ProfileViewModel @Inject constructor(
     private val _relationshipType = MutableStateFlow<Int?>(null)
     val relationshipType: StateFlow<Int?> = _relationshipType.asStateFlow()
 
+    private var loadProfileJob: kotlinx.coroutines.Job? = null
+
     fun loadProfile(userId: String?) {
-        viewModelScope.launch {
+        loadProfileJob?.cancel()
+        loadProfileJob = viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
-            
+
+            if (userId == null) {
+                // For the current user, wait until auth is authenticated.
+                // This fixes the race where AccountScreen/ProfileScreen opens while
+                // the session is still being validated.
+                authRepository.authState
+                    .filter { it is AuthRepository.AuthState.Authenticated }
+                    .first()
+            }
+
             val currentUser = (authRepository.authState.value as? AuthRepository.AuthState.Authenticated)?.user
             _isCurrentUser.value = userId == null || userId == currentUser?.id
-            
+
             val targetUserId = userId ?: currentUser?.id
-            
+
             targetUserId?.let { id ->
-                val result = if (_isCurrentUser.value) {
-                    profileRepository.getCurrentUserProfile(id)
-                } else {
-                    profileRepository.getUserProfile(id)
-                }
-                
+                val result = profileRepository.getUserProfile(id)
+
                 result.onSuccess { profile ->
                     _profile.value = profile
                     _error.value = null
@@ -78,7 +86,7 @@ class ProfileViewModel @Inject constructor(
             } ?: run {
                 _profile.value = currentUser?.toUserProfile()
             }
-            
+
             _isLoading.value = false
         }
     }

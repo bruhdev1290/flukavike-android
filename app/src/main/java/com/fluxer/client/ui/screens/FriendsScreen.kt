@@ -215,7 +215,12 @@ private fun RelationshipRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Avatar
-        val resolvedAvatarUrl = com.fluxer.client.util.CdnUrlBuilder.avatarUrl(cdnBaseUrl, user.id, user.avatarUrl)
+        val resolvedAvatarUrl = com.fluxer.client.util.CdnUrlBuilder.avatarUrlOrDefault(
+            cdnBase = cdnBaseUrl,
+            staticCdnBase = null,
+            userId = user.id,
+            hash = user.avatarUrl
+        )
         if (resolvedAvatarUrl != null) {
             AsyncImage(
                 model = resolvedAvatarUrl,

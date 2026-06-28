@@ -30,6 +30,7 @@ import coil.compose.AsyncImage
 import com.fluxer.client.data.model.VoiceParticipant
 import com.fluxer.client.ui.theme.*
 import com.fluxer.client.ui.viewmodel.VoiceChannelViewModel
+import com.fluxer.client.util.CdnUrlBuilder
 import io.livekit.android.renderer.SurfaceViewRenderer
 import io.livekit.android.room.participant.RemoteParticipant
 import io.livekit.android.room.track.VideoTrack
@@ -341,7 +342,12 @@ private fun RemoteParticipantCard(
         ?: serverInfo?.user?.username
         ?: participant.identity?.value
         ?: "Unknown"
-    val avatarUrl = serverInfo?.user?.avatarUrl
+    val avatarUrl = CdnUrlBuilder.avatarUrlOrDefault(
+        cdnBase = null,
+        staticCdnBase = null,
+        userId = serverInfo?.user?.id ?: "",
+        hash = serverInfo?.user?.avatarUrl
+    )
     val isMuted = !participant.isMicrophoneEnabled()
     val hasCam = participant.isCameraEnabled()
 

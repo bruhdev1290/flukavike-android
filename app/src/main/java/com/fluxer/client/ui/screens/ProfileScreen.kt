@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.fluxer.client.data.model.UserProfile
 import com.fluxer.client.data.model.UserStatus
+import com.fluxer.client.util.CdnUrlBuilder
 import com.fluxer.client.ui.components.FluxerEmptyState
 import com.fluxer.client.ui.components.FluxerLoadingState
 import com.fluxer.client.ui.components.FluxerPageScaffold
@@ -51,7 +52,17 @@ fun ProfileScreen(
     val showEditDialog by viewModel.showEditDialog.collectAsState()
     val error by viewModel.error.collectAsState()
     val relationshipType by viewModel.relationshipType.collectAsState()
-    
+    val avatarUrl = CdnUrlBuilder.avatarUrlOrDefault(
+        cdnBase = viewModel.cdnBaseUrl,
+        staticCdnBase = null,
+        userId = profile?.id ?: userId ?: "",
+        hash = profile?.avatarUrl,
+        size = CdnUrlBuilder.Sizes.AVATAR_PROFILE
+    )
+    val bannerUrl = profile?.bannerUrl?.let {
+        CdnUrlBuilder.userBannerUrl(viewModel.cdnBaseUrl, profile?.id ?: userId ?: "", it)
+    }
+
     LaunchedEffect(userId) {
         viewModel.loadProfile(userId)
     }
@@ -87,6 +98,8 @@ fun ProfileScreen(
                 currentUser != null -> {
                     ProfileContent(
                         profile = currentUser,
+                        avatarUrl = avatarUrl,
+                        bannerUrl = bannerUrl,
                         isCurrentUser = isCurrentUser,
                         relationshipType = relationshipType,
                         onEditClick = { viewModel.showEditDialog() },
@@ -135,6 +148,8 @@ fun ProfileScreen(
 @Composable
 private fun ProfileContent(
     profile: UserProfile,
+    avatarUrl: String?,
+    bannerUrl: String?,
     isCurrentUser: Boolean,
     relationshipType: Int?,
     onEditClick: () -> Unit,
@@ -154,6 +169,24 @@ private fun ProfileContent(
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
+        // Profile banner
+        if (bannerUrl != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            ) {
+                AsyncImage(
+                    model = bannerUrl,
+                    contentDescription = "Profile banner",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         FluxerPanel(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
@@ -169,13 +202,9 @@ private fun ProfileContent(
                         .then(if (isCurrentUser) Modifier.clickable { avatarPicker.launch("image/*") } else Modifier),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (profile.avatarUrl != null) {
+                    if (avatarUrl != null) {
                         AsyncImage(
-                            model = com.fluxer.client.util.CdnUrlBuilder.avatarUrl(
-                                viewModel.cdnBaseUrl,
-                                profile.id,
-                                profile.avatarUrl
-                            ),
+                            model = avatarUrl,
                             contentDescription = profile.username,
                             modifier = Modifier
                                 .fillMaxSize()

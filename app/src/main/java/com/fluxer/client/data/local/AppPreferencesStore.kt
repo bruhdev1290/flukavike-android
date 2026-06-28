@@ -33,6 +33,11 @@ enum class GestureSensitivity(val displayName: String, val description: String, 
     HIGH("High", "Light swipe triggers", 28f),
 }
 
+enum class ServerRailMode(val displayName: String, val description: String) {
+    RAIL("Rail", "Always-visible server icons on the left"),
+    DRAWER("Drawer", "Server list hidden behind a left-edge drawer")
+}
+
 @Singleton
 class AppPreferencesStore @Inject constructor(
     @ApplicationContext private val context: Context
@@ -72,6 +77,12 @@ class AppPreferencesStore @Inject constructor(
     )
     val gestureSensitivity: StateFlow<GestureSensitivity> = _gestureSensitivity.asStateFlow()
 
+    private val _serverRailMode = MutableStateFlow(
+        ServerRailMode.entries.firstOrNull { it.name == prefs.getString(KEY_SERVER_RAIL_MODE, ServerRailMode.RAIL.name) }
+            ?: ServerRailMode.RAIL
+    )
+    val serverRailMode: StateFlow<ServerRailMode> = _serverRailMode.asStateFlow()
+
     fun setAccentColor(color: Color) {
         _accentColor.value = color
         prefs.edit().putInt(KEY_ACCENT_COLOR, color.toArgb()).apply()
@@ -104,6 +115,11 @@ class AppPreferencesStore @Inject constructor(
         prefs.edit().putString(KEY_GESTURE_SENSITIVITY, sensitivity.name).apply()
     }
 
+    fun setServerRailMode(mode: ServerRailMode) {
+        _serverRailMode.value = mode
+        prefs.edit().putString(KEY_SERVER_RAIL_MODE, mode.name).apply()
+    }
+
     companion object {
         private const val KEY_ACCENT_COLOR = "accent_color"
         private const val KEY_FONT_SCALE = "font_scale"
@@ -111,5 +127,6 @@ class AppPreferencesStore @Inject constructor(
         private const val KEY_BIOMETRIC_LOCK = "biometric_lock"
         private const val KEY_GESTURES_ENABLED = "gestures_enabled"
         private const val KEY_GESTURE_SENSITIVITY = "gesture_sensitivity"
+        private const val KEY_SERVER_RAIL_MODE = "server_rail_mode"
     }
 }

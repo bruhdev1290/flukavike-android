@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.fluxer.client.data.model.*
 import com.fluxer.client.ui.theme.*
+import com.fluxer.client.util.CdnUrlBuilder
 
 @Composable
 fun VoiceChannelOverlay(
@@ -139,9 +140,15 @@ private fun VoiceParticipantItem(
                 shape = CircleShape,
                 color = VelvetLight
             ) {
-                if (participant.user.avatarUrl != null) {
+                val avatarUrl = CdnUrlBuilder.avatarUrlOrDefault(
+                    cdnBase = null,
+                    staticCdnBase = null,
+                    userId = participant.user.id,
+                    hash = participant.user.avatarUrl
+                )
+                if (avatarUrl != null) {
                     AsyncImage(
-                        model = participant.user.avatarUrl,
+                        model = avatarUrl,
                         contentDescription = participant.user.username,
                         modifier = Modifier.fillMaxSize()
                     )

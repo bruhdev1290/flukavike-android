@@ -48,7 +48,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
+import com.fluxer.client.util.CdnUrlBuilder
 import com.fluxer.client.data.model.displayName
 import com.fluxer.client.data.model.UserStatus
 import com.fluxer.client.ui.components.*
@@ -106,14 +108,18 @@ fun ChatScreen(
 
     val gesturesEnabled by prefsViewModel.gesturesEnabled.collectAsState()
     val gestureSensitivity by prefsViewModel.gestureSensitivity.collectAsState()
+    val serverRailMode by prefsViewModel.serverRailMode.collectAsState()
+    val showServerRail = serverRailMode == com.fluxer.client.data.local.ServerRailMode.RAIL
+    var serverDrawerOpen by remember { mutableStateOf(false) }
 
     var showCustomStatus by remember { mutableStateOf(false) }
     var showJoinServer by remember { mutableStateOf(false) }
     var showCreateServer by remember { mutableStateOf(false) }
     var showCreateChannel by remember { mutableStateOf(false) }
     var showAddServerMenu by remember { mutableStateOf(false) }
+    var showServerContextMenu by remember { mutableStateOf(false) }
     var profileCardUser by remember { mutableStateOf<com.fluxer.client.data.model.User?>(null) }
-    var profileCardUserId by remember { mutableStateOf("") }
+    var profileCardUserId by remember { mutableStateOf<String?>(null) }
     var viewingAttachment by remember { mutableStateOf<com.fluxer.client.data.model.Attachment?>(null) }
     
     val listState = rememberLazyListState()
@@ -177,24 +183,26 @@ fun ChatScreen(
         else -> 72.dp
     }
     
-    // Root layout - Server Sidebar is always visible on the left
+    // Root layout - Server Sidebar is visible on the left unless drawer mode is chosen
     Row(modifier = Modifier.fillMaxSize()) {
-        // Server Sidebar - Always visible, never covered
-        ServerSidebar(
-            servers = guilds,
-            selectedServerId = selectedServer?.id,
-            onServerSelected = { server ->
-                onNavigateToServer(server.id)
-                viewModel.selectServer(server)
-                if (isCompact && channels.isNotEmpty()) channelDrawerOpen = true
-            },
-            onHomeSelected = onNavigateToMessages,
-            unreadCountsByGuild = unreadCountsByGuild,
-            onJoinServer = { showAddServerMenu = true },
-            cdnBaseUrl = viewModel.cdnBaseUrl,
-            modifier = Modifier.width(sidebarWidth),
-            isCompact = isCompact
-        )
+        // Server Sidebar - visible in rail mode
+        if (showServerRail) {
+            ServerSidebar(
+                servers = guilds,
+                selectedServerId = selectedServer?.id,
+                onServerSelected = { server ->
+                    onNavigateToServer(server.id)
+                    viewModel.selectServer(server)
+                    if (isCompact && channels.isNotEmpty()) channelDrawerOpen = true
+                },
+                onHomeSelected = onNavigateToMessages,
+                unreadCountsByGuild = unreadCountsByGuild,
+                onJoinServer = { showAddServerMenu = true },
+                cdnBaseUrl = viewModel.cdnBaseUrl,
+                modifier = Modifier.width(sidebarWidth),
+                isCompact = isCompact
+            )
+        }
         
         // Main Content Area with optional Channel List
         Box(modifier = Modifier.weight(1f)) {
@@ -252,6 +260,14 @@ fun ChatScreen(
                                 .padding(horizontal = 16.dp, vertical = 14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            if (!showServerRail) {
+                                FluxerIconButton(
+                                    icon = Icons.Default.Menu,
+                                    contentDescription = "Servers",
+                                    onClick = { serverDrawerOpen = true }
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                            }
                             if (isCompact && channels.isNotEmpty()) {
                                 FluxerIconButton(
                                     icon = Icons.Default.Menu,
@@ -274,7 +290,10 @@ fun ChatScreen(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = TextMuted,
                                     maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = if (selectedServer != null) {
+                                        Modifier.clickable { showServerContextMenu = true }
+                                    } else Modifier
                                 )
                             }
                             Row(
@@ -570,7 +589,7 @@ fun ChatScreen(
                                                 onAvatarClick = { _ ->
                                                     profileCardUser = message.author
                                                     profileCardUserId = message.authorId.takeIf { it.isNotBlank() }
-                                                        ?: message.author?.id ?: ""
+                                                        ?: message.author?.id
                                                 },
                                                 onViewAttachment = { attachment -> viewingAttachment = attachment }
                                             )
@@ -730,7 +749,11 @@ fun ChatScreen(
                     edgeDragAccum += delta
                     val threshold = with(density) { gestureSensitivity.thresholdDp.dp.toPx() }
                     if (edgeDragAccum >= threshold) {
-                        channelDrawerOpen = true
+                        if (showServerRail) {
+                            channelDrawerOpen = true
+                        } else {
+                            serverDrawerOpen = true
+                        }
                         edgeDragAccum = 0f
                     }
                 }
@@ -747,7 +770,9 @@ fun ChatScreen(
             }
 
             // Edge swipe zone — separate, lightweight, never touches drawer lifecycle
-            if (isCompact && gesturesEnabled && !channelDrawerOpen && channels.isNotEmpty()) {
+            val canEdgeSwipeChannel = isCompact && showServerRail && !channelDrawerOpen && channels.isNotEmpty()
+            val canEdgeSwipeServer = isCompact && !showServerRail && !serverDrawerOpen
+            if (gesturesEnabled && (canEdgeSwipeChannel || canEdgeSwipeServer)) {
                 Box(
                     modifier = Modifier
                         .width(24.dp)
@@ -759,6 +784,49 @@ fun ChatScreen(
                             onDragStopped = { edgeDragAccum = 0f }
                         )
                 )
+            }
+
+            // Server drawer — shown when rail is hidden and user opens it
+            if (!showServerRail && serverDrawerOpen) {
+                // Backdrop — tap to close
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f))
+                        .clickable { serverDrawerOpen = false }
+                )
+
+                // Drawer panel
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(sidebarWidth)
+                        .background(VelvetBlack)
+                        .align(Alignment.CenterStart)
+                ) {
+                    ServerSidebar(
+                        servers = guilds,
+                        selectedServerId = selectedServer?.id,
+                        onServerSelected = { server ->
+                            onNavigateToServer(server.id)
+                            viewModel.selectServer(server)
+                            serverDrawerOpen = false
+                            if (isCompact && channels.isNotEmpty()) channelDrawerOpen = true
+                        },
+                        onHomeSelected = {
+                            serverDrawerOpen = false
+                            onNavigateToMessages()
+                        },
+                        unreadCountsByGuild = unreadCountsByGuild,
+                        onJoinServer = {
+                            serverDrawerOpen = false
+                            showAddServerMenu = true
+                        },
+                        cdnBaseUrl = viewModel.cdnBaseUrl,
+                        modifier = Modifier.fillMaxSize(),
+                        isCompact = isCompact
+                    )
+                }
             }
 
             // Channel drawer — original instant show/hide, no extra composables kept alive
@@ -787,6 +855,23 @@ fun ChatScreen(
                         .background(VelvetDark)
                 ) {
                     Column {
+                        val drawerBannerUrl = selectedServer?.let { srv ->
+                            CdnUrlBuilder.serverBannerUrl(
+                                cdnBase = viewModel.cdnBaseUrl,
+                                guildId = srv.id,
+                                hash = srv.bannerUrl
+                            )
+                        }
+                        if (drawerBannerUrl != null) {
+                            AsyncImage(
+                                model = drawerBannerUrl,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(96.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                         Surface(color = VelvetDark, modifier = Modifier.fillMaxWidth()) {
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -853,9 +938,15 @@ fun ChatScreen(
     profileCardUser?.let { user ->
         ProfileCardSheet(
             user = user,
-            onDismiss = { profileCardUser = null; profileCardUserId = "" },
-            onViewFullProfile = { onNavigateToUserProfile(profileCardUserId) },
-            onSendMessage = null
+            onDismiss = { profileCardUser = null; profileCardUserId = null },
+            onViewFullProfile = { userId ->
+                val targetId = userId.takeIf { it.isNotBlank() } ?: profileCardUserId ?: user.id
+                if (!targetId.isNullOrBlank()) {
+                    onNavigateToUserProfile(targetId)
+                }
+            },
+            onSendMessage = null,
+            cdnBaseUrl = viewModel.cdnBaseUrl
         )
     }
 
@@ -891,6 +982,24 @@ fun ChatScreen(
                 viewModel.setCustomStatus(status)
                 showCustomStatus = false
             }
+        )
+    }
+
+    selectedServer?.let { server ->
+        if (!showServerContextMenu) return@let
+        ServerContextMenu(
+            server = server,
+            cdnBaseUrl = viewModel.cdnBaseUrl,
+            onDismiss = { showServerContextMenu = false },
+            onMarkAsRead = { /* TODO */ showServerContextMenu = false },
+            onNotificationSettings = { /* TODO */ showServerContextMenu = false },
+            onPrivacySettings = { /* TODO */ showServerContextMenu = false },
+            onEditProfile = { /* TODO */ showServerContextMenu = false },
+            onMuteCommunity = { /* TODO */ showServerContextMenu = false },
+            onHideMutedChannels = { /* TODO */ },
+            onLeaveCommunity = { /* TODO */ showServerContextMenu = false },
+            onReportCommunity = { /* TODO */ showServerContextMenu = false },
+            onDebugCommunity = { /* TODO */ showServerContextMenu = false }
         )
     }
 

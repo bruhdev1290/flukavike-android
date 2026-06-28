@@ -2,6 +2,7 @@ package com.fluxer.client.data.repository
 
 import android.content.Context
 import android.net.Uri
+import com.fluxer.client.data.model.ServerProfile
 import com.fluxer.client.data.model.UpdateProfileRequest
 import com.fluxer.client.data.model.User
 import com.fluxer.client.data.model.UserProfile
@@ -22,6 +23,35 @@ class ProfileRepository @Inject constructor(
     private val avatarApiService: AvatarApiService,
     @ApplicationContext private val context: Context
 ) {
+    suspend fun getServerProfile(guildId: String): Result<ServerProfile> {
+        return try {
+            val response = apiService.getGuild(guildId)
+            if (response.isSuccessful) {
+                response.body()?.let { server ->
+                    Result.Success(
+                        ServerProfile(
+                            id = server.id,
+                            name = server.name,
+                            iconUrl = server.iconUrl,
+                            bannerUrl = server.bannerUrl,
+                            description = server.description,
+                            vanityUrl = server.vanityUrl,
+                            ownerId = server.ownerId,
+                            memberCount = server.memberCount,
+                            onlineCount = server.onlineCount,
+                            createdAt = server.createdAt
+                        )
+                    )
+                } ?: Result.Error("Empty response")
+            } else {
+                Result.Error("Failed to load server profile: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to load server profile")
+            Result.Error("Network error: ${e.message}")
+        }
+    }
+
     suspend fun getUserProfile(userId: String): Result<UserProfile> {
         return try {
             val response = apiService.getUserProfile(userId)
@@ -38,9 +68,9 @@ class ProfileRepository @Inject constructor(
         }
     }
 
-    suspend fun getCurrentUserProfile(userId: String): Result<UserProfile> {
+    suspend fun getCurrentUserProfile(): Result<UserProfile> {
         return try {
-            val response = apiService.getUserProfile(userId)
+            val response = apiService.getCurrentUserProfile()
             if (response.isSuccessful) {
                 response.body()?.let {
                     Result.Success(it.toUserProfile())

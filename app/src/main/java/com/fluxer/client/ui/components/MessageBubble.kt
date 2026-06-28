@@ -335,7 +335,12 @@ private fun ReplyPreview(
             modifier = Modifier.padding(start = 4.dp)
         ) {
             // Author avatar (small)
-            val replyAvatarUrl = CdnUrlBuilder.avatarUrl(cdnBaseUrl, message.author?.id ?: "", message.author?.avatarUrl)
+            val replyAvatarUrl = CdnUrlBuilder.avatarUrlOrDefault(
+                cdnBase = cdnBaseUrl,
+                staticCdnBase = null,
+                userId = message.author?.id ?: "",
+                hash = message.author?.avatarUrl
+            )
             if (replyAvatarUrl != null) {
                 SubcomposeAsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
@@ -536,7 +541,12 @@ fun UserAvatar(
             color = VelvetSurface,
             border = androidx.compose.foundation.BorderStroke(2.dp, BorderSubtle)
         ) {
-            val resolvedAvatarUrl = CdnUrlBuilder.avatarUrl(cdnBaseUrl, user?.id ?: "", user?.avatarUrl)
+            val resolvedAvatarUrl = CdnUrlBuilder.avatarUrlOrDefault(
+                cdnBase = cdnBaseUrl,
+                staticCdnBase = null,
+                userId = user?.id ?: "",
+                hash = user?.avatarUrl
+            )
             if (resolvedAvatarUrl != null) {
                 // Load user avatar image
                 SubcomposeAsyncImage(

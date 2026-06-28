@@ -29,6 +29,7 @@ import com.fluxer.client.ui.components.FluxerIconButton
 import com.fluxer.client.ui.components.FluxerLoadingState
 import com.fluxer.client.ui.components.FluxerPageScaffold
 import com.fluxer.client.ui.theme.*
+import com.fluxer.client.util.CdnUrlBuilder
 import com.fluxer.client.ui.viewmodel.StarredChannelsViewModel
 import java.time.Instant
 import java.time.ZoneId
@@ -127,9 +128,15 @@ private fun ServerHeader(server: Server) {
             shape = RoundedCornerShape(6.dp),
             color = VelvetSurface
         ) {
-            if (server.iconUrl != null) {
+            val iconUrl = CdnUrlBuilder.serverIconUrl(
+                cdnBase = null,
+                guildId = server.id,
+                hash = server.iconUrl,
+                size = 64
+            )
+            if (iconUrl != null) {
                 AsyncImage(
-                    model = server.iconUrl,
+                    model = iconUrl,
                     contentDescription = server.name,
                     modifier = Modifier.fillMaxSize()
                 )

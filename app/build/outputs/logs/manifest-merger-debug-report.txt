@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:2:1-177:12
-INJECTED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:2:1-177:12
-INJECTED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:2:1-177:12
-INJECTED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:2:1-177:12
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:2:1-177:12
+INJECTED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:2:1-177:12
+INJECTED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:2:1-177:12
+INJECTED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:2:1-177:12
 MERGED from [androidx.core:core-splashscreen:1.0.1] /Users/andrewgonzalez/.gradle/caches/transforms-3/436518e38ed1a439541309eff4269a9b/transformed/core-splashscreen-1.0.1/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.hilt:hilt-navigation-compose:1.1.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/3268c9420df8d842f57716592e9d39bd/transformed/hilt-navigation-compose-1.1.0/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.hilt:hilt-navigation:1.1.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/2d6ba2feaeb3ac8d3629332fff34ec72/transformed/hilt-navigation-1.1.0/AndroidManifest.xml:2:1-7:12
@@ -139,17 +139,17 @@ MERGED from [androidx.annotation:annotation-experimental:1.4.0] /Users/andrewgon
 MERGED from [com.google.dagger:dagger-lint-aar:2.50] /Users/andrewgonzalez/.gradle/caches/transforms-3/664d0b63cbc772ca986108a1d5f724d2/transformed/dagger-lint-aar-2.50/AndroidManifest.xml:16:1-19:12
 MERGED from [io.github.webrtc-sdk:android-prefixed:125.6422.02] /Users/andrewgonzalez/.gradle/caches/transforms-3/295227dcf8df81c04a3599257ab6c5f0/transformed/android-prefixed-125.6422.02/AndroidManifest.xml:2:1-9:12
 	package
-		INJECTED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml
 	android:versionName
-		INJECTED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml
 	xmlns:tools
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:3:5-51
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:3:5-51
 	android:versionCode
-		INJECTED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml
 	xmlns:android
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:2:11-69
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:2:11-69
 uses-permission#android.permission.INTERNET
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:6:5-67
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:6:5-67
 MERGED from [com.google.android.gms:play-services-measurement:21.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/3afa3e391c1a2ec0c073007cbd8f191f/transformed/play-services-measurement-21.5.0/AndroidManifest.xml:23:5-67
 MERGED from [com.google.android.gms:play-services-measurement:21.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/3afa3e391c1a2ec0c073007cbd8f191f/transformed/play-services-measurement-21.5.0/AndroidManifest.xml:23:5-67
 MERGED from [com.google.android.gms:play-services-measurement-api:21.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/830e61a7e72b336d47f96b400195f596/transformed/play-services-measurement-api-21.5.0/AndroidManifest.xml:22:5-67
@@ -167,9 +167,9 @@ MERGED from [io.livekit:livekit-android:2.5.0] /Users/andrewgonzalez/.gradle/cac
 MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.8] /Users/andrewgonzalez/.gradle/caches/transforms-3/ce7e52242c04c7f1337622cbc7670a4e/transformed/transport-backend-cct-3.1.8/AndroidManifest.xml:25:5-67
 MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.8] /Users/andrewgonzalez/.gradle/caches/transforms-3/ce7e52242c04c7f1337622cbc7670a4e/transformed/transport-backend-cct-3.1.8/AndroidManifest.xml:25:5-67
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:6:22-64
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:6:22-64
 uses-permission#android.permission.ACCESS_NETWORK_STATE
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:7:5-79
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:7:5-79
 MERGED from [com.google.firebase:firebase-messaging:23.4.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/cff142ba168674981151034ae02c6e47/transformed/firebase-messaging-23.4.0/AndroidManifest.xml:22:5-79
 MERGED from [com.google.firebase:firebase-messaging:23.4.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/cff142ba168674981151034ae02c6e47/transformed/firebase-messaging-23.4.0/AndroidManifest.xml:22:5-79
 MERGED from [com.google.android.gms:play-services-measurement:21.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/3afa3e391c1a2ec0c073007cbd8f191f/transformed/play-services-measurement-21.5.0/AndroidManifest.xml:24:5-79
@@ -191,93 +191,93 @@ MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.8] /User
 MERGED from [com.google.android.datatransport:transport-runtime:3.1.8] /Users/andrewgonzalez/.gradle/caches/transforms-3/7ad87b9bd5ae78bdc9a72f4dc6817261/transformed/transport-runtime-3.1.8/AndroidManifest.xml:22:5-79
 MERGED from [com.google.android.datatransport:transport-runtime:3.1.8] /Users/andrewgonzalez/.gradle/caches/transforms-3/7ad87b9bd5ae78bdc9a72f4dc6817261/transformed/transport-runtime-3.1.8/AndroidManifest.xml:22:5-79
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:7:22-76
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:7:22-76
 uses-permission#android.permission.POST_NOTIFICATIONS
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:10:5-77
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:10:5-77
 MERGED from [com.google.firebase:firebase-messaging:23.4.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/cff142ba168674981151034ae02c6e47/transformed/firebase-messaging-23.4.0/AndroidManifest.xml:23:5-77
 MERGED from [com.google.firebase:firebase-messaging:23.4.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/cff142ba168674981151034ae02c6e47/transformed/firebase-messaging-23.4.0/AndroidManifest.xml:23:5-77
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:10:22-74
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:10:22-74
 uses-permission#android.permission.USE_BIOMETRIC
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:13:5-72
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:13:5-72
 MERGED from [androidx.biometric:biometric:1.1.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/c814383cc7f9f2d5bf1733f92af2b845/transformed/biometric-1.1.0/AndroidManifest.xml:24:5-72
 MERGED from [androidx.biometric:biometric:1.1.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/c814383cc7f9f2d5bf1733f92af2b845/transformed/biometric-1.1.0/AndroidManifest.xml:24:5-72
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:13:22-69
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:13:22-69
 uses-permission#android.permission.CAMERA
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:16:5-65
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:16:5-65
 MERGED from [io.livekit:livekit-android:2.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/68621239f351a918ba83f38390576c61/transformed/livekit-android-2.5.0/AndroidManifest.xml:25:5-65
 MERGED from [io.livekit:livekit-android:2.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/68621239f351a918ba83f38390576c61/transformed/livekit-android-2.5.0/AndroidManifest.xml:25:5-65
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:16:22-62
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:16:22-62
 uses-permission#android.permission.RECORD_AUDIO
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:17:5-71
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:17:5-71
 MERGED from [io.livekit:livekit-android:2.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/68621239f351a918ba83f38390576c61/transformed/livekit-android-2.5.0/AndroidManifest.xml:24:5-71
 MERGED from [io.livekit:livekit-android:2.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/68621239f351a918ba83f38390576c61/transformed/livekit-android-2.5.0/AndroidManifest.xml:24:5-71
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:17:22-68
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:17:22-68
 uses-permission#android.permission.MODIFY_AUDIO_SETTINGS
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:18:5-80
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:18:5-80
 MERGED from [com.github.davidliu:audioswitch:89582c47c9a04c62f90aa5e57251af4800a62c9a] /Users/andrewgonzalez/.gradle/caches/transforms-3/0219a674e0950898f1e30a8ad212d4c2/transformed/audioswitch-89582c47c9a04c62f90aa5e57251af4800a62c9a/AndroidManifest.xml:12:5-80
 MERGED from [com.github.davidliu:audioswitch:89582c47c9a04c62f90aa5e57251af4800a62c9a] /Users/andrewgonzalez/.gradle/caches/transforms-3/0219a674e0950898f1e30a8ad212d4c2/transformed/audioswitch-89582c47c9a04c62f90aa5e57251af4800a62c9a/AndroidManifest.xml:12:5-80
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:18:22-77
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:18:22-77
 uses-permission#android.permission.READ_PHONE_STATE
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:19:5-75
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:19:5-75
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:19:22-72
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:19:22-72
 uses-permission#android.permission.BLUETOOTH
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:20:5-95
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:20:5-95
 MERGED from [com.github.davidliu:audioswitch:89582c47c9a04c62f90aa5e57251af4800a62c9a] /Users/andrewgonzalez/.gradle/caches/transforms-3/0219a674e0950898f1e30a8ad212d4c2/transformed/audioswitch-89582c47c9a04c62f90aa5e57251af4800a62c9a/AndroidManifest.xml:9:5-11:38
 MERGED from [com.github.davidliu:audioswitch:89582c47c9a04c62f90aa5e57251af4800a62c9a] /Users/andrewgonzalez/.gradle/caches/transforms-3/0219a674e0950898f1e30a8ad212d4c2/transformed/audioswitch-89582c47c9a04c62f90aa5e57251af4800a62c9a/AndroidManifest.xml:9:5-11:38
 	android:maxSdkVersion
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:20:66-92
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:20:66-92
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:20:22-65
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:20:22-65
 uses-permission#android.permission.BLUETOOTH_CONNECT
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:21:5-76
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:21:5-76
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:21:22-73
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:21:22-73
 uses-permission#android.permission.BLUETOOTH_ADMIN
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:22:5-101
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:22:5-101
 	android:maxSdkVersion
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:22:72-98
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:22:72-98
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:22:22-71
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:22:22-71
 uses-permission#android.permission.FOREGROUND_SERVICE
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:25:5-77
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:25:5-77
 MERGED from [io.livekit:livekit-android:2.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/68621239f351a918ba83f38390576c61/transformed/livekit-android-2.5.0/AndroidManifest.xml:26:5-77
 MERGED from [io.livekit:livekit-android:2.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/68621239f351a918ba83f38390576c61/transformed/livekit-android-2.5.0/AndroidManifest.xml:26:5-77
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:25:22-74
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:25:22-74
 uses-permission#android.permission.FOREGROUND_SERVICE_PHONE_CALL
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:26:5-88
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:26:5-88
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:26:22-85
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:26:22-85
 uses-permission#android.permission.FOREGROUND_SERVICE_MICROPHONE
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:27:5-88
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:27:5-88
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:27:22-85
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:27:22-85
 uses-permission#android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:28:5-94
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:28:5-94
 MERGED from [io.livekit:livekit-android:2.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/68621239f351a918ba83f38390576c61/transformed/livekit-android-2.5.0/AndroidManifest.xml:27:5-94
 MERGED from [io.livekit:livekit-android:2.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/68621239f351a918ba83f38390576c61/transformed/livekit-android-2.5.0/AndroidManifest.xml:27:5-94
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:28:22-91
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:28:22-91
 uses-permission#android.permission.MANAGE_OWN_CALLS
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:29:5-75
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:29:5-75
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:29:22-72
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:29:22-72
 uses-permission#android.permission.USE_FULL_SCREEN_INTENT
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:30:5-81
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:30:5-81
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:30:22-78
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:30:22-78
 uses-permission#android.permission.TURN_SCREEN_ON
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:31:5-73
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:31:5-73
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:31:22-70
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:31:22-70
 uses-permission#android.permission.WAKE_LOCK
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:34:5-68
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:34:5-68
 MERGED from [com.google.firebase:firebase-messaging:23.4.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/cff142ba168674981151034ae02c6e47/transformed/firebase-messaging-23.4.0/AndroidManifest.xml:24:5-68
 MERGED from [com.google.firebase:firebase-messaging:23.4.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/cff142ba168674981151034ae02c6e47/transformed/firebase-messaging-23.4.0/AndroidManifest.xml:24:5-68
 MERGED from [com.google.android.gms:play-services-measurement:21.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/3afa3e391c1a2ec0c073007cbd8f191f/transformed/play-services-measurement-21.5.0/AndroidManifest.xml:25:5-68
@@ -293,58 +293,58 @@ MERGED from [com.google.android.gms:play-services-measurement-sdk-api:21.5.0] /U
 MERGED from [org.unifiedpush.android:connector:2.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/2bcfbcb5721135bb86ae1c8d549e966a/transformed/connector-2.5.0/AndroidManifest.xml:7:5-68
 MERGED from [org.unifiedpush.android:connector:2.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/2bcfbcb5721135bb86ae1c8d549e966a/transformed/connector-2.5.0/AndroidManifest.xml:7:5-68
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:34:22-65
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:34:22-65
 uses-permission#android.permission.VIBRATE
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:37:5-66
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:37:5-66
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:37:22-63
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:37:22-63
 uses-permission#com.sec.android.provider.badge.permission.READ
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:40:5-86
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:40:5-86
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:40:22-83
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:40:22-83
 uses-permission#com.sec.android.provider.badge.permission.WRITE
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:41:5-87
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:41:5-87
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:41:22-84
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:41:22-84
 uses-permission#com.htc.launcher.permission.READ_SETTINGS
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:42:5-81
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:42:5-81
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:42:22-78
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:42:22-78
 uses-permission#com.htc.launcher.permission.UPDATE_SHORTCUT
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:43:5-83
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:43:5-83
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:43:22-80
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:43:22-80
 uses-permission#com.sonyericsson.home.permission.BROADCAST_BADGE
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:44:5-88
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:44:5-88
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:44:22-85
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:44:22-85
 uses-permission#com.sonymobile.home.permission.PROVIDER_INSERT_BADGE
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:45:5-92
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:45:5-92
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:45:22-89
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:45:22-89
 uses-permission#com.anddoes.launcher.permission.UPDATE_COUNT
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:46:5-84
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:46:5-84
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:46:22-81
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:46:22-81
 uses-permission#com.majeur.launcher.permission.UPDATE_BADGE
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:47:5-83
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:47:5-83
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:47:22-80
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:47:22-80
 uses-permission#com.huawei.android.launcher.permission.CHANGE_BADGE
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:48:5-91
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:48:5-91
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:48:22-88
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:48:22-88
 uses-permission#com.huawei.android.launcher.permission.READ_SETTINGS
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:49:5-92
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:49:5-92
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:49:22-89
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:49:22-89
 uses-permission#com.huawei.android.launcher.permission.WRITE_SETTINGS
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:50:5-93
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:50:5-93
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:50:22-90
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:50:22-90
 application
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:52:5-166:19
-INJECTED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:52:5-166:19
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:52:5-166:19
+INJECTED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:52:5-166:19
 MERGED from [androidx.compose.ui:ui-tooling-android:1.6.1] /Users/andrewgonzalez/.gradle/caches/transforms-3/6c966fe8f237fb7c03bf9a7dc5dda69f/transformed/ui-tooling-release/AndroidManifest.xml:22:5-26:19
 MERGED from [androidx.compose.ui:ui-tooling-android:1.6.1] /Users/andrewgonzalez/.gradle/caches/transforms-3/6c966fe8f237fb7c03bf9a7dc5dda69f/transformed/ui-tooling-release/AndroidManifest.xml:22:5-26:19
 MERGED from [androidx.compose.ui:ui-test-manifest:1.6.1] /Users/andrewgonzalez/.gradle/caches/transforms-3/f24526ec3ca4ce19e70beaa4e35925fa/transformed/ui-test-manifest-1.6.1/AndroidManifest.xml:22:5-26:19
@@ -416,191 +416,191 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/andr
 MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/andrewgonzalez/.gradle/caches/transforms-3/5fce6db7c318b32e7711c5e233b88bbc/transformed/startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
 MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/andrewgonzalez/.gradle/caches/transforms-3/5fce6db7c318b32e7711c5e233b88bbc/transformed/startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
 	android:extractNativeLibs
-		INJECTED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.13.1] /Users/andrewgonzalez/.gradle/caches/transforms-3/9bf1f9a7ec7587f2eb51ce8f4061903b/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:60:9-35
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:60:9-35
 	android:label
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:58:9-41
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:58:9-41
 	android:fullBackupContent
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:56:9-54
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:56:9-54
 	android:roundIcon
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:59:9-54
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:59:9-54
 	tools:targetApi
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:63:9-29
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:63:9-29
 	android:icon
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:57:9-43
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:57:9-43
 	android:allowBackup
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:54:9-36
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:54:9-36
 	android:theme
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:61:9-44
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:61:9-44
 	android:dataExtractionRules
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:55:9-65
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:55:9-65
 	android:usesCleartextTraffic
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:62:9-45
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:62:9-45
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:53:9-42
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:53:9-42
 activity#com.fluxer.client.MainActivity
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:65:9-110:20
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:65:9-110:20
 	android:launchMode
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:70:13-44
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:70:13-44
 	android:windowSoftInputMode
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:69:13-55
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:69:13-55
 	android:exported
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:67:13-36
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:67:13-36
 	android:theme
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:68:13-55
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:68:13-55
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:66:13-41
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:66:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:71:13-74:29
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:71:13-74:29
 action#android.intent.action.MAIN
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:72:17-69
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:72:17-69
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:72:25-66
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:72:25-66
 category#android.intent.category.LAUNCHER
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:73:17-77
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:73:17-77
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:73:27-74
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:73:27-74
 intent-filter#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+category:name:android.intent.category.DEFAULT+data:scheme:fluxer
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:75:13-80:29
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:75:13-80:29
 action#android.intent.action.VIEW
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:76:17-69
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:76:17-69
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:76:25-66
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:76:25-66
 category#android.intent.category.DEFAULT
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:77:17-76
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:77:17-76
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:77:27-73
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:77:27-73
 category#android.intent.category.BROWSABLE
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:78:17-78
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:78:17-78
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:78:27-75
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:78:27-75
 data
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 	android:host
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 	android:scheme
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 	android:pathPrefix
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 intent-filter#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+category:name:android.intent.category.DEFAULT+data:host:web.canary.fluxer.app+data:host:web.canary.fluxer.app+data:host:web.canary.fluxer.app+data:host:web.canary.fluxer.app+data:host:web.canary.fluxer.app+data:host:web.canary.fluxer.app+data:host:web.canary.fluxer.com+data:host:web.canary.fluxer.com+data:host:web.canary.fluxer.com+data:host:web.canary.fluxer.com+data:host:web.canary.fluxer.com+data:host:web.canary.fluxer.com+data:host:web.fluxer.app+data:host:web.fluxer.app+data:host:web.fluxer.app+data:host:web.fluxer.app+data:host:web.fluxer.app+data:host:web.fluxer.app+data:host:web.fluxer.com+data:host:web.fluxer.com+data:host:web.fluxer.com+data:host:web.fluxer.com+data:host:web.fluxer.com+data:host:web.fluxer.com+data:pathPrefix:/channels+data:pathPrefix:/channels+data:pathPrefix:/channels+data:pathPrefix:/channels+data:pathPrefix:/gift+data:pathPrefix:/gift+data:pathPrefix:/gift+data:pathPrefix:/gift+data:pathPrefix:/invite+data:pathPrefix:/invite+data:pathPrefix:/invite+data:pathPrefix:/invite+data:pathPrefix:/notifications+data:pathPrefix:/notifications+data:pathPrefix:/notifications+data:pathPrefix:/notifications+data:pathPrefix:/theme+data:pathPrefix:/theme+data:pathPrefix:/theme+data:pathPrefix:/theme+data:pathPrefix:/you+data:pathPrefix:/you+data:pathPrefix:/you+data:pathPrefix:/you+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https+data:scheme:https
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:81:13-109:29
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:81:13-109:29
 	android:autoVerify
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:81:28-53
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:81:28-53
 service#com.fluxer.client.service.FluxerMessagingService
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:113:9-119:19
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:113:9-119:19
 	android:exported
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:115:13-37
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:115:13-37
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:114:13-59
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:114:13-59
 intent-filter#action:name:com.google.firebase.MESSAGING_EVENT
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:116:13-118:29
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:116:13-118:29
 action#com.google.firebase.MESSAGING_EVENT
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:117:17-78
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:117:17-78
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:117:25-75
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:117:25-75
 service#com.fluxer.client.service.FluxerCallConnectionService
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:122:9-129:19
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:122:9-129:19
 	android:exported
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:125:13-36
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:125:13-36
 	android:permission
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:124:13-84
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:124:13-84
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:123:13-64
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:123:13-64
 intent-filter#action:name:android.telecom.ConnectionService
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:126:13-128:29
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:126:13-128:29
 action#android.telecom.ConnectionService
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:127:17-76
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:127:17-76
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:127:25-73
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:127:25-73
 receiver#com.fluxer.client.service.CallBroadcastReceiver
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:132:9-140:20
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:132:9-140:20
 	android:exported
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:134:13-37
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:134:13-37
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:133:13-58
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:133:13-58
 intent-filter#action:name:com.fluxer.client.ACTION_ACCEPT_CALL+action:name:com.fluxer.client.ACTION_DECLINE_CALL+action:name:com.fluxer.client.ACTION_END_CALL
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:135:13-139:29
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:135:13-139:29
 action#com.fluxer.client.ACTION_ACCEPT_CALL
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:136:17-79
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:136:17-79
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:136:25-76
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:136:25-76
 action#com.fluxer.client.ACTION_DECLINE_CALL
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:137:17-80
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:137:17-80
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:137:25-77
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:137:25-77
 action#com.fluxer.client.ACTION_END_CALL
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:138:17-76
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:138:17-76
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:138:25-73
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:138:25-73
 receiver#com.fluxer.client.service.FluxerUnifiedPushReceiver
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:143:9-153:20
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:143:9-153:20
 	android:exported
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:145:13-36
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:145:13-36
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:144:13-62
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:144:13-62
 intent-filter#action:name:org.unifiedpush.android.connector.MESSAGE+action:name:org.unifiedpush.android.connector.NEW_ENDPOINT+action:name:org.unifiedpush.android.connector.REGISTRATION_FAILED+action:name:org.unifiedpush.android.connector.REGISTRATION_REFUSED+action:name:org.unifiedpush.android.connector.UNREGISTERED
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:146:13-152:29
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:146:13-152:29
 action#org.unifiedpush.android.connector.MESSAGE
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:147:17-84
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:147:17-84
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:147:25-81
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:147:25-81
 action#org.unifiedpush.android.connector.UNREGISTERED
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:148:17-89
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:148:17-89
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:148:25-86
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:148:25-86
 action#org.unifiedpush.android.connector.NEW_ENDPOINT
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:149:17-89
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:149:17-89
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:149:25-86
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:149:25-86
 action#org.unifiedpush.android.connector.REGISTRATION_FAILED
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:150:17-96
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:150:17-96
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:150:25-93
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:150:25-93
 action#org.unifiedpush.android.connector.REGISTRATION_REFUSED
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:151:17-97
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:151:17-97
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:151:25-94
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:151:25-94
 meta-data#com.google.firebase.messaging.default_notification_icon
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:156:9-158:60
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:156:9-158:60
 	android:resource
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:158:13-57
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:158:13-57
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:157:13-83
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:157:13-83
 meta-data#com.google.firebase.messaging.default_notification_color
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:159:9-161:53
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:159:9-161:53
 	android:resource
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:161:13-50
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:161:13-50
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:160:13-84
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:160:13-84
 meta-data#com.google.firebase.messaging.default_notification_channel_id
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:162:9-164:46
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:162:9-164:46
 	android:value
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:164:13-43
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:164:13-43
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:163:13-89
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:163:13-89
 queries
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:168:5-175:15
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:168:5-175:15
 MERGED from [org.unifiedpush.android:connector:2.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/2bcfbcb5721135bb86ae1c8d549e966a/transformed/connector-2.5.0/AndroidManifest.xml:9:5-16:15
 MERGED from [org.unifiedpush.android:connector:2.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/2bcfbcb5721135bb86ae1c8d549e966a/transformed/connector-2.5.0/AndroidManifest.xml:9:5-16:15
 intent#action:name:org.unifiedpush.android.distributor.REGISTER
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:169:9-171:18
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:169:9-171:18
 action#org.unifiedpush.android.distributor.REGISTER
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:170:13-83
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:170:13-83
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:170:21-80
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:170:21-80
 intent#action:name:android.support.customtabs.action.CustomTabsService
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:172:9-174:18
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:172:9-174:18
 action#android.support.customtabs.action.CustomTabsService
-ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:173:13-90
+ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:173:13-90
 	android:name
-		ADDED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:173:21-87
+		ADDED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:173:21-87
 uses-sdk
-INJECTED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
-INJECTED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml
-INJECTED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml
+INJECTED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml
+INJECTED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml
 MERGED from [androidx.core:core-splashscreen:1.0.1] /Users/andrewgonzalez/.gradle/caches/transforms-3/436518e38ed1a439541309eff4269a9b/transformed/core-splashscreen-1.0.1/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.core:core-splashscreen:1.0.1] /Users/andrewgonzalez/.gradle/caches/transforms-3/436518e38ed1a439541309eff4269a9b/transformed/core-splashscreen-1.0.1/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.hilt:hilt-navigation-compose:1.1.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/3268c9420df8d842f57716592e9d39bd/transformed/hilt-navigation-compose-1.1.0/AndroidManifest.xml:5:5-44
@@ -870,9 +870,9 @@ MERGED from [com.google.dagger:dagger-lint-aar:2.50] /Users/andrewgonzalez/.grad
 MERGED from [io.github.webrtc-sdk:android-prefixed:125.6422.02] /Users/andrewgonzalez/.gradle/caches/transforms-3/295227dcf8df81c04a3599257ab6c5f0/transformed/android-prefixed-125.6422.02/AndroidManifest.xml:5:5-7:41
 MERGED from [io.github.webrtc-sdk:android-prefixed:125.6422.02] /Users/andrewgonzalez/.gradle/caches/transforms-3/295227dcf8df81c04a3599257ab6c5f0/transformed/android-prefixed-125.6422.02/AndroidManifest.xml:5:5-7:41
 	android:targetSdkVersion
-		INJECTED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml
 	android:minSdkVersion
-		INJECTED from /Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml
 activity#androidx.compose.ui.tooling.PreviewActivity
 ADDED from [androidx.compose.ui:ui-tooling-android:1.6.1] /Users/andrewgonzalez/.gradle/caches/transforms-3/6c966fe8f237fb7c03bf9a7dc5dda69f/transformed/ui-tooling-release/AndroidManifest.xml:23:9-25:39
 	android:exported

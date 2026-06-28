@@ -10,132 +10,132 @@
 10
 11    <!-- Network permissions -->
 12    <uses-permission android:name="android.permission.INTERNET" />
-12-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:6:5-67
-12-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:6:22-64
+12-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:6:5-67
+12-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:6:22-64
 13    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-13-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:7:5-79
-13-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:7:22-76
+13-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:7:5-79
+13-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:7:22-76
 14
 15    <!-- Notification permissions -->
 16    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-16-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:10:5-77
-16-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:10:22-74
+16-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:10:5-77
+16-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:10:22-74
 17
 18    <!-- Biometric lock -->
 19    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
-19-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:13:5-72
-19-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:13:22-69
+19-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:13:5-72
+19-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:13:22-69
 20
 21    <!-- Voice/Call permissions -->
 22    <uses-permission android:name="android.permission.CAMERA" />
-22-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:16:5-65
-22-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:16:22-62
+22-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:16:5-65
+22-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:16:22-62
 23    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-23-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:17:5-71
-23-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:17:22-68
+23-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:17:5-71
+23-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:17:22-68
 24    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-24-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:18:5-80
-24-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:18:22-77
+24-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:18:5-80
+24-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:18:22-77
 25    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-25-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:19:5-75
-25-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:19:22-72
+25-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:19:5-75
+25-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:19:22-72
 26    <uses-permission
-26-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:20:5-95
+26-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:20:5-95
 27        android:name="android.permission.BLUETOOTH"
-27-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:20:22-65
+27-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:20:22-65
 28        android:maxSdkVersion="30" />
-28-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:20:66-92
+28-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:20:66-92
 29    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-29-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:21:5-76
-29-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:21:22-73
+29-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:21:5-76
+29-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:21:22-73
 30    <uses-permission
-30-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:22:5-101
+30-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:22:5-101
 31        android:name="android.permission.BLUETOOTH_ADMIN"
-31-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:22:22-71
+31-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:22:22-71
 32        android:maxSdkVersion="30" />
-32-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:22:72-98
+32-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:22:72-98
 33
 34    <!-- Foreground service for calls -->
 35    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-35-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:25:5-77
-35-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:25:22-74
+35-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:25:5-77
+35-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:25:22-74
 36    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
-36-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:26:5-88
-36-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:26:22-85
+36-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:26:5-88
+36-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:26:22-85
 37    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-37-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:27:5-88
-37-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:27:22-85
+37-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:27:5-88
+37-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:27:22-85
 38    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
-38-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:28:5-94
-38-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:28:22-91
+38-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:28:5-94
+38-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:28:22-91
 39    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
-39-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:29:5-75
-39-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:29:22-72
+39-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:29:5-75
+39-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:29:22-72
 40    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-40-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:30:5-81
-40-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:30:22-78
+40-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:30:5-81
+40-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:30:22-78
 41    <uses-permission android:name="android.permission.TURN_SCREEN_ON" />
-41-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:31:5-73
-41-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:31:22-70
+41-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:31:5-73
+41-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:31:22-70
 42
 43    <!-- Wake lock for calls -->
 44    <uses-permission android:name="android.permission.WAKE_LOCK" />
-44-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:34:5-68
-44-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:34:22-65
+44-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:34:5-68
+44-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:34:22-65
 45
 46    <!-- Vibration for notifications -->
 47    <uses-permission android:name="android.permission.VIBRATE" />
-47-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:37:5-66
-47-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:37:22-63
+47-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:37:5-66
+47-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:37:22-63
 48
 49    <!-- Launcher app-icon badge support -->
 50    <uses-permission android:name="com.sec.android.provider.badge.permission.READ" />
-50-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:40:5-86
-50-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:40:22-83
+50-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:40:5-86
+50-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:40:22-83
 51    <uses-permission android:name="com.sec.android.provider.badge.permission.WRITE" />
-51-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:41:5-87
-51-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:41:22-84
+51-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:41:5-87
+51-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:41:22-84
 52    <uses-permission android:name="com.htc.launcher.permission.READ_SETTINGS" />
-52-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:42:5-81
-52-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:42:22-78
+52-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:42:5-81
+52-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:42:22-78
 53    <uses-permission android:name="com.htc.launcher.permission.UPDATE_SHORTCUT" />
-53-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:43:5-83
-53-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:43:22-80
+53-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:43:5-83
+53-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:43:22-80
 54    <uses-permission android:name="com.sonyericsson.home.permission.BROADCAST_BADGE" />
-54-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:44:5-88
-54-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:44:22-85
+54-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:44:5-88
+54-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:44:22-85
 55    <uses-permission android:name="com.sonymobile.home.permission.PROVIDER_INSERT_BADGE" />
-55-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:45:5-92
-55-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:45:22-89
+55-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:45:5-92
+55-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:45:22-89
 56    <uses-permission android:name="com.anddoes.launcher.permission.UPDATE_COUNT" />
-56-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:46:5-84
-56-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:46:22-81
+56-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:46:5-84
+56-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:46:22-81
 57    <uses-permission android:name="com.majeur.launcher.permission.UPDATE_BADGE" />
-57-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:47:5-83
-57-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:47:22-80
+57-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:47:5-83
+57-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:47:22-80
 58    <uses-permission android:name="com.huawei.android.launcher.permission.CHANGE_BADGE" />
-58-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:48:5-91
-58-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:48:22-88
+58-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:48:5-91
+58-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:48:22-88
 59    <uses-permission android:name="com.huawei.android.launcher.permission.READ_SETTINGS" />
-59-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:49:5-92
-59-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:49:22-89
+59-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:49:5-92
+59-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:49:22-89
 60    <uses-permission android:name="com.huawei.android.launcher.permission.WRITE_SETTINGS" />
-60-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:50:5-93
-60-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:50:22-90
+60-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:50:5-93
+60-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:50:22-90
 61
 62    <queries>
-62-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:168:5-175:15
+62-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:168:5-175:15
 63        <intent>
-63-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:169:9-171:18
+63-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:169:9-171:18
 64            <action android:name="org.unifiedpush.android.distributor.REGISTER" />
-64-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:170:13-83
-64-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:170:21-80
+64-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:170:13-83
+64-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:170:21-80
 65        </intent>
 66        <intent>
-66-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:172:9-174:18
+66-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:172:9-174:18
 67            <action android:name="android.support.customtabs.action.CustomTabsService" />
-67-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:173:13-90
-67-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:173:21-87
+67-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:173:13-90
+67-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:173:21-87
 68        </intent>
 69        <intent>
 69-->[org.unifiedpush.android:connector:2.5.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/2bcfbcb5721135bb86ae1c8d549e966a/transformed/connector-2.5.0/AndroidManifest.xml:13:9-15:18
@@ -177,378 +177,378 @@
 86-->[androidx.core:core:1.13.1] /Users/andrewgonzalez/.gradle/caches/transforms-3/9bf1f9a7ec7587f2eb51ce8f4061903b/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
 87
 88    <application
-88-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:52:5-166:19
+88-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:52:5-166:19
 89        android:name="com.fluxer.client.FluxerApplication"
-89-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:53:9-42
+89-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:53:9-42
 90        android:allowBackup="false"
-90-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:54:9-36
+90-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:54:9-36
 91        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
 91-->[androidx.core:core:1.13.1] /Users/andrewgonzalez/.gradle/caches/transforms-3/9bf1f9a7ec7587f2eb51ce8f4061903b/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
 92        android:dataExtractionRules="@xml/data_extraction_rules"
-92-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:55:9-65
+92-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:55:9-65
 93        android:debuggable="true"
 94        android:extractNativeLibs="true"
 95        android:fullBackupContent="@xml/backup_rules"
-95-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:56:9-54
+95-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:56:9-54
 96        android:icon="@mipmap/ic_launcher"
-96-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:57:9-43
+96-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:57:9-43
 97        android:label="@string/app_name"
-97-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:58:9-41
+97-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:58:9-41
 98        android:roundIcon="@mipmap/ic_launcher_round"
-98-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:59:9-54
+98-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:59:9-54
 99        android:supportsRtl="true"
-99-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:60:9-35
+99-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:60:9-35
 100        android:theme="@style/Theme.Fluxer"
-100-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:61:9-44
+100-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:61:9-44
 101        android:usesCleartextTraffic="false" >
-101-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:62:9-45
+101-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:62:9-45
 102        <activity
-102-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:65:9-110:20
+102-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:65:9-110:20
 103            android:name="com.fluxer.client.MainActivity"
-103-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:66:13-41
+103-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:66:13-41
 104            android:exported="true"
-104-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:67:13-36
+104-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:67:13-36
 105            android:launchMode="singleTask"
-105-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:70:13-44
+105-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:70:13-44
 106            android:theme="@style/Theme.Fluxer.Splash"
-106-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:68:13-55
+106-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:68:13-55
 107            android:windowSoftInputMode="adjustResize" >
-107-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:69:13-55
+107-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:69:13-55
 108            <intent-filter>
-108-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:71:13-74:29
+108-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:71:13-74:29
 109                <action android:name="android.intent.action.MAIN" />
-109-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:72:17-69
-109-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:72:25-66
+109-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:72:17-69
+109-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:72:25-66
 110
 111                <category android:name="android.intent.category.LAUNCHER" />
-111-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:73:17-77
-111-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:73:27-74
+111-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:73:17-77
+111-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:73:27-74
 112            </intent-filter>
 113            <intent-filter>
-113-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:75:13-80:29
+113-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:75:13-80:29
 114                <action android:name="android.intent.action.VIEW" />
-114-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:76:17-69
-114-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:76:25-66
+114-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:76:17-69
+114-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:76:25-66
 115
 116                <category android:name="android.intent.category.DEFAULT" />
-116-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:77:17-76
-116-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:77:27-73
+116-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:77:17-76
+116-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:77:27-73
 117                <category android:name="android.intent.category.BROWSABLE" />
-117-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:78:17-78
-117-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:78:27-75
+117-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:78:17-78
+117-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:78:27-75
 118
 119                <data android:scheme="fluxer" />
-119-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
-119-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+119-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+119-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 120            </intent-filter>
 121            <intent-filter android:autoVerify="true" >
-121-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:81:13-109:29
-121-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:81:28-53
+121-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:81:13-109:29
+121-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:81:28-53
 122                <action android:name="android.intent.action.VIEW" />
-122-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:76:17-69
-122-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:76:25-66
+122-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:76:17-69
+122-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:76:25-66
 123
 124                <category android:name="android.intent.category.DEFAULT" />
-124-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:77:17-76
-124-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:77:27-73
+124-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:77:17-76
+124-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:77:27-73
 125                <category android:name="android.intent.category.BROWSABLE" />
-125-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:78:17-78
-125-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:78:27-75
+125-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:78:17-78
+125-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:78:27-75
 126
 127                <data
-127-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+127-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 128                    android:host="web.fluxer.app"
-128-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+128-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 129                    android:pathPrefix="/channels"
-129-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+129-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 130                    android:scheme="https" />
-130-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+130-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 131                <data
-131-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+131-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 132                    android:host="web.fluxer.app"
-132-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+132-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 133                    android:pathPrefix="/invite"
-133-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+133-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 134                    android:scheme="https" />
-134-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+134-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 135                <data
-135-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+135-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 136                    android:host="web.fluxer.app"
-136-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+136-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 137                    android:pathPrefix="/gift"
-137-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+137-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 138                    android:scheme="https" />
-138-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+138-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 139                <data
-139-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+139-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 140                    android:host="web.fluxer.app"
-140-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+140-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 141                    android:pathPrefix="/theme"
-141-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+141-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 142                    android:scheme="https" />
-142-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+142-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 143                <data
-143-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+143-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 144                    android:host="web.fluxer.app"
-144-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+144-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 145                    android:pathPrefix="/notifications"
-145-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+145-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 146                    android:scheme="https" />
-146-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+146-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 147                <data
-147-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+147-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 148                    android:host="web.fluxer.app"
-148-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+148-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 149                    android:pathPrefix="/you"
-149-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+149-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 150                    android:scheme="https" />
-150-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+150-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 151                <data
-151-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+151-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 152                    android:host="web.canary.fluxer.app"
-152-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+152-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 153                    android:pathPrefix="/channels"
-153-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+153-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 154                    android:scheme="https" />
-154-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+154-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 155                <data
-155-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+155-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 156                    android:host="web.canary.fluxer.app"
-156-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+156-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 157                    android:pathPrefix="/invite"
-157-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+157-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 158                    android:scheme="https" />
-158-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+158-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 159                <data
-159-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+159-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 160                    android:host="web.canary.fluxer.app"
-160-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+160-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 161                    android:pathPrefix="/gift"
-161-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+161-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 162                    android:scheme="https" />
-162-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+162-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 163                <data
-163-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+163-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 164                    android:host="web.canary.fluxer.app"
-164-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+164-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 165                    android:pathPrefix="/theme"
-165-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+165-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 166                    android:scheme="https" />
-166-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+166-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 167                <data
-167-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+167-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 168                    android:host="web.canary.fluxer.app"
-168-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+168-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 169                    android:pathPrefix="/notifications"
-169-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+169-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 170                    android:scheme="https" />
-170-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+170-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 171                <data
-171-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+171-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 172                    android:host="web.canary.fluxer.app"
-172-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+172-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 173                    android:pathPrefix="/you"
-173-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+173-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 174                    android:scheme="https" />
-174-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+174-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 175                <data
-175-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+175-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 176                    android:host="web.fluxer.com"
-176-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+176-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 177                    android:pathPrefix="/channels"
-177-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+177-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 178                    android:scheme="https" />
-178-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+178-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 179                <data
-179-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+179-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 180                    android:host="web.fluxer.com"
-180-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+180-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 181                    android:pathPrefix="/invite"
-181-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+181-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 182                    android:scheme="https" />
-182-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+182-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 183                <data
-183-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+183-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 184                    android:host="web.fluxer.com"
-184-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+184-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 185                    android:pathPrefix="/gift"
-185-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+185-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 186                    android:scheme="https" />
-186-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+186-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 187                <data
-187-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+187-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 188                    android:host="web.fluxer.com"
-188-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+188-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 189                    android:pathPrefix="/theme"
-189-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+189-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 190                    android:scheme="https" />
-190-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+190-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 191                <data
-191-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+191-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 192                    android:host="web.fluxer.com"
-192-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+192-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 193                    android:pathPrefix="/notifications"
-193-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+193-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 194                    android:scheme="https" />
-194-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+194-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 195                <data
-195-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+195-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 196                    android:host="web.fluxer.com"
-196-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+196-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 197                    android:pathPrefix="/you"
-197-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+197-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 198                    android:scheme="https" />
-198-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+198-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 199                <data
-199-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+199-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 200                    android:host="web.canary.fluxer.com"
-200-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+200-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 201                    android:pathPrefix="/channels"
-201-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+201-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 202                    android:scheme="https" />
-202-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+202-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 203                <data
-203-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+203-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 204                    android:host="web.canary.fluxer.com"
-204-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+204-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 205                    android:pathPrefix="/invite"
-205-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+205-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 206                    android:scheme="https" />
-206-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+206-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 207                <data
-207-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+207-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 208                    android:host="web.canary.fluxer.com"
-208-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+208-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 209                    android:pathPrefix="/gift"
-209-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+209-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 210                    android:scheme="https" />
-210-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+210-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 211                <data
-211-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+211-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 212                    android:host="web.canary.fluxer.com"
-212-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+212-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 213                    android:pathPrefix="/theme"
-213-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+213-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 214                    android:scheme="https" />
-214-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+214-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 215                <data
-215-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+215-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 216                    android:host="web.canary.fluxer.com"
-216-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+216-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 217                    android:pathPrefix="/notifications"
-217-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+217-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 218                    android:scheme="https" />
-218-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+218-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 219                <data
-219-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
+219-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:17-49
 220                    android:host="web.canary.fluxer.com"
-220-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
+220-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:46-75
 221                    android:pathPrefix="/you"
-221-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
+221-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:85:76-106
 222                    android:scheme="https" />
-222-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
+222-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:79:23-46
 223            </intent-filter>
 224        </activity>
 225
 226        <!-- Firebase Messaging Service -->
 227        <service
-227-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:113:9-119:19
+227-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:113:9-119:19
 228            android:name="com.fluxer.client.service.FluxerMessagingService"
-228-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:114:13-59
+228-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:114:13-59
 229            android:exported="false" >
-229-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:115:13-37
+229-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:115:13-37
 230            <intent-filter>
-230-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:116:13-118:29
+230-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:116:13-118:29
 231                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-231-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:117:17-78
-231-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:117:25-75
+231-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:117:17-78
+231-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:117:25-75
 232            </intent-filter>
 233        </service>
 234
 235        <!-- Call Connection Service for CallKit integration -->
 236        <service
-236-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:122:9-129:19
+236-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:122:9-129:19
 237            android:name="com.fluxer.client.service.FluxerCallConnectionService"
-237-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:123:13-64
+237-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:123:13-64
 238            android:exported="true"
-238-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:125:13-36
+238-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:125:13-36
 239            android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE" >
-239-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:124:13-84
+239-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:124:13-84
 240            <intent-filter>
-240-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:126:13-128:29
+240-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:126:13-128:29
 241                <action android:name="android.telecom.ConnectionService" />
-241-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:127:17-76
-241-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:127:25-73
+241-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:127:17-76
+241-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:127:25-73
 242            </intent-filter>
 243        </service>
 244
 245        <!-- Call Broadcast Receiver -->
 246        <receiver
-246-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:132:9-140:20
+246-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:132:9-140:20
 247            android:name="com.fluxer.client.service.CallBroadcastReceiver"
-247-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:133:13-58
+247-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:133:13-58
 248            android:exported="false" >
-248-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:134:13-37
+248-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:134:13-37
 249            <intent-filter>
-249-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:135:13-139:29
+249-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:135:13-139:29
 250                <action android:name="com.fluxer.client.ACTION_ACCEPT_CALL" />
-250-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:136:17-79
-250-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:136:25-76
+250-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:136:17-79
+250-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:136:25-76
 251                <action android:name="com.fluxer.client.ACTION_DECLINE_CALL" />
-251-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:137:17-80
-251-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:137:25-77
+251-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:137:17-80
+251-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:137:25-77
 252                <action android:name="com.fluxer.client.ACTION_END_CALL" />
-252-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:138:17-76
-252-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:138:25-73
+252-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:138:17-76
+252-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:138:25-73
 253            </intent-filter>
 254        </receiver>
 255
 256        <!-- UnifiedPush Messaging Receiver -->
 257        <receiver
-257-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:143:9-153:20
+257-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:143:9-153:20
 258            android:name="com.fluxer.client.service.FluxerUnifiedPushReceiver"
-258-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:144:13-62
+258-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:144:13-62
 259            android:exported="true" >
-259-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:145:13-36
+259-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:145:13-36
 260            <intent-filter>
-260-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:146:13-152:29
+260-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:146:13-152:29
 261                <action android:name="org.unifiedpush.android.connector.MESSAGE" />
-261-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:147:17-84
-261-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:147:25-81
+261-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:147:17-84
+261-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:147:25-81
 262                <action android:name="org.unifiedpush.android.connector.UNREGISTERED" />
-262-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:148:17-89
-262-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:148:25-86
+262-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:148:17-89
+262-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:148:25-86
 263                <action android:name="org.unifiedpush.android.connector.NEW_ENDPOINT" />
-263-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:149:17-89
-263-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:149:25-86
+263-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:149:17-89
+263-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:149:25-86
 264                <action android:name="org.unifiedpush.android.connector.REGISTRATION_FAILED" />
-264-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:150:17-96
-264-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:150:25-93
+264-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:150:17-96
+264-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:150:25-93
 265                <action android:name="org.unifiedpush.android.connector.REGISTRATION_REFUSED" />
-265-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:151:17-97
-265-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:151:25-94
+265-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:151:17-97
+265-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:151:25-94
 266            </intent-filter>
 267        </receiver>
 268
 269        <!-- Firebase Metadata -->
 270        <meta-data
-270-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:156:9-158:60
+270-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:156:9-158:60
 271            android:name="com.google.firebase.messaging.default_notification_icon"
-271-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:157:13-83
+271-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:157:13-83
 272            android:resource="@drawable/ic_notification" />
-272-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:158:13-57
+272-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:158:13-57
 273        <meta-data
-273-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:159:9-161:53
+273-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:159:9-161:53
 274            android:name="com.google.firebase.messaging.default_notification_color"
-274-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:160:13-84
+274-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:160:13-84
 275            android:resource="@color/phantom_red" />
-275-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:161:13-50
+275-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:161:13-50
 276        <meta-data
-276-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:162:9-164:46
+276-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:162:9-164:46
 277            android:name="com.google.firebase.messaging.default_notification_channel_id"
-277-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:163:13-89
+277-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:163:13-89
 278            android:value="fluxer_general" />
-278-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:164:13-43
+278-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:164:13-43
 279
 280        <activity
 280-->[androidx.compose.ui:ui-tooling-android:1.6.1] /Users/andrewgonzalez/.gradle/caches/transforms-3/6c966fe8f237fb7c03bf9a7dc5dda69f/transformed/ui-tooling-release/AndroidManifest.xml:23:9-25:39
@@ -654,10 +654,10 @@
 338            android:exported="false" >
 338-->[com.google.firebase:firebase-messaging:23.4.0] /Users/andrewgonzalez/.gradle/caches/transforms-3/cff142ba168674981151034ae02c6e47/transformed/firebase-messaging-23.4.0/AndroidManifest.xml:49:13-37
 339            <intent-filter android:priority="-500" >
-339-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:116:13-118:29
+339-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:116:13-118:29
 340                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-340-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:117:17-78
-340-->/Users/andrewgonzalez/flukavike-android/app/src/main/AndroidManifest.xml:117:25-75
+340-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:117:17-78
+340-->/Users/andrewgonzalez/Downloads/flukavike-android/app/src/main/AndroidManifest.xml:117:25-75
 341            </intent-filter>
 342        </service>
 343        <service

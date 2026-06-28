@@ -14,6 +14,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fluxer.client.data.local.FontScale
+import com.fluxer.client.data.local.ServerRailMode
 import com.fluxer.client.data.local.ThemePreset
 import com.fluxer.client.ui.theme.*
 import com.fluxer.client.ui.viewmodel.AppPreferencesViewModel
@@ -37,6 +40,7 @@ fun AppearanceScreen(
     val accentColor by viewModel.accentColor.collectAsState()
     val fontScale by viewModel.fontScale.collectAsState()
     val themePreset by viewModel.themePreset.collectAsState()
+    val serverRailMode by viewModel.serverRailMode.collectAsState()
 
     Scaffold(
         topBar = {
@@ -198,6 +202,58 @@ fun AppearanceScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextMuted
                             )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Server Rail Layout Mode
+            SettingsSection(title = "Server Rail Layout") {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    Text(
+                        text = "Choose how the server list appears in chat",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextMuted,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ServerRailMode.entries.forEach { mode ->
+                            val isSelected = serverRailMode == mode
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { viewModel.setServerRailMode(mode) },
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isSelected) accentColor.copy(alpha = 0.15f) else VelvetMid,
+                                border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, accentColor) else null
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        imageVector = when (mode) {
+                                            ServerRailMode.RAIL -> Icons.Default.ViewList
+                                            ServerRailMode.DRAWER -> Icons.Default.Menu
+                                        },
+                                        contentDescription = mode.displayName,
+                                        tint = if (isSelected) accentColor else TextSecondary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = mode.displayName,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (isSelected) accentColor else TextMuted,
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                                    )
+                                }
+                            }
                         }
                     }
                 }

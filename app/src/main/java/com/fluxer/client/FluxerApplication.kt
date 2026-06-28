@@ -7,6 +7,7 @@ import coil.ImageLoader
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import com.fluxer.client.data.local.InstanceConfigStore
+import com.fluxer.client.di.CdnClient
 import com.fluxer.client.util.UnifiedPushManager
 import dagger.hilt.android.HiltAndroidApp
 import okhttp3.OkHttpClient
@@ -16,7 +17,7 @@ import javax.inject.Inject
 @HiltAndroidApp
 class FluxerApplication : Application() {
     @Inject lateinit var instanceConfigStore: InstanceConfigStore
-    @Inject lateinit var okHttpClient: OkHttpClient
+    @CdnClient @Inject lateinit var okHttpClient: OkHttpClient
 
     override fun onCreate() {
         super.onCreate()
