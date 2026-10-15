@@ -42,10 +42,6 @@ fun LoginScreen(
     val customInstanceUrl by viewModel.customInstanceUrl.collectAsState()
     val activeInstanceBaseUrl by viewModel.activeInstanceBaseUrl.collectAsState()
     val instanceMessage by viewModel.instanceMessage.collectAsState()
-    val captchaRequired by viewModel.captchaRequired.collectAsState()
-    val captchaSiteKey by viewModel.captchaSiteKey.collectAsState()
-    val captchaProvider by viewModel.captchaProvider.collectAsState()
-    val captchaToken by viewModel.captchaToken.collectAsState()
     val mfaChallenge by viewModel.mfaChallenge.collectAsState()
     val isMfaLoading by viewModel.isMfaLoading.collectAsState()
     val isPasskeySupportedInThisBuild = viewModel.isPasskeySupportedInThisBuild
@@ -123,7 +119,6 @@ fun LoginScreen(
                     onClick = { 
                         isLoginMode = true
                         viewModel.clearError()
-                        viewModel.resetCaptchaState()
                     }
                 )
                 Spacer(modifier = Modifier.width(32.dp))
@@ -133,7 +128,6 @@ fun LoginScreen(
                     onClick = { 
                         isLoginMode = false
                         viewModel.clearError()
-                        viewModel.resetCaptchaState()
                     }
                 )
             }
@@ -281,60 +275,6 @@ fun LoginScreen(
                 )
             }
 
-            // Captcha challenge
-            AnimatedVisibility(
-                visible = captchaRequired,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Please complete the verification below.",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = TextSecondary,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-
-                    CaptchaWidget(
-                        siteKey = captchaSiteKey,
-                        provider = captchaProvider,
-                        baseUrl = activeInstanceBaseUrl,
-                        onToken = { viewModel.onCaptchaToken(it) },
-                        onError = { }
-                    )
-                }
-            }
-
-            AnimatedVisibility(
-                visible = captchaToken != null,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint = androidx.compose.ui.graphics.Color(0xFF4CAF50)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Verification completed",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = androidx.compose.ui.graphics.Color(0xFF4CAF50)
-                    )
-                }
-            }
-
             AnimatedVisibility(
                 visible = mfaChallenge != null,
                 enter = fadeIn() + expandVertically(),
@@ -428,7 +368,7 @@ fun LoginScreen(
                 text = if (isLoginMode) "SIGN IN" else "CREATE ACCOUNT",
                 isLoading = isLoading,
                 enabled = if (isLoginMode) {
-                    mfaChallenge == null && !(captchaRequired && captchaToken == null)
+                    mfaChallenge == null
                 } else true,
                 onClick = {
                     if (isLoginMode) {

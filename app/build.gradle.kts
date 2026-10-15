@@ -24,7 +24,6 @@ android {
 
         buildConfigField("String", "FLUXER_BASE_URL", "\"https://web.fluxer.app/\"")
         buildConfigField("String", "FLUXER_WS_URL", "\"wss://gateway.fluxer.app\"")
-        buildConfigField("String", "HCAPTCHA_SITE_KEY", "\"9cbad400-df84-4e0c-bda6-e65000be78aa\"")
     }
 
     buildTypes {

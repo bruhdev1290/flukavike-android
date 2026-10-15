@@ -13,7 +13,6 @@ import kotlinx.serialization.Serializable
     val web: String? = null,
     val admin: String? = null,
     val invite: String? = null,
-    val captcha: CaptchaConfig? = null,
     val endpoints: EndpointsConfig? = null,
     val push: PushConfig? = null,
     val name: String? = null,
@@ -77,35 +76,4 @@ import kotlinx.serialization.Serializable
         @SerialName("public_vapid_key")
         val publicVapidKey: String? = null
     )
-
-    @Serializable
-    data class CaptchaConfig(
-        val provider: String = "hcaptcha",
-        val sitekey: String = "",
-        val service: String? = null,
-        @SerialName("site_key")
-        val siteKeyAlt: String? = null,
-        val key: String? = null,
-        @SerialName("hcaptcha_site_key")
-        val hcaptchaSiteKey: String? = null,
-        @SerialName("turnstile_site_key")
-        val turnstileSiteKey: String? = null
-    ) {
-        fun resolvedSitekey(): String {
-            return sitekey.takeIf { it.isNotBlank() }
-                ?: siteKeyAlt?.takeIf { it.isNotBlank() }
-                ?: key?.takeIf { it.isNotBlank() }
-                ?: hcaptchaSiteKey?.takeIf { it.isNotBlank() }
-                ?: turnstileSiteKey?.takeIf { it.isNotBlank() }
-                ?: ""
-        }
-
-        fun resolvedProvider(): String {
-            val p = provider.trim().lowercase()
-            if (p.isNotBlank() && p != "none") return p
-            if (!turnstileSiteKey.isNullOrBlank()) return "turnstile"
-            if (!hcaptchaSiteKey.isNullOrBlank()) return "hcaptcha"
-            return "hcaptcha"
-        }
-    }
 }

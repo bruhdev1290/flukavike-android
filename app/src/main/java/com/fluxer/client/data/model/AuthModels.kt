@@ -21,10 +21,7 @@ data class LoginRequest(
     val email: String,
     val password: String,
     @SerialName("device_name")
-    val deviceName: String = "Android Device",
-    @SerialName("captcha_key")
-    @EncodeDefault(EncodeDefault.Mode.NEVER)
-    val captchaKey: String? = null
+    val deviceName: String = "Android Device"
 )
 
 @Serializable

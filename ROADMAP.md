@@ -12,7 +12,7 @@ Last updated: 2026-06-27
 - [x] Room database with entities, DAOs, and DI (`AppDatabase`, `DatabaseEntities`, `DatabaseDaos`)
 - [x] DataStore preferences (`AppPreferencesStore`, `DataStoreExt`)
 - [x] Instance configuration store (`InstanceConfigStore`, `InstanceConfig`)
-- [x] BuildConfig fields: base URL, WebSocket URL, hCaptcha site key
+- [x] BuildConfig fields: base URL, WebSocket URL
 - [x] Release build with minify + resource shrinking + ProGuard rules
 
 ### Auth System (HANDS OFF — see CLAUDE.md)
@@ -20,7 +20,7 @@ Last updated: 2026-06-27
 - [x] CSRF token interception
 - [x] Secure cookie storage (EncryptedSharedPreferences)
 - [x] Auth token storage
-- [x] hCaptcha widget (callback-based, not polling)
+- [x] ALTCHA native proof-of-work captcha
 - [x] IP auth required flow
 - [x] WebAuthn support (`WebAuthnService`)
 - [x] Auth authenticator + interceptor chain

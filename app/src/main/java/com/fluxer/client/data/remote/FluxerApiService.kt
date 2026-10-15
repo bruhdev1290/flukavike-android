@@ -28,12 +28,14 @@ interface FluxerApiService {
     @POST("/api/auth/login")
     suspend fun login(
         @Body request: LoginRequest,
-        @Header("X-Captcha-Token") captchaToken: String? = null,
-        @Header("X-Captcha-Type") captchaType: String? = null
+        @Header("X-Captcha-Token") captchaToken: String? = null
     ): Response<AuthResponse>
 
     @POST("/api/auth/register")
-    suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
+    suspend fun register(
+        @Body request: RegisterRequest,
+        @Header("X-Captcha-Token") captchaToken: String? = null
+    ): Response<AuthResponse>
 
     @POST("/api/auth/logout")
     suspend fun logout(): Response<Unit>

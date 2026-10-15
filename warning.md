@@ -64,11 +64,11 @@ If a future task seems to require touching these files, stop and ask the user fi
 
 ---
 
-### Captcha Widget — HANDS OFF
+### Captcha (ALTCHA)
 
-**File:** `app/src/main/java/com/fluxer/client/ui/components/CaptchaWidget.kt`
+**File:** `app/src/main/java/com/fluxer/client/util/AltchaSolver.kt`
 
-**Why:** Uses `?onload=onCaptchaLoaded` callback parameter — not a polling loop. The polling approach timed out before hCaptcha finished loading. Do not revert to a polling/interval approach.
+Fluxer uses ALTCHA proof-of-work (no widget). `AuthRepository.withAltcha` solves the `altcha_challenge` from `CAPTCHA_REQUIRED`/`INVALID_CAPTCHA` errors natively and retries with `X-Captcha-Token`. Never resend a token after `INVALID_CAPTCHA`; use the new challenge.
 
 ---
 

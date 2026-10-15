@@ -39,7 +39,6 @@ The affected systems include:
 - **Authentication flow** — cookie/token storage, session refresh, CSRF handling, and MFA/WebAuthn paths.
 - **Network configuration** — OkHttp client setup, interceptor ordering, timeouts, and retry policy.
 - **API endpoint paths and data models** — exact REST paths and serializers verified against the live API.
-- **Captcha loading** — callback-based initialization.
 - **Channel/guild loading logic** — verified fetch paths and UI state updates.
 
 The specific files involved change as the codebase evolves. **See [`CLAUDE.md`](CLAUDE.md) for the current list of files and the full details on every fix.**
@@ -52,7 +51,7 @@ The specific files involved change as the codebase evolves. **See [`CLAUDE.md`](
 - **Cookie + token auth** with encrypted `SecureCookieStorage` (AES-256 via `EncryptedSharedPreferences`).
 - **Automatic session refresh** via `AuthAuthenticator` on 401 responses.
 - **CSRF protection** via `CsrfInterceptor` for all state-changing requests.
-- **hCaptcha support** with `?onload=` callback integration.
+- **ALTCHA captcha** solved natively (proof-of-work, no WebView).
 - **WebAuthn MFA** flow for passwordless second-factor login.
 - **Biometric app lock** via `BiometricLockManager`.
 
@@ -142,13 +141,12 @@ com.fluxer.client/
 
 ### Configuration
 
-Base URLs and hCaptcha site key are defined in `app/build.gradle.kts`:
+Base URLs are defined in `app/build.gradle.kts`:
 
 ```kotlin
 defaultConfig {
     buildConfigField("String", "FLUXER_BASE_URL", """"https://web.fluxer.app/"""")
     buildConfigField("String", "FLUXER_WS_URL", """"wss://gateway.fluxer.app"""")
-    buildConfigField("String", "HCAPTCHA_SITE_KEY", """"your-site-key"""")
 }
 ```
 
@@ -174,7 +172,7 @@ Install to a device or emulator:
 
 ## 🔐 Authentication Flow
 
-1. User enters credentials (and solves captcha if required) in `LoginScreen`.
+1. User enters credentials (captcha is solved automatically) in `LoginScreen`.
 2. `AuthViewModel` calls `AuthRepository.login()`.
 3. Retrofit POSTs to `/api/auth/login`; the server sets the `fluxer_session` HttpOnly cookie.
 4. `SecureCookieStorage` encrypts and persists the cookie.

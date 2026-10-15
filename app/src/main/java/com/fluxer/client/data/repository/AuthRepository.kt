@@ -15,6 +15,7 @@ import com.fluxer.client.data.local.SecureCookieStorage
 import com.fluxer.client.data.local.InstanceConfigStore
 import com.fluxer.client.data.model.*
 import com.fluxer.client.data.remote.*
+import com.fluxer.client.util.AltchaSolver
 import com.fluxer.client.util.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +29,8 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.HttpException
 import timber.log.Timber
 import java.io.IOException
@@ -56,7 +59,6 @@ class AuthRepository @Inject constructor(
 
     val sessionCookieFlow: Flow<String?> = cookieStorage.sessionCookieFlow
 
-    private var discoveredCaptchaConfig: InstanceConfig.CaptchaConfig? = null
     private var authToken: String? = null
 
     private val jsonParser = Json { ignoreUnknownKeys = true }
@@ -76,17 +78,14 @@ class AuthRepository @Inject constructor(
     /**
      * Login with email and password
      */
-    suspend fun login(email: String, password: String, captchaToken: String? = null): LoginResult {
+    suspend fun login(email: String, password: String): LoginResult {
         return try {
             Timber.i("🔐 Attempting login for: $email")
             _authState.value = AuthState.Loading
 
-            val captchaType = discoveredCaptchaConfig?.resolvedProvider() ?: "hcaptcha"
-            val response = apiService.login(
-                request = LoginRequest(email, password, captchaKey = captchaToken),
-                captchaToken = captchaToken,
-                captchaType = captchaType
-            )
+            val response = withAltcha { captchaToken ->
+                apiService.login(LoginRequest(email, password), captchaToken)
+            }
 
             if (response.isSuccessful) {
                 val authData = response.body()
@@ -142,7 +141,6 @@ class AuthRepository @Inject constructor(
                         _authState.value = AuthState.Error(result.message)
                         Timber.e("❌ Login failed: ${result.message}")
                     }
-                    is LoginResult.CaptchaRequired,
                     is LoginResult.MfaRequired,
                     is LoginResult.IpAuthorizationRequired -> {
                         _authState.value = AuthState.Unauthenticated
@@ -155,7 +153,6 @@ class AuthRepository @Inject constructor(
             val result = parseLoginError(e.code(), e.response()?.errorBody()?.string())
             when (result) {
                 is LoginResult.Error -> _authState.value = AuthState.Error(result.message)
-                is LoginResult.CaptchaRequired,
                 is LoginResult.MfaRequired,
                 is LoginResult.IpAuthorizationRequired -> _authState.value = AuthState.Unauthenticated
                 LoginResult.Success -> Unit
@@ -238,7 +235,9 @@ class AuthRepository @Inject constructor(
             Timber.i("📝 Attempting registration for: $email")
             _authState.value = AuthState.Loading
 
-            val response = apiService.register(RegisterRequest(email, username, password))
+            val response = withAltcha { captchaToken ->
+                apiService.register(RegisterRequest(email, username, password), captchaToken)
+            }
 
             if (response.isSuccessful) {
                 val authData = response.body()
@@ -348,7 +347,6 @@ class AuthRepository @Inject constructor(
     fun onInstanceChanged() {
         gatewayManager.disconnect()
         clearSession()
-        discoveredCaptchaConfig = null
         repoScope.launch { runDiscovery() }
     }
 
@@ -430,9 +428,8 @@ class AuthRepository @Inject constructor(
                 val response = apiService.discoverInstance(wellKnownUrl)
                 if (response.isSuccessful) {
                     response.body()?.let { config ->
-                        discoveredCaptchaConfig = config.captcha
                         instanceConfigStore.saveDiscoveredConfig(config)
-                        Timber.d("Instance discovered. API: ${config.resolvedApi()}, Gateway: ${config.resolvedGateway()}, Captcha: ${config.captcha != null}")
+                        Timber.d("Instance discovered. API: ${config.resolvedApi()}, Gateway: ${config.resolvedGateway()}")
                     }
                 }
             }
@@ -443,39 +440,58 @@ class AuthRepository @Inject constructor(
 
     private fun parseLoginError(code: Int, errorBody: String?): LoginResult {
         val raw = errorBody ?: return LoginResult.Error(parseError(code, null))
-        return try {
-            val err = jsonParser.decodeFromString(CaptchaRequiredResponse.serializer(), raw)
-            when {
-                err.error == "captcha_required" -> {
-                    val sitekey = err.sitekey?.takeIf { it.isNotBlank() }
-                        ?: discoveredCaptchaConfig?.resolvedSitekey()
-                        ?: BuildConfig.HCAPTCHA_SITE_KEY
-                    val provider = err.provider?.trim()?.lowercase()
-                        ?: discoveredCaptchaConfig?.resolvedProvider()
-                        ?: "hcaptcha"
-                    LoginResult.CaptchaRequired(sitekey, provider)
-                }
-                else -> LoginResult.Error(parseError(code, raw))
-            }
-        } catch (e: Exception) {
-            // Try to parse as IP authorization error first
-            try {
-                val ipErr = jsonParser.decodeFromString(IpAuthRequiredResponse.serializer(), raw)
-                if (ipErr.code == "IP_AUTHORIZATION_REQUIRED" || ipErr.ipAuthorizationRequired == true) {
-                    return LoginResult.IpAuthorizationRequired(ipErr.ticket, ipErr.email, ipErr.resendAvailableIn)
-                }
-            } catch (_: Exception) { }
 
-            val lower = raw.lowercase()
-            val normalized = lower.filter { it.isLetterOrDigit() }
-            if (lower.contains("captcha") || lower.contains("api error 7") || normalized.contains("apierror7")) {
-                val sitekey = discoveredCaptchaConfig?.resolvedSitekey() ?: BuildConfig.HCAPTCHA_SITE_KEY
-                val provider = discoveredCaptchaConfig?.resolvedProvider() ?: "hcaptcha"
-                LoginResult.CaptchaRequired(sitekey, provider)
-            } else {
-                LoginResult.Error(parseError(code, raw))
+        // Try to parse as IP authorization error first
+        try {
+            val ipErr = jsonParser.decodeFromString(IpAuthRequiredResponse.serializer(), raw)
+            if (ipErr.code == "IP_AUTHORIZATION_REQUIRED" || ipErr.ipAuthorizationRequired == true) {
+                return LoginResult.IpAuthorizationRequired(ipErr.ticket, ipErr.email, ipErr.resendAvailableIn)
             }
+        } catch (_: Exception) { }
+
+        // withAltcha already solved and retried; reaching here means verification kept failing.
+        if (raw.contains("CAPTCHA", ignoreCase = true)) {
+            return LoginResult.Error("Verification failed. Please try again.")
         }
+        return LoginResult.Error(parseError(code, raw))
+    }
+
+    /**
+     * Runs [call], transparently answering ALTCHA proof-of-work challenges.
+     *
+     * A gated request returns 400 `CAPTCHA_REQUIRED` (or `INVALID_CAPTCHA`) carrying an
+     * `altcha_challenge`. We solve it natively and retry with `X-Captcha-Token`. Tokens are
+     * single-use, so every retry uses a freshly issued challenge.
+     */
+    private suspend fun <T> withAltcha(call: suspend (captchaToken: String?) -> retrofit2.Response<T>): retrofit2.Response<T> {
+        var token: String? = null
+        var attempt = 0
+        while (true) {
+            val response = call(token)
+            if (response.isSuccessful || response.code() != 400 || attempt >= MAX_ALTCHA_ATTEMPTS) return response
+
+            val raw = response.errorBody()?.string()
+            val challenge = raw?.let { extractAltchaChallenge(it) }
+            val rebuilt = fun(): retrofit2.Response<T> = retrofit2.Response.error(
+                response.code(),
+                (raw ?: "").toResponseBody(response.errorBody()?.contentType())
+            )
+            if (challenge == null) return rebuilt()
+
+            token = AltchaSolver.solveToken(challenge) ?: return rebuilt()
+            attempt++
+        }
+    }
+
+    private companion object {
+        const val MAX_ALTCHA_ATTEMPTS = 3
+    }
+
+    private fun extractAltchaChallenge(raw: String): JsonObject? = try {
+        val root = jsonParser.parseToJsonElement(raw).jsonObject
+        (root["altcha_challenge"] ?: root["data"]?.jsonObject?.get("altcha_challenge"))?.jsonObject
+    } catch (_: Exception) {
+        null
     }
 
     private fun parseError(code: Int, errorBody: String?): String {
@@ -548,7 +564,6 @@ class AuthRepository @Inject constructor(
 
     sealed class LoginResult {
         object Success : LoginResult()
-        data class CaptchaRequired(val sitekey: String?, val provider: String?) : LoginResult()
         data class MfaRequired(
             val ticket: String,
             val totp: Boolean,
